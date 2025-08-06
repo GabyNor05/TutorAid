@@ -6,9 +6,9 @@ function Navbar() {
         <nav className="navbar">
             <div classname = "logo-placeholder" style={{color: "white"}}></div>
             <div className="nav-links">
-                <Link to="/">Dashboard</Link>
-                <Link to="/login">Login</Link>
-                <Link to="/signup">Signup</Link>
+                <Link to="/" className="nav-link">Dashboard</Link>
+                <Link to="/login" className="nav-link">Login</Link>
+                <Link to="/signup" className="nav-link">Signup</Link>
             </div>
         </nav>
     )

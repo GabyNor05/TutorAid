@@ -1,14 +1,48 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./css/signup.css";
 import signupImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 
 function Signup() {
     const navigate = useNavigate();
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errors, setErrors] = useState({});
+
+    const validate = () => {
+        const newErrors = {};
+        if (!username) newErrors.username = "Username is required";
+        if (!email) {
+            newErrors.email = "Email is required";
+        } else {
+            // Simple email regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                newErrors.email = "Enter a valid email address";
+            }
+        }
+        if (!password) {
+            newErrors.password = "Password is required";
+        } else {
+            const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                newErrors.password =
+                    "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.";
+            }
+        }
+        return newErrors;
+    };
 
     const handleSignUpClick = () => {
-        navigate("/onboarding");
+        const validationErrors = validate();
+        setErrors(validationErrors);
+
+        if (Object.keys(validationErrors).length === 0) {
+            navigate("/onboarding");
+        }
     };
+
     return(
     <div>
         <div className="signup-page">
@@ -18,23 +52,52 @@ function Signup() {
                 </div>
                 <div className="signup-form">
                     <h2>Sign up</h2>
-                    <form>
+                    <form onSubmit={e => e.preventDefault()}>
                         <div className="form-group">
-                            <label htmlFor="name">Name</label>
-                            <input type="text" id="name" name="name" required />
+                            <label>Username</label>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                value={username}
+                                onChange={e => setUsername(e.target.value)}
+                                required
+                            />
+                            {errors.username && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.username}</span>
+                            )}
                         </div>
                         <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input type="text" id="email" name="email" required />
+                            <label>Email</label>
+                            <input
+                                type="text"
+                                id="email"
+                                name="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                            />
+                            {errors.email && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.email}</span>
+                            )}
                         </div>
                         <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input type="password" id="password" name="password" required />
+                            <label>Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                required
+                            />
+                            {errors.password && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.password}</span>
+                            )}
                         </div>
                         <div style={{width: "100%"}}>
-                            <button className="signup-btn"type="button" onClick={handleSignUpClick}>Sign up</button>
-                        </div>
-                        
+                            <button className="signup-btn" type="button" onClick={handleSignUpClick}>Sign up</button>
+                        </div>  
                     </form>
                     <div className="login-link">
                         <p>Don't have an account?</p> 

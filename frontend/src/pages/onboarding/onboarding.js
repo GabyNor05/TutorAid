@@ -5,9 +5,24 @@ import { useNavigate } from "react-router-dom";
 
 function Onboarding() {
     const navigate = useNavigate();
+    const [school, setSchool] = useState("");
+    const [grade, setGrade] = useState("");
+    const [address, setAddress] = useState("");
+    const [city, setCity] = useState("");
+    const [province, setProvince] = useState("");
+    const [errors, setErrors] = useState({});
 
     const handleonboardingClick = () => {
-        navigate("/dashboard");
+        const newErrors = {};
+        if (!school) newErrors.school = "School is required";
+        if (!grade) newErrors.grade = "Grade is required";
+        if (!address) newErrors.address = "Address is required";
+        if (!city) newErrors.city = "City is required";
+        if (!province) newErrors.province = "Province is required";
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length === 0) {
+            navigate("/dashboard");
+        }
     };
     return(
     <div>
@@ -21,20 +36,87 @@ function Onboarding() {
                     <form>
                         <div className="form-group">
                             <label>What school do you go to?</label>
-                            <input type="text" id="school" name="school" required />
+                            <input
+                                type="text"
+                                id="school"
+                                name="school"
+                                value={school}
+                                onChange={e => setSchool(e.target.value)}
+                                required
+                            />
+                            {errors.school && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.school}</span>
+                            )}
                         </div>
                         <div className="form-group">
                             <label>What grade are you in?</label>
-                            <input type="text" id="grade" name="grade" required />
+                            <input
+                                type="text"
+                                id="grade"
+                                name="grade"
+                                value={grade}
+                                onChange={e => setGrade(e.target.value)}
+                                required
+                            />
+                            {errors.grade && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.grade}</span>
+                            )}
                         </div>
                         <div className="form-group">
                             <label>Address</label>
-                            <input type="textarea" id="address" name="address" required />
+                            <input
+                                type="text"
+                                id="address"
+                                name="address"
+                                value={address}
+                                onChange={e => setAddress(e.target.value)}
+                                required
+                            />
+                            {errors.address && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.address}</span>
+                            )}
+                        </div>
+                        <div className ="address-row">
+                            <div className="form-group">
+                            <label>City</label>
+                            <input
+                                type="text"
+                                id="city"
+                                name="city"
+                                value={city}
+                                onChange={e => setCity(e.target.value)}
+                                required
+                            />
+                            {errors.city && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.city}</span>
+                            )}
                         </div>
                         <div className="form-group">
-                            <label>City</label>
-                            <input type="dropdown" id="city" name="city" required />
+                            <label>Province</label>
+                            <select
+                                id="province"
+                                name="province"
+                                value={province}
+                                onChange={e => setProvince(e.target.value)}
+                                required
+                            >
+                                <option value="">Select Province</option>
+                                <option value="Eastern Cape">Eastern Cape</option>
+                                <option value="Free State">Free State</option>
+                                <option value="Gauteng">Gauteng</option>
+                                <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                <option value="Limpopo">Limpopo</option>
+                                <option value="Mpumalanga">Mpumalanga</option>
+                                <option value="North West">North West</option>
+                                <option value="Northern Cape">Northern Cape</option>
+                                <option value="Western Cape">Western Cape</option>
+                            </select>
+                            {errors.province && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.province}</span>
+                            )}
                         </div>
+                        </div>
+                        
                         <div style={{width: "100%"}}>
                             <button className="onboarding-btn"type="button" onClick={handleonboardingClick}>Go to Dashboard</button>
                         </div>
