@@ -1,24 +1,36 @@
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import Dashboard from './pages/dashboard/Dashboard';
+import Signup from './pages/signup/Signup';
+import Login from './pages/login/login';
+import Navbar from './pages/generalComponents/Navbar';
+import Onboarding from './pages/onboarding/onboarding';
+import Otp from './pages/otp/Otp';
+
+function AppContent() {
+  const location = useLocation();
+  const hideNavbar = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/onboarding";
+  return (
+    <div className="App">
+      {!hideNavbar && <Navbar />}
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />   
+        <Route path="/onboarding" element={<Onboarding />} /> 
+        <Route path="/otp" element={<Otp />} /> 
+      </Routes>
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    
+      <Router>
+        <AppContent />
+      </Router>
+    
   );
 }
 
