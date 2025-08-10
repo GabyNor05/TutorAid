@@ -1,0 +1,49 @@
+.dashboard-navigation {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    gap: 20px;
+    width: 60%;
+    margin: 0 auto;
+}
+
+.navcard{
+    width: 400px;
+    height: 180px;
+    border-radius: 20px;
+    background: linear-gradient(270deg, #E9AD53 0%, #866026 100%);
+    box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
+    border-style: none;
+    overflow: hidden;
+}
+
+.navcard-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content: space-between;
+    align-items: center;
+    gap: 50px;
+    
+}
+
+.navcard-icon{
+    margin: auto;
+}
+
+.navcard-text {
+    background: radial-gradient(#8660263e, #3f2b0d00);
+    margin: auto 0;
+    padding: 10px;
+    width: 50%;
+    border-top-right-radius: 10px;
+}
+
+.navcard-text h2{
+    font-family: 'Montserrat', sans-serif;
+    color: var(--Paper-White);
+    font-size: 20px;
+    text-decoration: none;
+    font-style: normal;
+    font-weight: 600;
+    text-align: left;
+}

@@ -24,6 +24,7 @@ function Onboarding() {
             navigate("/dashboard");
         }
     };
+    
     return(
     <div>
         <div className="onboarding-page">

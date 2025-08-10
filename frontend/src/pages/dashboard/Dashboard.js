@@ -1,9 +1,87 @@
 import React from "react";
+import "./css/dashboard.css";
+import { useNavigate } from "react-router-dom";
+import Clock from "./assets/clock.svg";
+import People from "./assets/people.svg";
+import Task from "./assets/task.svg";
 
 function Dashboard() {
+    const navigate = useNavigate();
+    // Replace this with your actual role logic (e.g., from context, Redux, or props)
+    const role = "tutor"; // "tutor", "admin", or "student"
+
+    const handleNavigation = (path) => {
+        navigate(path);
+    };
+
     return (
-        <div></div>
-    )
+        <div className="page-background"> 
+            <div className="pt-2 text-center">
+                <h1 className="page-title">Welcome to your dashboard</h1>
+                
+            </div>
+
+            <div className="dashboard-navigation">
+                
+                    {role === "tutor" && (
+                        <>
+                            <div className="navcard-row">
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonrequests")}>
+                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                <div className="navcard-text">
+                                    <h2>Lesson Requests</h2>
+                                </div>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/studentprofiles")}>
+                                    <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                    <div className="navcard-text">
+                                    <h2>Student Profiles</h2>
+                                    </div>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonlogs")}>
+                                    <img src={Task} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                    <div className="navcard-text">
+                                    <h2>Lesson Logs</h2>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                        </>
+                    )}
+                    {role === "admin" && (
+                        <>
+                            <div className="navcard-row">
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/reports")}>
+                                <h2>Reports</h2>
+                                <p>View system reports.</p>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/feedbackrequests")}>
+                                    <h2>Feedback Requests</h2>
+                                    <p>Manage feedback requests.</p>
+                                </button>
+                            </div>
+                            
+                        </>
+                    )}
+                    {role === "student" && (
+                        <>
+                            <div className="navcard-row">
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/booking")}>
+                                <h2>Booking</h2>
+                                <p>Book your lessons here.</p>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/feedbackform")}>
+                                    <h2>Feedback Request Form</h2>
+                                    <p>Submit your feedback requests.</p>
+                                </button>
+                            </div>
+                            
+                        </>
+                    )}
+                
+            </div>
+        </div>
+    );
 }
 
 export default Dashboard;

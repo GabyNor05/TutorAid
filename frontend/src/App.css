@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
 :root {
   --Wall-Teal: #2B5561;
@@ -9,13 +9,14 @@
   --Yellow-Gradient:  linear-gradient(270deg, #EFB155 0%, #876026 100%);
 box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
 }
+
 .navbar {
   display: flex;
   flex-direction: row;
   padding: 20px;
   background-color: var(--Wall-Teal);
   width: 100%;
-  height: 88px;
+  height: 78px;
 }
 
 .nav-links{
@@ -25,6 +26,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
   justify-content: center;
   gap: 20px;
 }
+
 .nav-link{
   display: flex;
 flex-direction: row;
@@ -38,4 +40,21 @@ flex-direction: row;
   font-style: normal;
   font-weight: 600;
   line-height: normal;
+}
+
+.page-background {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(0deg, rgba(239, 246, 255, 0.70) 0%, rgba(239, 246, 255, 0.70) 100%), url('./pages/reusableAssets/whitepaper.png') lightgray 50% / cover; 
+    background-size: cover;
+    background-position: top;
+}
+
+.page-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 36px;
+    color: var(--Wall-Teal);
+    margin-top: 20px;
+    margin-bottom: 50px;
+    font-weight: 600;
 }
