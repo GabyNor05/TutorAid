@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Clock from "./assets/clock.svg";
 import People from "./assets/people.svg";
 import Task from "./assets/task.svg";
+import LessonCards from "../generalComponents/lessonCards";
 
 function Dashboard() {
     const navigate = useNavigate();
@@ -17,8 +18,7 @@ function Dashboard() {
     return (
         <div className="page-background"> 
             <div className="pt-2 text-center">
-                <h1 className="page-title">Welcome to your dashboard</h1>
-                
+                <h1 className="page-title">Welcome to your dashboard</h1>  
             </div>
 
             <div className="dashboard-navigation">
@@ -44,8 +44,7 @@ function Dashboard() {
                                     <h2>Lesson Logs</h2>
                                     </div>
                                 </button>
-                            </div>
-                            
+                            </div>                           
                         </>
                     )}
                     {role === "admin" && (
@@ -59,8 +58,7 @@ function Dashboard() {
                                     <h2>Feedback Requests</h2>
                                     <p>Manage feedback requests.</p>
                                 </button>
-                            </div>
-                            
+                            </div>   
                         </>
                     )}
                     {role === "student" && (
@@ -77,10 +75,22 @@ function Dashboard() {
                             </div>
                             
                         </>
+                    )}   
+            </div>
+            <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
+                {role === "tutor" && (
+                    <div >
+                        <h1 className="section-title" style={{marginLeft: "290px"}}>Upcoming Lessons</h1>
+                        <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", paddingBottom: "30px"}}>
+                            <LessonCards image= "https://via.placeholder.com/150" name = "Bo Fin Arvin" date = "2025-09-25" time = "14:00" address = "321 Corner of Fae and Lewis" subject = "History"/>
+                            <LessonCards image ="https://via.placeholder.com/150" name = "Lauren Lewis" date = "2025-09-21" time = "10:00" address = "123 Main St" subject = "Math"/>
+                            <LessonCards image ="https://via.placeholder.com/150" name = "Kenzi Solo" date = "2025-09-22" time = "17:00" address = "456 Elm St" subject = "Science"/> 
+                        </div>  
+                    </div>
                     )}
-                
             </div>
         </div>
+        
     );
 }
 

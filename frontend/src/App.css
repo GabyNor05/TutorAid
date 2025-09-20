@@ -58,3 +58,12 @@ flex-direction: row;
     margin-bottom: 50px;
     font-weight: 600;
 }
+
+.section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 28px;
+    color: var(--Paper-White);
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
