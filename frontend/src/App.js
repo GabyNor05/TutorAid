@@ -6,6 +6,8 @@ import Login from './pages/login/login';
 import Navbar from './pages/generalComponents/Navbar';
 import Onboarding from './pages/onboarding/onboarding';
 import Otp from './pages/otp/Otp';
+import UserProfile from './pages/generalComponents/userProfile/UserProfile';
+import LessonRequests from './pages/tutor/lessonRequests/LessonRequests';
 
 function AppContent() {
   const location = useLocation();
@@ -19,6 +21,8 @@ function AppContent() {
         <Route path="/login" element={<Login />} />   
         <Route path="/onboarding" element={<Onboarding />} /> 
         <Route path="/otp" element={<Otp />} /> 
+        <Route path="/userprofile" element={<UserProfile />} />
+        <Route path="/lessonrequests" element={<LessonRequests />} />
       </Routes>
     </div>
   );

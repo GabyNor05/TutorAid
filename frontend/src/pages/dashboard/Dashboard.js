@@ -10,7 +10,6 @@ function Dashboard() {
     const navigate = useNavigate();
     // Replace this with your actual role logic (e.g., from context, Redux, or props)
     const role = "tutor"; // "tutor", "admin", or "student"
-
     const handleNavigation = (path) => {
         navigate(path);
     };
@@ -79,6 +78,16 @@ function Dashboard() {
             </div>
             <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
                 {role === "tutor" && (
+                    <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px", width: "1000px", margin: "0 auto"}}>
+                        <h1 className="section-title" style={{display: "flex", justifyContent: "left", margin: "20px"}}>Upcoming Lessons</h1>
+                        <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px"}}>
+                            <LessonCards image= "https://via.placeholder.com/150" name = "Bo Fin Arvin" date = "2025-09-25" time = "14:00" address = "321 Corner of Fae and Lewis" subject = "History"/>
+                            <LessonCards image ="https://via.placeholder.com/150" name = "Lauren Lewis" date = "2025-09-21" time = "10:00" address = "123 Main St" subject = "Math"/>
+                            <LessonCards image ="https://via.placeholder.com/150" name = "Kenzi Solo" date = "2025-09-22" time = "17:00" address = "456 Elm St" subject = "Science"/> 
+                        </div>  
+                    </div>
+                    )}
+                {role === "student" && (
                     <div >
                         <h1 className="section-title" style={{marginLeft: "290px"}}>Upcoming Lessons</h1>
                         <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", paddingBottom: "30px"}}>
