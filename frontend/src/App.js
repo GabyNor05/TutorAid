@@ -8,6 +8,7 @@ import Onboarding from './pages/onboarding/onboarding';
 import Otp from './pages/otp/Otp';
 import UserProfile from './pages/generalComponents/userProfile/UserProfile';
 import LessonRequests from './pages/tutor/lessonRequests/LessonRequests';
+import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
 
 function AppContent() {
   const location = useLocation();
@@ -23,6 +24,7 @@ function AppContent() {
         <Route path="/otp" element={<Otp />} /> 
         <Route path="/userprofile" element={<UserProfile />} />
         <Route path="/lessonrequests" element={<LessonRequests />} />
+        <Route path="/studentfiles" element={<StudentFiles />} />
       </Routes>
     </div>
   );

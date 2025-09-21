@@ -19,7 +19,7 @@ function Otp() {
 
         if (Object.keys(newErrors).length === 0) {
             // Proceed with navigation or API call
-            navigate("/dashboard");
+            navigate("/");
         }     
     };
 

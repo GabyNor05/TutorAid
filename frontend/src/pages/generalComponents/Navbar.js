@@ -13,30 +13,19 @@ function Navbar() {
     return (
         <nav className="navbar">
             <div className="nav-logo">
-                <img
-                src={Logo}
-                alt="Logo"
-                className="logo"
-                onClick={() => handleNavigation("/dashboard")}
-                style={{ cursor: "pointer" }}
-                />
+                <img src={Logo} alt="Logo" className="logo" onClick={() => handleNavigation("/dashboard")} style={{ cursor: "pointer" }}/>
             </div>
             <div className="nav-links">
-                <Link to="/" className="nav-link">Dashboard</Link>
-                <Link to="/login" className="nav-link">Login</Link>
-                <Link to="/signup" className="nav-link">Signup</Link>
+                
             </div>
-            <div className="navMenu" style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setShowMenu((prev) => !prev)}
-              tabIndex={0}
-              title="Profile menu">
+            <div className="navMenu" style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setShowMenu((prev) => !prev)} tabIndex={0} title="Profile menu">
                 <List size={32} color={"#fff"} weight="bold"/>
             </div>
              {showMenu && (
-              <div className="nav-dropdown"
-              >
+              <div className="nav-dropdown">
                 <button className="dropdown-item" onClick={() => {
                     setShowMenu(false);
-                    navigate("/dashboard");
+                    navigate("/");
                   }}
                 >
                   Dashboard
@@ -52,13 +41,44 @@ function Navbar() {
                 <button
                   className="dropdown-item" onClick={() => {
                     setShowMenu(false);
+                    navigate("/studentfiles");
+                  }}
+                >
+                  Student Files
+                </button>
+                <button
+                  className="dropdown-item" onClick={() => {
+                    setShowMenu(false);
+                    navigate("/studentfiles");
+                  }}
+                >
+                  Lesson Feedback
+                </button>
+                <button
+                  className="dropdown-item" onClick={() => {
+                    setShowMenu(false);
                     navigate("/userprofile");
                   }}
                 >
                   My Profile
                 </button>
                 <button
-                  className="dropdown-item text-red-600 hover:text-blue-50 hover:font-semibold transition-colors"  onClick={() => {
+                  className="dropdown-item" onClick={() => {
+                    setShowMenu(false);
+                    navigate("/login");
+                  }}
+                >
+                  Login
+                </button>
+                <button
+                  className="dropdown-item" onClick={() => {
+                    setShowMenu(false);
+                    navigate("/signup");
+                  }}
+                >
+                  Signup
+                </button>
+                <button className="dropdown-item text-red-600 hover:text-blue-50 hover:font-semibold transition-colors"  onClick={() => {
                     setShowMenu(false);
                     navigate("/userprofile");
                   }}
@@ -66,8 +86,7 @@ function Navbar() {
                   Log out
                 </button>
                 </div>
-            )}
-              
+            )}   
         </nav>
     )
 }

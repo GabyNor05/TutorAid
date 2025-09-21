@@ -1,4 +1,7 @@
 import React from "react";
+import "./css/userprofile.css";
+import UserCard from "./UserCards";
+
 
 function UserProfile() {
     const role = "tutor";
@@ -8,25 +11,11 @@ function UserProfile() {
                 <h1 className="page-title">User Profile</h1>  
             </div>
             {role === "tutor" && (
-                <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", paddingBottom: "30px"}}>
-                    <div style={{width: "200px", height: "200px", borderRadius: "50%", backgroundColor: "#E0E0E0"}}>
-                        <img src="https://via.placeholder.com/150" alt="Profile" style={{width: "100%", height: "100%", borderRadius: "50%"}} />
-                    </div>
-                    <h1>Dr Lauren Lewis</h1>
-                    <p>Email: laurenl@ashinc.fae</p>
-                    <p>Bio: Experienced tutor with a passion for teaching.</p>
-                    <p>Subjects: Math, Science, English</p>
-                    <p>Availability: Mon-Fri, 9am-5pm</p>
-                </div>)}
+                <><UserCard name = "Dr Lauren Lewis" email = "laurenl@ashinc.fae" bio = "Experienced tutor with a passion for teaching." subjects = "Math, Science, English" availability="Mon-Fri, 9am-5pm" role = "tutor" /></>
+                )}
             {role === "student" && (
-                <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", paddingBottom: "30px"}}>
-                    <div style={{width: "200px", height: "200px", borderRadius: "50%", backgroundColor: "#E0E0E0"}}>
-                        <img src="https://via.placeholder.com/150" alt="Profile" style={{width: "100%", height: "100%", borderRadius: "50%"}} />
-                    </div>
-                    <h1>Bo Fin Arvin</h1>
-                    <p>Email: isabeau@unaligned.fae</p>
-                    <p>Address: 321 Corner of Fae and Lewis</p>
-                </div>)}
+                <><UserCard name = "Bo Fin Arvin" email = "isabeau@unaligned.fae" address="321 Corner of Fae and Lewis" role = "student" /></>
+                )}
             
         </div>
     )
