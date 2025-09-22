@@ -1,12 +1,12 @@
 :root {
-  --Wall-Teal: #2B5561;
-  --Paper-White: #eff6ff;
-  --Ruler-Yellow: #F1B356;
-  --Active-Green: #3A9D23;
-  --Cancel-Red: #B22222;
-  --System-Blue: #5F9ABE;
-  --Yellow-Gradient:  linear-gradient(270deg, #EFB155 0%, #876026 100%);
-box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
+    --Wall-Teal: #2B5561;
+    --Paper-White: #eff6ff;
+    --Ruler-Yellow: #F1B356;
+    --Active-Green: #3A9D23;
+    --Cancel-Red: #B22222;
+    --System-Blue: #5F9ABE;
+    --Yellow-Gradient: linear-gradient(270deg, #EFB155 0%, #876026 100%);
+    box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
 }
 
 .signup-page {
@@ -16,7 +16,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     justify-content: center;
     width: 100%;
     height: 100vh;
-    background: linear-gradient(0deg, rgba(239, 246, 255, 0.70) 0%, rgba(239, 246, 255, 0.70) 100%), url('../assets/whitepaper.png') lightgray 50% / cover no-repeat; 
+    background: linear-gradient(0deg, rgba(239, 246, 255, 0.70) 0%, rgba(239, 246, 255, 0.70) 100%), url('../assets/whitepaper.png') lightgray 50% / cover no-repeat;
     background-size: cover;
     background-position: center;
 }
@@ -33,13 +33,13 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     overflow: hidden;
 }
 
-.signup-image img{
+.signup-image img {
     width: 450px;
     height: 100%;
     object-fit: fill;
 }
 
-.signup-form{
+.signup-form {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -49,11 +49,11 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     padding: 50px;
 }
 
-.signup-form form{
+.signup-form form {
     margin-bottom: 20px;
 }
 
-.signup-form h2{
+.signup-form h2 {
     font-family: 'Montserrat', sans-serif;
     color: var(--Wall-Teal);
     font-size: 30px;
@@ -88,7 +88,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     background-color: var(--Paper-White);
 }
 
-.signup-btn{
+.signup-btn {
     width: 234.783px;
     height: 50px;
     background-color: var(--Wall-Teal);
@@ -99,7 +99,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     font-family: 'Montserrat', sans-serif;
     font-size: 16px;
     font-weight: 600;
-    margin: auto 0; 
+    margin: auto 0;
 }
 
 .signup-form button.signup-btn {
@@ -108,7 +108,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     display: block;
 }
 
-.login-link{
+.login-link {
     font-family: 'Montserrat', sans-serif;
     display: flex;
     direction: row;
@@ -119,11 +119,10 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     gap: 5px;
 }
 
-.login-link a{
+.login-link a {
     color: var(--System-Blue);
     text-decoration: underline;
     font-weight: 500;
-
 }
 
 .google-button-container {
@@ -139,7 +138,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     border-radius: 4px;
 }
 
-.google-button{
+.google-button {
     display: flex;
     flex-direction: row;
     align-items: center;

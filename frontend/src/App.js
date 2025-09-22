@@ -1,4 +1,5 @@
 import './App.css';
+/* import 'bootstrap/dist/css/bootstrap.min.css'; */
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
 import Signup from './pages/signup/Signup';
@@ -10,6 +11,7 @@ import UserProfile from './pages/generalComponents/userProfile/UserProfile';
 import LessonRequests from './pages/tutor/lessonRequests/LessonRequests';
 import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
 import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
+import ReportForm from './pages/tutor/reportForm/ReportForm';
 
 function AppContent() {
   const location = useLocation();
@@ -27,6 +29,7 @@ function AppContent() {
         <Route path="/lessonrequests" element={<LessonRequests />} />
         <Route path="/studentfiles" element={<StudentFiles />} />
         <Route path="/lessonFeedback" element={<LessonFeedback />} />
+        <Route path="/reportform" element={<ReportForm />} />
       </Routes>
     </div>
   );

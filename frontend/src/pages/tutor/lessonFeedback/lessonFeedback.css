@@ -76,6 +76,7 @@
 .report-link a{
     text-decoration: underline;
     font-weight: 500;
+    color: red;
 }
 
 .lesson-feedback-rating{

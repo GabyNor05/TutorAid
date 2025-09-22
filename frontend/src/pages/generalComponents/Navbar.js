@@ -21,6 +21,7 @@ function Navbar() {
             <div className="navMenu" style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setShowMenu((prev) => !prev)} tabIndex={0} title="Profile menu">
                 <List size={32} color={"#fff"} weight="bold"/>
             </div>
+            
              {showMenu && (
               <div className="nav-dropdown">
                 <button className="dropdown-item" onClick={() => {

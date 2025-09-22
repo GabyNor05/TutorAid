@@ -118,6 +118,14 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     background-position: top;
 }
 
+.blue-page-background {
+    width: 100%;
+    min-height: 100vh;
+    background: url('./pages/reusableAssets/blueWallpaper.png') lightgray 50% / cover no-repeat; 
+    background-size: cover;
+    background-position: top;
+}
+
 .page-title {
     font-family: 'Montserrat', sans-serif;
     font-size: 36px;
@@ -127,10 +135,28 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     font-weight: 600;
 }
 
+.blue-page-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 36px;
+    color: var(--Paper-White);
+    /* margin-top: 20px; */
+    margin-bottom: 50px;
+    font-weight: 600;
+}
+
 .section-title {
     font-family: 'Montserrat', sans-serif;
     font-size: 28px;
     color: var(--Paper-White);
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.white-section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 28px;
+    color: var(--Wall-Teal);
     margin-top: 20px;
     margin-bottom: 20px;
     font-weight: 600;
