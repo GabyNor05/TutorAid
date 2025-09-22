@@ -1,11 +1,13 @@
 import React from "react";
+import FeedbackForm from "./FeedbackForm";
 
 function LessonFeedback() {
     return (
         <div className="page-background">
-            <h1>Booking Page</h1>
-            <p>This is where you can book your lessons.</p>
-            {/* Booking form and functionality will go here */}
+            <div className="form-card">
+            <FeedbackForm />
+            </div>
+            
         </div>
     );
 }
