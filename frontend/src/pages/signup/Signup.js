@@ -51,7 +51,7 @@ function Signup() {
                     <img src={signupImage} alt="signup" />
                 </div>
                 <div className="signup-form">
-                    <h2>Sign up</h2>
+                    <h2>Create your account</h2>
                     <form onSubmit={e => e.preventDefault()}>
                         <div className="form-group">
                             <label>Username</label>
@@ -96,12 +96,12 @@ function Signup() {
                             )}
                         </div>
                         <div style={{width: "100%"}}>
-                            <button className="signup-btn" type="button" onClick={handleSignUpClick}>Sign up</button>
+                            <button className="signup-btn" type="button" onClick={handleSignUpClick}>Sign Up</button>
                         </div>  
                     </form>
                     <div className="login-link">
                         <p>Don't have an account?</p> 
-                        <a href="/login">Login</a>
+                        <a href="/">Login</a>
                     </div>
                     <div className="Google-signup">
                         <button className="google-button-container" >

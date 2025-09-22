@@ -17,10 +17,11 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
   justify-items: center; 
   padding: 20px ;
   background-color: var(--Wall-Teal);
-  
   max-width: 1920px;         /* Optional: set a max width */
   margin: 0 auto;            /* Center the navbar itself */
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .logo {

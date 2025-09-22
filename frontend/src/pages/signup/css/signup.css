@@ -4,6 +4,7 @@
   --Ruler-Yellow: #F1B356;
   --Active-Green: #3A9D23;
   --Cancel-Red: #B22222;
+  --System-Blue: #5F9ABE;
   --Yellow-Gradient:  linear-gradient(270deg, #EFB155 0%, #876026 100%);
 box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
 }
@@ -24,9 +25,9 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 50px;
+    gap: 25px;
     width: 1000px;
-    height: 550px;
+    height: 600px;
     background-color: var(--Paper-White);
     border-radius: 20px;
     overflow: hidden;
@@ -43,9 +44,23 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 450px;
+    width: 500px;
     height: 100%;
     padding: 50px;
+}
+
+.signup-form form{
+    margin-bottom: 20px;
+}
+
+.signup-form h2{
+    font-family: 'Montserrat', sans-serif;
+    color: var(--Wall-Teal);
+    font-size: 30px;
+    text-decoration: none;
+    font-style: normal;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
 .form-group {
@@ -74,7 +89,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
 }
 
 .signup-btn{
-    width: 290px;
+    width: 234.783px;
     height: 50px;
     background-color: var(--Wall-Teal);
     color: var(--Paper-White);
@@ -84,7 +99,13 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     font-family: 'Montserrat', sans-serif;
     font-size: 16px;
     font-weight: 600;
-    margin: auto;
+    margin: auto 0; 
+}
+
+.signup-form button.signup-btn {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }
 
 .login-link{
@@ -98,16 +119,22 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     gap: 5px;
 }
 
+.login-link a{
+    color: var(--System-Blue);
+    text-decoration: underline;
+    font-weight: 500;
+
+}
+
 .google-button-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 50px;
-    width: 100%;
+    height: 60px;
     margin-top: 20px;
     padding: 20px;
-    background-color: #fff;
+    background-color: #ffffff7c;
     border-width: 1px;
     border-radius: 4px;
 }
@@ -117,6 +144,6 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 50px;
+    gap: 25px;
     cursor: pointer;
 }

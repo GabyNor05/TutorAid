@@ -9,22 +9,24 @@ import Otp from './pages/otp/Otp';
 import UserProfile from './pages/generalComponents/userProfile/UserProfile';
 import LessonRequests from './pages/tutor/lessonRequests/LessonRequests';
 import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
+import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
 
 function AppContent() {
   const location = useLocation();
-  const hideNavbar = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/onboarding";
+  const hideNavbar = location.pathname === "/" || location.pathname === "/signup" || location.pathname === "/onboarding";
   return (
     <div className="App">
       {!hideNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />   
+        <Route path="/" element={<Login />} />   
         <Route path="/onboarding" element={<Onboarding />} /> 
         <Route path="/otp" element={<Otp />} /> 
         <Route path="/userprofile" element={<UserProfile />} />
         <Route path="/lessonrequests" element={<LessonRequests />} />
         <Route path="/studentfiles" element={<StudentFiles />} />
+        <Route path="/lessonFeedback" element={<LessonFeedback />} />
       </Routes>
     </div>
   );

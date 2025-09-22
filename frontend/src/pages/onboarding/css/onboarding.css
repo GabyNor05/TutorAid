@@ -24,9 +24,9 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 50px;
+    gap: 25px;
     width: 1000px;
-    height: 550px;
+    height: 600px;
     background-color: var(--Paper-White);
     border-radius: 20px;
     overflow: hidden;
@@ -43,11 +43,24 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 450px;
+    width: 500px;
     height: 100%;
     padding: 50px;
 }
 
+.onboarding-form form{
+    margin-bottom: 20px;
+}
+
+.onboarding-form h2{
+    font-family: 'Montserrat', sans-serif;
+    color: var(--Wall-Teal);
+    font-size: 24px;
+    text-decoration: none;
+    font-style: normal;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
 .form-group {
     display: flex;
     flex-direction: column;
@@ -73,9 +86,30 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     background-color: var(--Paper-White);
 }
 
+.onboarding-btn{
+    width: 234.783px;
+    height: 50px;
+    background-color: var(--Wall-Teal);
+    color: var(--Paper-White);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin: auto 0; 
+}
+
+.onboarding-form button.onboarding-btn {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
 /* Match select styling to input */
 .form-group select {
     width: 100%;
+    height: 46px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -89,6 +123,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     flex-direction: row;
     gap: 30px;
     width: 100%;
+    justify-content: space-between;
 }
 
 /* Make city and province share the row equally */

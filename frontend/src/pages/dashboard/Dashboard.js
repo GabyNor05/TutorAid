@@ -37,10 +37,10 @@ function Dashboard() {
                                     <h2>Student Profiles</h2>
                                     </div>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonlogs")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonfeedback")}>
                                     <img src={Task} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
                                     <div className="navcard-text">
-                                    <h2>Lesson Logs</h2>
+                                    <h2>Lesson Feedback</h2>
                                     </div>
                                 </button>
                             </div>                           

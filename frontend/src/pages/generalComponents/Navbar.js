@@ -25,7 +25,7 @@ function Navbar() {
               <div className="nav-dropdown">
                 <button className="dropdown-item" onClick={() => {
                     setShowMenu(false);
-                    navigate("/");
+                    navigate("/dashboard");
                   }}
                 >
                   Dashboard
@@ -49,7 +49,7 @@ function Navbar() {
                 <button
                   className="dropdown-item" onClick={() => {
                     setShowMenu(false);
-                    navigate("/studentfiles");
+                    navigate("/lessonfeedback");
                   }}
                 >
                   Lesson Feedback
@@ -65,7 +65,7 @@ function Navbar() {
                 <button
                   className="dropdown-item" onClick={() => {
                     setShowMenu(false);
-                    navigate("/login");
+                    navigate("/");
                   }}
                 >
                   Login
