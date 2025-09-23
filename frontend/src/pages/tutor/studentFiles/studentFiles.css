@@ -97,20 +97,6 @@
     font-weight: 500;
 }
 
-.card-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-}
-
-.view-file-btn {
-    background-color: #3A9D23;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-}
 
 .upload-file-btn {
     background-color: var(--Wall-Teal);

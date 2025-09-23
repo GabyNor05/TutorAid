@@ -8,6 +8,7 @@ function UserCard({
   email,
   bio,
   subjects,
+  qualifications,
   availability,
   address,
   role,
@@ -21,6 +22,7 @@ function UserCard({
     email,
     bio,
     subjects,
+    qualifications,
     availability,
     address
   });
@@ -68,6 +70,7 @@ function UserCard({
               <>
                 <p><strong>Bio: </strong>{bio}</p>
                 <p><strong>Subjects: </strong>{subjects}</p>
+                <p><strong>Qualifications: </strong>{qualifications}</p>
                 <p><strong>Availability: </strong>{availability}</p>
               </>
             )}

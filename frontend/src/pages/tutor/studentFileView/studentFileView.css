@@ -1,0 +1,77 @@
+.student-file-view-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 30px 80px 20px;
+  margin: auto;
+  max-width: 1400px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 50px;
+  color: #000;
+}
+
+.student-file-view-card-content{
+    display: flex;
+    flex-direction: row;
+    gap: 80px;
+    align-items: center;
+    justify-content: center;
+}
+
+.student-file-view-card-content img {
+    width: 400px;
+    height: 300px;
+    border-radius: 20px;
+    object-fit: cover;
+    background-color: #d9d9d99d;
+}
+
+.student-file-view-card-details{
+    width: 600px;
+}
+
+.student-file-view-card-details h3 {
+    color: #181f2a;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 38px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.student-file-view-card-info{
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.student-file-view-card-bottom-row a{
+    color: var(--System-Blue);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.status-label {
+    position: relative;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.status-label.active {
+    background-color: #399d23a1;
+}
+.status-label.inactive {
+    background-color: #b22222b5;
+}
+.status-label.pending {
+    background-color: #f1b356ca;
+    color: #333;
+}

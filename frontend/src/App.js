@@ -12,6 +12,7 @@ import LessonRequests from './pages/tutor/lessonRequests/LessonRequests';
 import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
 import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
 import ReportForm from './pages/tutor/reportForm/ReportForm';
+import StudentFileView from './pages/tutor/studentFileView/StudentFileView';
 
 function AppContent() {
   const location = useLocation();
@@ -30,6 +31,7 @@ function AppContent() {
         <Route path="/studentfiles" element={<StudentFiles />} />
         <Route path="/lessonFeedback" element={<LessonFeedback />} />
         <Route path="/reportform" element={<ReportForm />} />
+        <Route path="/studentfileview" element={<StudentFileView />} />
       </Routes>
     </div>
   );

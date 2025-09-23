@@ -1,0 +1,62 @@
+.heading-row{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 200px;
+    align-items: center;
+    padding: 0 16px;
+    color:  var(--Paper-White);
+    margin: 10px auto;
+    max-width: 1000px;
+}
+.pdf-card{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 200px;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    margin-bottom: 18px;
+    padding: 16px;
+    gap: 16px;
+    max-width: 1000px;
+    margin: 10px auto;
+}
+
+.pdf-card-content{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px; /* Match parent grid */
+    align-items: center;
+    gap: 16px;
+    max-width: 1000px;
+}
+
+.pdf-card-content > * {
+    box-sizing: border-box;
+    border: 1px dashed #342c2c;
+}
+
+/*  */
+
+
+.pdf-name{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-width: 200px;
+    gap: 8px;
+}
+
+.pdf-name img{
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.pdf-name h3{
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px;
+
+    color: #181f2a;
+    margin: 0;
+    min-width: 140px;
+
+}

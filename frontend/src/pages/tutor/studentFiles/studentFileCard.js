@@ -27,7 +27,7 @@ function StudentFileCard({ image, name, grade, status = "Pending" }) {
                         <p>Grade {grade}</p>
                     </div>
                     <div className="view-file-link">
-                        <a href="/dashboard">View File</a>
+                        <a href="/studentfileview">View File</a>
                     </div>
                 </div>
                 <div className="card-actions">
