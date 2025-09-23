@@ -25,6 +25,8 @@ const deleteUser = async (id) => {
     return { message: 'User deleted' };
 };
 
+
+
 module.exports = {
     getAllUsers,
     getUserById,

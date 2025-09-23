@@ -1,4 +1,6 @@
 const userModel = require('../models/userModel');
+const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
 
 exports.getUsers = (req, res) => {
     userModel.getAllUsers((err, results) => {
@@ -15,21 +17,40 @@ exports.getUser = (req, res) => {
     });
 };
 
-exports.createUser = (req, res) => {
-    const user = req.body;
-    userModel.createUser(user, (err, results) => {
-        if (err) return res.status(500).json({ error: err });
-        res.json({ id: results.insertId, ...user });
-    });
+exports.createUser = async (req, res) => {
+    try {
+        let imageUrl = null;
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "users"
+            });
+            imageUrl = result.secure_url;
+            fs.unlinkSync(req.file.path); // Remove temp file
+        }
+        const user = { ...req.body, image: imageUrl };
+        const createdUser = await userModel.createUser(user);
+        res.json(createdUser);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-exports.updateUser = (req, res) => {
-    const id = req.params.id;
-    const user = req.body;
-    userModel.updateUser(id, user, (err, results) => {
-        if (err) return res.status(500).json({ error: err });
-        res.json({ id, ...user });
-    });
+exports.updateUser = async (req, res) => {
+    try {
+        let imageUrl = req.body.image;
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "users"
+            });
+            imageUrl = result.secure_url;
+            fs.unlinkSync(req.file.path); // Remove temp file
+        }
+        const user = { ...req.body, image: imageUrl };
+        const updatedUser = await userModel.updateUser(req.params.id, user);
+        res.json(updatedUser);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 exports.deleteUser = (req, res) => {
