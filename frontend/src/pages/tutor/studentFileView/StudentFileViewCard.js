@@ -18,7 +18,7 @@ function StudentFileViewCard({ student }) {
                 </div>
                 <div className="student-file-view-card-bottom-row">
                         
-                        <div className={`status-label ${student.status ? student.status.toLowerCase() : "pending"}`}>
+                        <div className={`file-status-label ${student.status ? student.status.toLowerCase() : "pending"}`}>
                             {student.status || "Pending"}
                         </div>
                     </div>

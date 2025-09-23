@@ -54,7 +54,7 @@
     font-weight: 500;
 }
 
-.status-label {
+.file-status-label {
     position: relative;
     bottom: 10px;
     left: 10px;
@@ -65,13 +65,13 @@
     color: white;
 }
 
-.status-label.active {
+.file-status-label.active {
     background-color: #399d23a1;
 }
-.status-label.inactive {
+.file-status-label.inactive {
     background-color: #b22222b5;
 }
-.status-label.pending {
+.file-status-label.pending {
     background-color: #f1b356ca;
     color: #333;
 }
