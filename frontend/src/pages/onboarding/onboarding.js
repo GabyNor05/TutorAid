@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./css/onboarding.css";
 import onboardingImage from "./assets/calendarImage.png";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Onboarding() {
     const navigate = useNavigate();
@@ -10,9 +11,10 @@ function Onboarding() {
     const [address, setAddress] = useState("");
     const [city, setCity] = useState("");
     const [province, setProvince] = useState("");
+    const [status, setStatus] = useState("");
     const [errors, setErrors] = useState({});
 
-    const handleonboardingClick = () => {
+    const handleOnboardingClick = async () => {
         const newErrors = {};
         if (!school) newErrors.school = "School is required";
         if (!grade) newErrors.grade = "Grade is required";
@@ -20,8 +22,26 @@ function Onboarding() {
         if (!city) newErrors.city = "City is required";
         if (!province) newErrors.province = "Province is required";
         setErrors(newErrors);
+
         if (Object.keys(newErrors).length === 0) {
-            navigate("/dashboard");
+            try {
+                // Get userId from context, props, or localStorage
+                const userID = localStorage.getItem("userID"); // Example
+                console.log("userID from localStorage:", userID);
+                // Send a PUT request to update user and student info
+                await axios.put(`http://localhost:5000/api/users/${userID}`, {
+                    role: "Student", // Make sure this is included!
+                    grade,
+                    school,
+                    address,
+                    city,
+                    province,
+                    status
+                });
+                navigate("/dashboard");
+            } catch (error) {
+                setErrors({ api: "Onboarding failed. Please try again." });
+            }
         }
     };
     
@@ -119,7 +139,7 @@ function Onboarding() {
                         </div>
                         
                         <div style={{width: "100%"}}>
-                            <button className="onboarding-btn"type="button" onClick={handleonboardingClick}>Go to Dashboard</button>
+                            <button className="onboarding-btn"type="button" onClick={handleOnboardingClick}>Go to Dashboard</button>
                         </div>
                         
                     </form>

@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/signup.css";
 import signupImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 function Signup() {
     const navigate = useNavigate();
+
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
+
 
     const validate = () => {
         const newErrors = {};
@@ -34,12 +37,25 @@ function Signup() {
         return newErrors;
     };
 
-    const handleSignUpClick = () => {
+    const handleSignUpClick = async () => {
         const validationErrors = validate();
         setErrors(validationErrors);
 
         if (Object.keys(validationErrors).length === 0) {
-            navigate("/onboarding");
+            try {
+                const response = await axios.post('http://localhost:5000/api/users', {
+                    name: username,
+                    email,
+                    password,
+                    role: "Student"
+                });
+                console.log(response);
+                localStorage.setItem("userID", response.data.userID); // or response.data.id
+                navigate("/onboarding");
+            } catch (error) {
+                console.error(error);
+                setErrors({ api: "Signup failed. Please try again." });
+            }
         }
     };
 

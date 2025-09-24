@@ -24,7 +24,7 @@ exports.getUser = async (req, res) => {
     }
 };
 
-// CREATE new user
+// CREATE new user with role-specific data
 exports.createUser = async (req, res) => {
     try {
         // Handle image upload
@@ -36,15 +36,44 @@ exports.createUser = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
+        // Build user object for Users table
         const user = {
-            ...req.body,
-            password: hashedPassword,
             image: imageUrl,
+            name: req.body.name,
+            email: req.body.email,
+            password: hashedPassword,
+            role: req.body.role
         };
 
+        // Create user in Users table and get userID
         const createdUser = await userModel.createUser(user);
+
+        // Insert into role-specific table
+        if (user.role === "Tutor") {
+            await userModel.createTutor({
+                userID: createdUser.userID,
+                bio: req.body.bio || "",
+                subjects: req.body.subjects || "",
+                qualifications: req.body.qualifications || "",
+                availability: req.body.availability || ""
+            });
+        } else if (user.role === "Student") {
+            await userModel.createStudent({
+                userID: createdUser.userID,
+                grade: req.body.grade || "",
+                school: req.body.school || "",
+                address: req.body.address || "",
+                status: req.body.status || "Active"
+            });
+        } else if (user.role === "Admin") {
+            await userModel.createAdmin({
+                userID: createdUser.userID
+            });
+        }
+
         res.json(createdUser);
     } catch (err) {
+        console.error("Error in createUser:", err); // <-- Add this line
         res.status(500).json({ error: err.message });
     }
 };
@@ -52,29 +81,26 @@ exports.createUser = async (req, res) => {
 // UPDATE existing user
 exports.updateUser = async (req, res) => {
     try {
-        // Handle image upload
-        let imageUrl = req.body.image || null;
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path, { folder: "users" });
-            imageUrl = result.secure_url;
-            fs.unlinkSync(req.file.path);
+        // Only update Users table if user info is present
+        if (req.body.name || req.body.email || req.body.password || req.body.role || req.body.image) {
+            await userModel.updateUser(req.params.id, req.body);
         }
 
-        // Hash password if provided
-        let password = req.body.password;
-        if (password) {
-            password = await bcrypt.hash(password, 10);
+        // Only update student info if role is Student
+        if (req.body.role === "Student") {
+            await userModel.updateStudent(req.params.id, {
+                grade: req.body.grade || null,
+                school: req.body.school || null,
+                address: req.body.address || null,
+                city: req.body.city || null,
+                province: req.body.province || null,
+                status: req.body.status || "Active"
+            });
         }
 
-        const user = {
-            ...req.body,
-            password: password || undefined,
-            image: imageUrl
-        };
-
-        const updatedUser = await userModel.updateUser(req.params.id, user);
-        res.json(updatedUser);
+        res.json({ message: "User updated" });
     } catch (err) {
+        console.error("Error in updateUser:", err);
         res.status(500).json({ error: err.message });
     }
 };
@@ -92,19 +118,19 @@ exports.deleteUser = async (req, res) => {
 // test
 exports.createTestUser = async (req, res) => {
     try {
-        const randomImage = "https://via.placeholder.com/150";
+        const randomImage = "https://picsum.photos/id/28/200/300";
         const hashedPassword = await bcrypt.hash("testpassword", 10);
 
         const testUser = {
-            name: "Test User",
-            email: "testuser" + Date.now() + "@example.com", // Make email unique for testing
+            name: "Sophie Leighton",
+            email: "sophleighton" + Date.now() + "@example.com", // Make email unique for testing
             password: hashedPassword,
-            role: "Student",
+            role: "Tutor",
             image: randomImage,
-            grade: "10",
-            school: "Test High School",
-            address: "123 Test St",
-            status: "Active"
+            bio: "Very enthusiastic tutor with a passion for teaching.",
+            subjects: "Mathematics, Physics",
+            qualifications:  "M.Sc. in Physics",
+            availability:  "Weekdays 10 AM - 2 PM"
         };
 
         const createdUser = await userModel.createUser(testUser);
