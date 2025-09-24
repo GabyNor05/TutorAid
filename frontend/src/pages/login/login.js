@@ -5,13 +5,21 @@ import { useNavigate } from "react-router-dom";
 
 function Login() {
     const navigate = useNavigate();
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
 
     const handleLoginClick = () => {
         const newErrors = {};
-        if (!username) newErrors.username = "Username is required";
+        if (!email) {
+            newErrors.email = "Email is required";
+        } else {
+            // Simple email regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                newErrors.email = "Enter a valid email address";
+            }
+        }
         if (!password) {
             newErrors.password = "Password is required";
         } else {
@@ -41,16 +49,16 @@ function Login() {
                     <h2>Login</h2>
                     <form onSubmit={e => e.preventDefault()}>
                         <div className="form-group">
-                            <label>Username</label>
+                            <label>Email</label>
                             <input
                                 type="text"
-                                id="username"
-                                name="username"
-                                value={username}
-                                onChange={e => setUsername(e.target.value)}
+                                id="email"
+                                name="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
                             />
-                            {errors.username && (
-                                <span style={{ color: "red", fontSize: "12px" }}>{errors.username}</span>
+                            {errors.email && (
+                                <span style={{ color: "red", fontSize: "12px" }}>{errors.email}</span>
                             )}
                         </div>
                         <div className="form-group">

@@ -9,12 +9,13 @@
 
 .navcard{
     width: 400px;
-    height: 180px;
+    height: 200px;
     border-radius: 20px;
     background: linear-gradient(270deg, #E9AD53 0%, #866026 100%);
     box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     border-style: none;
     overflow: hidden;
+    padding: 8px
 }
 
 .navcard-row {
@@ -26,6 +27,15 @@
     
 }
 
+.navcard-content{
+   display: flex;
+   flex-direction: column;
+   
+   
+   
+   
+}
+
 .navcard-icon{
     margin: auto;
 }
@@ -34,8 +44,10 @@
     background: radial-gradient(#8660263e, #3f2b0d00);
     margin: auto 0;
     padding: 10px;
-    width: 50%;
     border-top-right-radius: 10px;
+    width:fit-content;
+    position: absolute;
+    
 }
 
 .navcard-text h2{

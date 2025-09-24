@@ -1,0 +1,140 @@
+.addstaff-form-container {
+    background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 30px 80px 20px;
+  margin: 0 auto;
+  max-width: 700px;
+  max-height: 100%;
+}
+
+
+
+.addstaff-form h2 {
+    text-align: center;
+    margin-bottom: 22px;
+    color: #222;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+    letter-spacing: 0.2px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 9px 12px;
+    border: 1px solid #d3d3d3;
+    border-radius: 5px;
+    font-size: 15px;
+    background: #f9fafb;
+    transition: border-color 0.2s;
+    font-family: 'Montserrat', sans-serif;
+
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #1976d2;
+    outline: none;
+}
+
+.form-group textarea {
+    min-height: 56px;
+    resize: vertical;
+}
+
+.subjects-selects {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+}
+.subject-select {
+    flex: 1;
+}
+
+button[type="submit"] {
+    margin-top: 15px;
+    width: 300px;
+    height: 50px;
+    background-color: var(--Wall-Teal);
+    color: var(--Paper-White);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.2s;
+    
+}
+
+button[type="submit"]:hover {
+    background: var(--Wall-Teal-Light);
+}
+
+.availability-block {
+    margin-bottom: 12px;
+    padding: 10px 0 0 0;
+    border-top: 1px solid #eee;
+}
+
+.availability-block-row {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.availability-block-row input[type="checkbox"] {
+    transform: scale(1.2);
+    margin-right: 6px;
+    cursor: pointer;
+    width: 200px;
+}
+
+.availability-block label {
+    font-weight: 500;
+    margin-right: 12px;
+    color: #1976d2;
+    min-width: 80px;
+}
+
+.availability-times {
+    display: flex;
+    gap: 18px;
+    margin-top: 8px;
+}
+
+.availability-times label {
+    font-weight: 400;
+    color: #444;
+}
+
+input[type="time"] {
+    padding: 7px 8px;
+    border-radius: 5px;
+    border: 1px solid #d3d3d3;
+    background: #f9fafb;
+    font-size: 15px;
+    margin-left: 6px;
+    width: 60px;
+    
+}
+

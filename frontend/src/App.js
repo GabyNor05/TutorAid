@@ -13,6 +13,7 @@ import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
 import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
 import ReportForm from './pages/tutor/reportForm/ReportForm';
 import StudentFileView from './pages/tutor/studentFileView/StudentFileView';
+import AddStaff from './pages/admin/addStaff/AddStaff';
 
 function AppContent() {
   const location = useLocation();
@@ -32,6 +33,7 @@ function AppContent() {
         <Route path="/lessonFeedback" element={<LessonFeedback />} />
         <Route path="/reportform" element={<ReportForm />} />
         <Route path="/studentfileview" element={<StudentFileView />} />
+        <Route path="/addstaff" element={<AddStaff />} />
       </Routes>
     </div>
   );
