@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "./css/userprofile.css";
-import { PencilSimple, Trash } from "@phosphor-icons/react";
+import { PencilSimple, Trash, Plus } from "@phosphor-icons/react";
 
 function UserCard({
   image,
@@ -27,6 +27,27 @@ function UserCard({
     address
   });
 
+  // Ref for hidden file input
+  const fileInputRef = useRef();
+
+  // Handle image click
+  const handleImageClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle file selection and upload immediately
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file && onSave) {
+      // Create FormData for image only
+      const data = new FormData();
+      data.append("image", file);
+      onSave(data, true); // true = isFormData
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEditData(prev => ({ ...prev, [name]: value }));
@@ -39,19 +60,57 @@ function UserCard({
 
   return (
     <div className="userCard">
-      <div style={{ width: "200px", height: "200px", borderRadius: "50%", backgroundColor: "#E0E0E0", margin: "0 auto" }}>
-        <img src={image} alt={name || "Profile"} style={{ width: "100%", height: "100%", borderRadius: "50%" }} />
+      <div className="userCard-image bg-gray-200 hover:bg-sky-700"
+        style={{
+          width: "200px",
+          height: "200px",
+          borderRadius: "50%",
+          margin: "0 auto",
+          cursor: "pointer",
+          position: "relative"
+        }}
+        onClick={handleImageClick}
+        title="Click to upload a new profile image"
+      >
+        <img
+          src={image}
+          alt={name || "Profile"}
+          style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+        />
+        {/* Hidden file input */}
+        <input className="userCard-image-input hover:bg-sky-700"
+          type="file"
+          name="image"
+          accept="image/*"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleImageChange}
+        />
+        <span className="userCard-image-edit-icon bg-white hover:bg-cyan-800 hover:text-white"
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 10,
+            
+            borderRadius: "50%",
+            padding: "6px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            fontSize: "14px"
+          }}
+        >
+          <Plus size={32} weight="bold"/>
+        </span>
       </div>
       <div className="userCard-content">
         {editMode ? (
           <form className="userCard-edit-form" onSubmit={e => { e.preventDefault(); handleSave(); }}>
-            <input label = "Name" name="name" value={editData.name} onChange={handleChange} placeholder="Name" />
-            <input label = "" name="email" value={editData.email} onChange={handleChange} placeholder="Email" />
+            <input name="name" value={editData.name} onChange={handleChange} placeholder="Name" />
+            <input name="email" value={editData.email} onChange={handleChange} placeholder="Email" />
             {role === "tutor" && (
               <>
-                <input label = "" name="bio" value={editData.bio} onChange={handleChange} placeholder="Bio" />
-                <input label = "" name="subjects" value={editData.subjects} onChange={handleChange} placeholder="Subjects" />
-                <input label = "" name="availability" value={editData.availability} onChange={handleChange} placeholder="Availability" />
+                <input name="bio" value={editData.bio} onChange={handleChange} placeholder="Bio" />
+                <input name="subjects" value={editData.subjects} onChange={handleChange} placeholder="Subjects" />
+                <input name="availability" value={editData.availability} onChange={handleChange} placeholder="Availability" />
               </>
             )}
             {role === "student" && (
@@ -59,14 +118,14 @@ function UserCard({
             )}
             <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
               <button className="userCard-save-btn" type="submit">Save</button>
-              <button  className="userCard-cancel-btn" onClick={() => setEditMode(false)}>Cancel</button>
+              <button className="userCard-cancel-btn" onClick={() => setEditMode(false)}>Cancel</button>
             </div>
           </form>
         ) : (
           <>
             <h3>{name}</h3>
             <p><strong>Email: </strong>{email}</p>
-            {role === "tutor" && (
+            {role === "Tutor" && (
               <>
                 <p><strong>Bio: </strong>{bio}</p>
                 <p><strong>Subjects: </strong>{subjects}</p>
@@ -74,7 +133,7 @@ function UserCard({
                 <p><strong>Availability: </strong>{availability}</p>
               </>
             )}
-            {role === "student" && (
+            {role === "Student" && (
               <p><strong>Address: </strong>{address}</p>
             )}
             <div className = "userCardButtons" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>

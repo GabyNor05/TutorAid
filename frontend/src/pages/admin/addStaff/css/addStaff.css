@@ -18,25 +18,25 @@
     letter-spacing: 0.5px;
 }
 
-.form-group {
+.addStaff-form-group {
     margin-bottom: 16px;
     display: flex;
     flex-direction: column;
     width: 100%;
-    align-items: center;
+    align-items: left;
     justify-content: center;
 }
 
-.form-group label {
+.addStaff-form-group label {
     font-weight: 500;
     margin-bottom: 5px;
     color: #333;
     letter-spacing: 0.2px;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.addStaff-form-group input,
+.addStaff-form-group select,
+.addStaff-form-group textarea {
     padding: 9px 12px;
     border: 1px solid #d3d3d3;
     border-radius: 5px;
@@ -47,24 +47,24 @@
 
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.addStaff-form-group input:focus,
+.addStaff-form-group select:focus,
+.addStaff-form-group textarea:focus {
     border-color: #1976d2;
     outline: none;
 }
 
-.form-group textarea {
+.addStaff-form-group textarea {
     min-height: 56px;
     resize: vertical;
 }
 
-.subjects-selects {
+.addStaff-subjects-selects {
     display: flex;
     gap: 12px;
     margin-top: 6px;
 }
-.subject-select {
+.addStaff-subject-select {
     flex: 1;
 }
 

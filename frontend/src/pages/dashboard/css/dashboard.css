@@ -24,19 +24,64 @@
     justify-content:space-between;
     align-items: center;
     gap: 50px;
-    
 }
 
 .navcard-content{
    display: flex;
-   flex-direction: column;
-   
-   
-   
-   
+   flex-direction: column; 
 }
 
 .navcard-icon{
+    margin: 0 auto;
+}
+
+.navcard-text {
+    background: radial-gradient(#8660263e, #3f2b0d00);
+    margin: auto 0;
+    padding: 10px;
+    width: 50%;
+    border-top-right-radius: 10px;
+    position: absolute;
+}
+
+.navcard-text h2{
+    font-family: 'Montserrat', sans-serif;
+    color: var(--Paper-White);
+    font-size: 20px;
+    text-decoration: none;
+    font-style: normal;
+    font-weight: 600;
+    text-align: left;
+}
+
+
+
+.navcard-red{
+    width: 400px;
+    height: 200px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
+    border-style: none;
+    overflow: hidden;
+    padding: 8px
+}
+
+.navcard-red-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content:space-between;
+    align-items: center;
+    gap: 50px;
+    
+}
+
+.navcard-red-content{
+   display: flex;
+   flex-direction: column;
+
+}
+
+.navcard-red-icon{
     margin: auto;
 }
 
@@ -63,7 +108,6 @@
 .upcoming-lessons {
     margin-top: 50px;
     background-image: url('../../reusableAssets/blueWallpaper.png');
-    
     background-size: cover;
     background-position: center;
 }

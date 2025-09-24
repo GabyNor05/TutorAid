@@ -6,8 +6,32 @@ const getAllUsers = async () => {
 };
 
 const getUserById = async (userID) => {
-    const [rows] = await pool.query('SELECT * FROM Users WHERE userID = ?', [userID]);
-    return rows[0];
+    // Get basic user info
+    const [users] = await pool.query('SELECT * FROM Users WHERE userID = ?', [userID]);
+    const user = users[0];
+    if (!user) return null;
+
+    // If tutor, get extra fields
+    if (user.role === "Tutor") {
+        const [tutors] = await pool.query(
+            'SELECT bio, subjects, qualifications, availability FROM Tutors WHERE userID = ?', [userID]
+        );
+        if (tutors[0]) {
+            return { ...user, ...tutors[0] };
+        }
+    }
+
+    // If student, you can add similar logic for student fields
+    if (user.role === "Student") {
+        const [students] = await pool.query(
+            'SELECT grade, school, address, city, province, status FROM Students WHERE userID = ?', [userID]
+        );
+        if (students[0]) {
+            return { ...user, ...students[0] };
+        }
+    }
+
+    return user;
 };
 
 const createUser = async (user) => {
@@ -78,10 +102,10 @@ const deleteUser = async (userID) => {
     return { message: 'User deleted' };
 };
 
-const createTutor = async (tutor) => {
+const createTutor = async ({ userID, bio, subjects, qualifications, availability }) => {
     await pool.query(
         'INSERT INTO Tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
-        [tutor.userID, tutor.bio, tutor.subjects, tutor.qualifications, tutor.availability]
+        [userID, bio, subjects, qualifications, availability]
     );
 };
 
@@ -128,6 +152,18 @@ const updateStudent = async (userID, student) => {
     console.log("Student update result:", result);
 };
 
+const createTutorAvailability = async ({ tutorID, day_group, start_time, end_time }) => {
+    await pool.query(
+        'INSERT INTO TutorAvailability (tutorID, day_group, start_time, end_time) VALUES (?, ?, ?, ?)',
+        [tutorID, day_group, start_time, end_time]
+    );
+};
+
+const getUserByEmail = async (email) => {
+    const [rows] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
+    return rows[0];
+};
+
 module.exports = {
     getAllUsers,
     getUserById,
@@ -137,5 +173,7 @@ module.exports = {
     createTutor,
     updateTutor,
     createStudent,
-    updateStudent
+    updateStudent,
+    createTutorAvailability,
+    getUserByEmail,
 };

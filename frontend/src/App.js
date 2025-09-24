@@ -13,7 +13,7 @@ import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
 import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
 import ReportForm from './pages/tutor/reportForm/ReportForm';
 import StudentFileView from './pages/tutor/studentFileView/StudentFileView';
-import AddStaff from './pages/admin/addStaff/AddStaff';
+import AddStaff from './pages/admin/addStaff/addStaff';
 
 function AppContent() {
   const location = useLocation();
@@ -41,11 +41,9 @@ function AppContent() {
 
 function App() {
   return (
-    
       <Router>
         <AppContent />
-      </Router>
-    
+      </Router> 
   );
 }
 

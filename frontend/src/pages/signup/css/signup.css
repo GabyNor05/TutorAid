@@ -28,7 +28,7 @@
     gap: 25px;
     width: 1000px;
     height: 600px;
-    background-color: var(--Paper-White);
+    background-color: white;
     border-radius: 20px;
     overflow: hidden;
 }
@@ -63,14 +63,14 @@
     margin-bottom: 20px;
 }
 
-.form-group {
+.signup-form-group {
     display: flex;
     flex-direction: column;
     width: 400px;
     margin-bottom: 20px;
 }
 
-.form-group label {
+.signup-form-group label {
     margin-bottom: 5px;
     font-weight: bold;
     font-family: "OpenSans", sans-serif;
@@ -78,14 +78,14 @@
     align-self: start;
 }
 
-.form-group input {
+.signup-form-group input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-family: 'Montserrat', sans-serif;
     font-size: 16px;
-    background-color: var(--Paper-White);
+    background-color: white;
 }
 
 .signup-btn {

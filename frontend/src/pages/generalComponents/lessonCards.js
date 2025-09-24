@@ -2,7 +2,7 @@ import React from "react";
 
 function LessonCards({ image, name, date, time, address, subject, showStatus = true }) {
     return (
-         <div className="lesson-cards transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" style={{display: "flex", alignItems: "center", }}>
+         <div className="lesson-cards transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-[102%]" style={{display: "flex", alignItems: "center", }}>
             <div className="lesson-info" style={{ borderRadius: "8px", padding: "30px", margin: "0 auto", display: "grid", alignItems: "center", gridTemplateColumns: "1fr 2fr 1fr", gap: "20px", width: "1000px", backgroundColor: '#f9f9f9', height: "200px" }}>
                 <div className="card-imageCol">
                     <div style={{height: "150px", width: "200px", backgroundColor: "#E0E0E0", borderRadius: "8px" }}>

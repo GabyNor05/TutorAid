@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Login() {
     const navigate = useNavigate();
@@ -9,7 +10,7 @@ function Login() {
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
 
-    const handleLoginClick = () => {
+    const handleLoginClick = async () => {
         const newErrors = {};
         if (!email) {
             newErrors.email = "Email is required";
@@ -33,8 +34,16 @@ function Login() {
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0) {
-            // Proceed with navigation or API call
-            navigate("/otp");
+            try {
+                const res = await axios.post("http://localhost:5000/api/users/login", {
+                    email,
+                    password
+                });
+                localStorage.setItem("userID", res.data.userID);
+                navigate("/otp");
+            } catch (err) {
+                setErrors({ general: err.response?.data?.error || "Login failed" });
+            }
         }
     };
 
@@ -48,7 +57,7 @@ function Login() {
                 <div className="login-form">
                     <h2>Login</h2>
                     <form onSubmit={e => e.preventDefault()}>
-                        <div className="form-group">
+                        <div className="login-form-group">
                             <label>Email</label>
                             <input
                                 type="text"
@@ -61,7 +70,7 @@ function Login() {
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.email}</span>
                             )}
                         </div>
-                        <div className="form-group">
+                        <div className="login-form-group">
                             <label>Password</label>
                             <input
                                 type="password"
@@ -74,6 +83,9 @@ function Login() {
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.password}</span>
                             )}
                         </div>
+                        {errors.general && (
+                            <span style={{ color: "red", fontSize: "12px" }}>{errors.general}</span>
+                        )}
                         <div style={{width: "100%"}}>
                             <button className="login-btn" type="button" onClick={handleLoginClick}>Login</button>
                         </div>

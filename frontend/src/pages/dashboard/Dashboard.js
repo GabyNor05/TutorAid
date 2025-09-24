@@ -5,12 +5,13 @@ import Clock from "./assets/clock.svg";
 import People from "./assets/people.svg";
 import Task from "./assets/task.svg";
 import LessonCards from "../generalComponents/lessonCards";
+import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NoteIcon, } from "@phosphor-icons/react";
 
 
 function Dashboard() {
     const navigate = useNavigate();
     // Replace this with your actual role logic (e.g., from context, Redux, or props)
-    const role = "Admin"; // "tutor", "admin", or "student"
+    const role = "Tutor"; // "Tutor", "Admin", or "Student"
     const handleNavigation = (path) => {
         navigate(path);
     };
@@ -26,22 +27,28 @@ function Dashboard() {
                     {role === "Tutor" && (
                         <>
                             <div className="navcard-row">
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonrequests")}>
-                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
-                                    <h2>Lesson Requests</h2>
-                                </div>
-                                </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/studentprofiles")}>
-                                    <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                    <div className="navcard-text">
-                                    <h2>Student Profiles</h2>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                    <div className="navcard-content">
+                                        <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <div className="navcard-text -bottom-3 ">
+                                            <h2>Lesson Requests</h2>
+                                        </div>
                                     </div>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonfeedback")}>
-                                    <img src={Task} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                    <div className="navcard-text">
-                                    <h2>Lesson Feedback</h2>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentprofiles")}>
+                                    <div className="navcard-content">
+                                        <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <div className="navcard-text -bottom-3">
+                                            <h2>Student Profiles</h2>
+                                        </div>
+                                    </div>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonfeedback")}>
+                                    <div className="navcard-content">
+                                        <img src={Task} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <div className="navcard-text -bottom-3 ">
+                                            <h2>Lesson Feedback</h2>
+                                        </div>
                                     </div>
                                 </button>
                             </div>                           
@@ -50,45 +57,46 @@ function Dashboard() {
                     {role === "Admin" && (
                         <>
                             <div className="navcard-row">
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/addstaff")}>
-                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
-                                    <h2>Add Staff</h2>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/addstaff")}>
+                                <div className="navcard-content">
+                                    <UserCirclePlusIcon size={120} className="navcard-icon opacity-30" />
+                                    <div className="navcard-text -bottom-3">
+                                        <h2>Add Staff</h2>
+                                    </div>
                                 </div>
-                                </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/addstaff")}>
-                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
-                                    <h2>Manage Users</h2>
-                                </div>
-                                </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonrequests")}>
-                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
-                                    <h2>Student Feedback Requests</h2>
-                                </div>
-                                </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonrequests")}>
-                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
-                                    <h2>User Experience Feedback</h2>
-                                </div>
-                                </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonrequests")}>
-                                <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
-                                    <h2>Manage Reports</h2>
-                                </div>
-                                </button>
 
-                                
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/reports")}>
-                                <h2>Reports</h2>
-                                <p>View system reports.</p>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/reports")}>
-                                <h2>Reports</h2>
-                                <p>View system reports.</p>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/addstaff")}>
+                                    <div className="navcard-content">
+                                        <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <div className="navcard-text -bottom-3">
+                                            <h2>Manage Users</h2>
+                                        </div>
+                                    </div>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                    <div className="navcard-content">
+                                        <File size={120} className="navcard-icon opacity-30"/>
+                                        <div className="navcard-text -bottom-3">
+                                            <h2>Student Feedback Requests</h2>
+                                        </div>
+                                    </div>
+                                </button>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                    <div className="navcard-content">
+                                        <ClipboardText size={120} className="navcard-icon opacity-30"/>
+                                        <div className="navcard-text -bottom-3">
+                                            <h2>User Experience Feedback</h2>
+                                        </div>
+                                    </div>
+                                </button>
+                                <button className="navcard-red transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 bg-gradient-to-r from-red-950 via-red-800  to-red-600 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                    <div className="navcard-content">
+                                        <WarningIcon size={120} className="navcard-icon opacity-30"/>
+                                        <div className="navcard-text -bottom-3">
+                                            <h2>Manage Reports</h2>
+                                        </div>
+                                    </div>
                                 </button>
                             </div>   
                         </>
@@ -96,28 +104,21 @@ function Dashboard() {
                     {role === "Student" && (
                         <>
                             <div className="navcard-row">
-                               <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonrequests")}>
+                               <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
                                 <div className="navcard-content">
-                                    <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                <div className="navcard-text">
+                                    
+                                    <Calendar size={120} className="navcard-icon opacity-30"/>
+                                <div className="navcard-text -bottom-3">
                                     <h2>Book Lessons</h2>
                                 </div>
                                 </div>
                                 
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/studentprofiles")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentprofiles")}>
                                     <div className="navcard-content">
                                         <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                        <div className="navcard-text">
-                                            <h2>Student Profiles</h2>
-                                        </div>
-                                    </div>
-                                </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110" onClick={() => handleNavigation("/lessonfeedback")}>
-                                    <div className="navcard-content">
-                                        <img src={Task} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
-                                        <div className="navcard-text">
-                                        <h2>Request Progress Notes</h2>
+                                        <div className="navcard-text -bottom-3">
+                                            <h2>Request Progress Notes</h2>
                                         </div>
                                     </div>
                                 </button>
@@ -126,7 +127,7 @@ function Dashboard() {
                     )}   
             </div>
             <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
-                {role === "tutor" && (
+                {role === "Tutor" && (
                     <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px", width: "1000px", margin: "0 auto"}}>
                         <h1 className="section-title" style={{display: "flex", justifyContent: "left", margin: "20px"}}>Upcoming Lessons</h1>
                         <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px"}}>
@@ -136,7 +137,7 @@ function Dashboard() {
                         </div>  
                     </div>
                     )}
-                {role === "student" && (
+                {role === "Student" && (
                     <div >
                         <h1 className="section-title" style={{marginLeft: "290px"}}>Upcoming Lessons</h1>
                         <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", paddingBottom: "30px"}}>

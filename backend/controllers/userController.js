@@ -17,7 +17,7 @@ const bcrypt = require('bcryptjs');
 exports.getUser = async (req, res) => {
     try {
         const user = await userModel.getUserById(req.params.id);
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        if (!user) return res.status(404).json({ error: "User not found" });
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -27,6 +27,8 @@ exports.getUser = async (req, res) => {
 // CREATE new user with role-specific data
 exports.createUser = async (req, res) => {
     try {
+        console.log("BODY:", req.body);
+        console.log("FILE:", req.file);
         // Handle image upload
         let imageUrl = null;
         if (req.file) {
@@ -38,22 +40,29 @@ exports.createUser = async (req, res) => {
 
         // Build user object for Users table
         const user = {
-            image: imageUrl,
+            image: req.file ? req.file.path : null,
             name: req.body.name,
             email: req.body.email,
             password: hashedPassword,
-            role: req.body.role
+            role: req.body.role,
+            bio: req.body.bio,
+            subjects: req.body.subjects,
+            qualifications: req.body.qualifications,
+            availability: req.body.availability
         };
-
-        // Create user in Users table and get userID
         const createdUser = await userModel.createUser(user);
 
         // Insert into role-specific table
         if (user.role === "Tutor") {
+            // subjects: array from frontend, join to string
+            const subjectsString = Array.isArray(req.body.subjects)
+                ? req.body.subjects.filter(s => s).join(", ")
+                : req.body.subjects || "";
+
             await userModel.createTutor({
                 userID: createdUser.userID,
                 bio: req.body.bio || "",
-                subjects: req.body.subjects || "",
+                subjects: subjectsString,
                 qualifications: req.body.qualifications || "",
                 availability: req.body.availability || ""
             });
@@ -66,10 +75,27 @@ exports.createUser = async (req, res) => {
                 status: req.body.status || "Active"
             });
         } else if (user.role === "Admin") {
-            await userModel.createAdmin({
-                userID: createdUser.userID
-            });
+            // For Admin, just create the user (already done above)
         }
+
+        // Save structured availability
+            const tutorID = createdUser.userID;
+            const availStr = req.body.availability || "";
+            const availBlocks = availStr.split(";").map(s => s.trim()).filter(Boolean);
+            for (const block of availBlocks) {
+                const [dayGroup, times] = block.split(":").map(s => s.trim());
+                if (dayGroup && times) {
+                    const [start, end] = times.split("-").map(s => s.trim());
+                    if (start && end) {
+                        await userModel.createTutorAvailability({
+                            tutorID,
+                            day_group: dayGroup,
+                            start_time: start,
+                            end_time: end
+                        });
+                    }
+                }
+            }
 
         res.json(createdUser);
     } catch (err) {
@@ -81,24 +107,39 @@ exports.createUser = async (req, res) => {
 // UPDATE existing user
 exports.updateUser = async (req, res) => {
     try {
-        // Only update Users table if user info is present
-        if (req.body.name || req.body.email || req.body.password || req.body.role || req.body.image) {
-            await userModel.updateUser(req.params.id, req.body);
+        let imageUrl;
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "uploads"
+            });
+            imageUrl = result.secure_url;
+            fs.unlinkSync(req.file.path);
         }
 
-        // Only update student info if role is Student
-        if (req.body.role === "Student") {
+        // Build update object for Users table
+        const updateData = { ...req.body };
+        if (imageUrl) updateData.image = imageUrl;
+
+        await userModel.updateUser(req.params.id, updateData);
+
+        // If student fields are present, update Students table
+        if (
+            updateData.grade !== undefined ||
+            updateData.school !== undefined ||
+            updateData.address !== undefined ||
+            updateData.status !== undefined
+        ) {
             await userModel.updateStudent(req.params.id, {
-                grade: req.body.grade || null,
-                school: req.body.school || null,
-                address: req.body.address || null,
-                city: req.body.city || null,
-                province: req.body.province || null,
-                status: req.body.status || "Active"
+                grade: updateData.grade,
+                school: updateData.school,
+                address: updateData.address,
+                status: updateData.status
             });
         }
 
-        res.json({ message: "User updated" });
+        // Optionally fetch updated user and return
+        const updatedUser = await userModel.getUserById(req.params.id);
+        res.json(updatedUser);
     } catch (err) {
         console.error("Error in updateUser:", err);
         res.status(500).json({ error: err.message });
@@ -139,6 +180,24 @@ exports.createTestUser = async (req, res) => {
     } catch (err) {
         console.error("Error creating test user:", err);
         res.status(500).json({ error: err.message });
+    }
+};
+
+exports.loginUser = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await userModel.getUserByEmail(email);
+        if (!user) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+        // Optionally return user info (never return password)
+        res.json({ userID: user.userID, name: user.name, email: user.email, role: user.role });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
     }
 };
 

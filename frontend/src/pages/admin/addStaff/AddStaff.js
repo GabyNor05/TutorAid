@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./css/addStaff.css";
+import axios from "axios";
 
 const subjectOptions = [
     "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
@@ -13,7 +14,7 @@ function AddStaff() {
         email: "",
         password: "",
         role: "Admin",
-        profileImage: null,
+        image: null,
         bio: "",
         subjects: "",
         qualifications: "",
@@ -31,8 +32,8 @@ function AddStaff() {
 
     const handleChange = e => {
         const { name, value, files } = e.target;
-        if (name === "profileImage") {
-            setForm({ ...form, profileImage: files[0] });
+        if (name === "image") {
+            setForm({ ...form, image: files[0] });
         } else {
             setForm({ ...form, [name]: value });
         }
@@ -59,7 +60,7 @@ function AddStaff() {
         setSubjects(newSubjects);
     };
 
-    const handleSubmit = e => {
+    const handleSubmit = async e => {
         e.preventDefault();
         // Build availability string for backend
         let availabilityStr = "";
@@ -72,13 +73,28 @@ function AddStaff() {
 
         // Prepare form data
          const data = new FormData();
-        Object.entries(form).forEach(([key, value]) => data.append(key, value));
+        data.append("image", form.image); // file
+        data.append("name", form.name);
+        data.append("email", form.email);
+        data.append("password", form.password);
+        data.append("bio", form.bio);
         data.append("subjects", subjects.filter(s => s).join(", ")); // comma-separated
+        data.append("qualifications", form.qualifications);
         data.append("availability", availabilityStr.trim());
-        if (form.profileImage) data.append("profileImage", form.profileImage);
+        data.append("role", form.role);
+        
 
         // TODO: Send data to backend
-        alert("Staff member added (demo)\nSubjects: " + subjects.filter(s => s).join(", "));
+        try {
+            const response = await axios.post('http://localhost:5000/api/users', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            console.log(response);
+            alert("Staff member added!");
+            // Optionally, navigate or reset form here
+        } catch (error) {
+            alert("Error adding staff: " + error.response?.data?.error || error.message);
+        }
     };
 
     return (
@@ -89,19 +105,19 @@ function AddStaff() {
                     <h2>Add Staff Member</h2>  
                 </div>
                 <form className="addstaff-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
+                    <div className="addStaff-form-group">
                         <label>Name</label>
                         <input type="text" name="name" value={form.name} onChange={handleChange} required />
                     </div>
-                    <div className="form-group">
+                    <div className="addStaff-form-group">
                         <label>Email</label>
                         <input type="email" name="email" value={form.email} onChange={handleChange} required />
                     </div>
-                    <div className="form-group">
+                    <div className="addStaff-form-group">
                         <label>Password</label>
                         <input type="password" name="password" value={form.password} onChange={handleChange} required />
                     </div>
-                    <div className="form-group">
+                    <div className="addStaff-form-group">
                         <label>Role</label>
                         <select name="role" value={form.role} onChange={handleChange} required>
                             <option value="Admin">Admin</option>
@@ -110,14 +126,14 @@ function AddStaff() {
                     </div>
                     {form.role === "Tutor" && (
                          <>
-                            <div className="form-group">
+                            <div className="addStaff-form-group">
                                 <label>Bio</label>
                                 <textarea name="bio" value={form.bio} onChange={handleChange} />
                             </div>
-                            <div className="form-group">
+                            <div className="addStaff-form-group">
                                 <label>Subjects</label>
                                <div className="subjects-selects">
-                                    {[0, 1, 2].map(i => (
+                                    {[0,1,2].map(i => (
                                         <select
                                             key={i}
                                             value={subjects[i]}
@@ -133,11 +149,11 @@ function AddStaff() {
                                     ))}
                                 </div>
                             </div>
-                            <div className="form-group">
+                            <div className="addStaff-form-group">
                                 <label>Qualifications</label>
                                 <textarea name="qualifications" value={form.qualifications} onChange={handleChange} />
                             </div>
-                            <div className="form-group">
+                            <div className="addStaff-form-group">
                                 <label>Availability</label>
                                 <div className="availability-block">
                                     <div className="availability-block-row">
@@ -205,11 +221,11 @@ function AddStaff() {
                             </div>
                         </>
                     )}
-                    <div className="form-group">
+                    <div className="addStaff-form-group">
                         <label>Profile Image</label>
-                        <input type="file" name="profileImage" accept="image/*" onChange={handleChange} required />
+                        <input type="file" name="image" accept="image/*" onChange={handleChange} required />
                     </div>
-                    <div className="form-group">
+                    <div className="addStaff-form-group">
                     <button type="submit">Add Staff</button>
                     </div>
                 </form>

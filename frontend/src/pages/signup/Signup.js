@@ -69,7 +69,7 @@ function Signup() {
                 <div className="signup-form">
                     <h2>Create your account</h2>
                     <form onSubmit={e => e.preventDefault()}>
-                        <div className="form-group">
+                        <div className="signup-form-group">
                             <label>Username</label>
                             <input
                                 type="text"
@@ -83,7 +83,7 @@ function Signup() {
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.username}</span>
                             )}
                         </div>
-                        <div className="form-group">
+                        <div className="signup-form-group">
                             <label>Email</label>
                             <input
                                 type="text"
@@ -97,7 +97,7 @@ function Signup() {
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.email}</span>
                             )}
                         </div>
-                        <div className="form-group">
+                        <div className="signup-form-group">
                             <label>Password</label>
                             <input
                                 type="password"

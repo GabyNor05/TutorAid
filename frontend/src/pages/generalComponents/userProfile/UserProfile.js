@@ -1,36 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "./css/userprofile.css";
 import UserCard from "./UserCards";
 
-
 function UserProfile() {
-    const [user, setUser] = useState({
-        name: "Dr Lauren Lewis",
-        email: "laurenl@ashinc.fae",
-        bio: "Experienced tutor with a passion for teaching.",
-        subjects: "Math, Science, English",
-        availability: "Mon-Fri, 9am-5pm",
-        address: "123 Main St",
-        image: "https://via.placeholder.com/150",
-        role: "tutor"
-    });
+    const [user, setUser] = useState(null);
 
-    // For demonstration, you can change role to "student" to test student view
-    const role = user.role;
+    useEffect(() => {
+        // Replace with actual user ID (e.g., from auth or localStorage)
+        const userId = localStorage.getItem("userID");
+        axios.get(`http://localhost:5000/api/users/${userId}`)
+            .then(res => setUser(res.data))
+            .catch(err => console.error("Failed to fetch user:", err));
+    }, []);
 
-    return(
+    const handleSave = async (updatedData) => {
+        const userId = localStorage.getItem("userID");
+        try {
+            const res = await axios.put(`http://localhost:5000/api/users/${userId}`, updatedData);
+            setUser(res.data); // Update local state with new data
+        } catch (err) {
+            console.error("Failed to update user:", err);
+        }
+    };
+
+    if (!user) return <div>Loading...</div>;
+
+    return (
         <div className="page-background">
             <div className="pt-2 text-center">
-                <h1 className="page-title">User Profile</h1>  
+                <h1 className="page-title">User Profile</h1>
             </div>
             <UserCard
                 {...user}
-                onSave={updatedData => setUser({ ...user, ...updatedData })}
+                onSave={handleSave}
                 onDelete={() => {/* your delete logic */}}
             />
         </div>
-    )
-
+    );
 }
 
 export default UserProfile;
