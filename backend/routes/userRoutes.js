@@ -14,5 +14,7 @@ router.get('/', userController.getUsers);
 router.get('/:id', userController.getUser);
 router.delete('/:id', userController.deleteUser);
 router.post('/login', userController.loginUser);
+router.post('/send-otp', userController.sendOtp);
+router.post('/verify-otp', userController.verifyOtp);
 
 module.exports = router;

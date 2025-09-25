@@ -2,6 +2,28 @@ const userModel = require('../models/userModel');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: 'meganllysmithh895  @gmail.com',
+    subject: 'Test Email',
+    text: 'Hello from Nodemailer!'
+}, (err, info) => {
+    if (err) console.error(err);
+    else console.log('Email sent:', info.response);
+});
+
+const otpStore = {}; // { email: otp }
 
 // GET all users
  exports.getUsers = async (req, res) => {
@@ -199,5 +221,35 @@ exports.loginUser = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Server error" });
     }
+};
+
+exports.sendOtp = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        otpStore[email] = otp; // Store OTP for this email
+
+        // Send OTP via email
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Your OTP Code",
+            text: `Your OTP is: ${otp}`
+        });
+
+        res.json({ message: "OTP sent" });
+    } catch (err) {
+        console.error("Error sending OTP:", err);
+        res.status(500).json({ error: "Failed to send OTP" });
+    }
+};
+
+exports.verifyOtp = async (req, res) => {
+    const { email, otp } = req.body;
+    if (otpStore[email] && otpStore[email] === otp) {
+        delete otpStore[email]; // Optional: clear OTP after success
+        return res.json({ success: true });
+    }
+    return res.status(400).json({ error: "Invalid OTP" });
 };
 

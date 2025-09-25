@@ -1,17 +1,26 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./css/dashboard.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 import Clock from "./assets/clock.svg";
 import People from "./assets/people.svg";
 import Task from "./assets/task.svg";
 import LessonCards from "../generalComponents/lessonCards";
 import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NoteIcon, } from "@phosphor-icons/react";
+import axios from "axios";
 
 
 function Dashboard() {
+    const [role, setRole] = useState(null);
     const navigate = useNavigate();
-    // Replace this with your actual role logic (e.g., from context, Redux, or props)
-    const role = "Tutor"; // "Tutor", "Admin", or "Student"
+
+    useEffect(() => {
+        const userId = localStorage.getItem("userID");
+        if (userId) {
+            axios.get(`http://localhost:5000/api/users/${userId}`)
+                .then(res => setRole(res.data.role))
+                .catch(err => setRole(null));
+        }
+    }, []);
     const handleNavigation = (path) => {
         navigate(path);
     };
@@ -35,7 +44,7 @@ function Dashboard() {
                                         </div>
                                     </div>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentprofiles")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentfiles")}>
                                     <div className="navcard-content">
                                         <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
                                         <div className="navcard-text -bottom-3">
