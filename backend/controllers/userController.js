@@ -13,15 +13,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: 'meganllysmithh895  @gmail.com',
-    subject: 'Test Email',
-    text: 'Hello from Nodemailer!'
-}, (err, info) => {
-    if (err) console.error(err);
-    else console.log('Email sent:', info.response);
-});
 
 const otpStore = {}; // { email: otp }
 
@@ -227,8 +218,10 @@ exports.sendOtp = async (req, res) => {
     const { email } = req.body;
     try {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        otpStore[email] = otp; // Store OTP for this email
-
+        otpStore[email] = {
+            otp,
+            createdAt: Date.now()
+        };
         // Send OTP via email
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -246,10 +239,20 @@ exports.sendOtp = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
     const { email, otp } = req.body;
-    if (otpStore[email] && otpStore[email] === otp) {
-        delete otpStore[email]; // Optional: clear OTP after success
+    const record = otpStore[email];
+    if (!record) {
+        return res.status(400).json({ error: "Invalid OTP" });
+    }
+    
+    // Check if OTP is expired (5 minutes = 300000 ms)
+    if (Date.now() - record.createdAt > 6000) {
+        delete otpStore[email];
+        return res.status(400).json({ error: "OTP expired" });
+    }
+
+    if (record.otp === otp) {
+        delete otpStore[email]; // Clear OTP after success
         return res.json({ success: true });
     }
     return res.status(400).json({ error: "Invalid OTP" });
 };
-

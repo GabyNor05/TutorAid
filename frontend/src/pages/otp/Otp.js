@@ -11,6 +11,7 @@ function Otp() {
     const [status, setStatus] = useState("");
     const [email, setEmail] = useState(""); // Add this
     const [otpSent, setOtpSent] = useState(false);
+
     const userId = localStorage.getItem("userID");
 
     useEffect(() => {
@@ -21,11 +22,12 @@ function Otp() {
                 await axios.post("http://localhost:5000/api/users/send-otp", { email: userRes.data.email });
                 setStatus("OTP sent to your email!");
                 setOtpSent(true);
+                localStorage.setItem("otpSent", "true");
             } catch (err) {
                 setStatus("Failed to send OTP.");
             }
         }
-        if (userId && !otpSent) sendOtp();
+        if (userId && !otpSent && localStorage.getItem("otpSent") !== "true") sendOtp();
     }, [userId, otpSent]);
 
     const handleotpClick = async () => {
@@ -47,6 +49,18 @@ function Otp() {
         }
     };
 
+    const handleSendOtp = async () => {
+        try {
+            const userRes = await axios.get(`http://localhost:5000/api/users/${userId}`);
+            setEmail(userRes.data.email);
+            await axios.post("http://localhost:5000/api/users/send-otp", { email: userRes.data.email });
+            setStatus("OTP sent to your email!");
+            setOtpSent(true);
+        } catch (err) {
+            setStatus("Failed to send OTP.");
+        }
+    };
+
     return(
     <div>
         <div className="otp-page">
@@ -57,7 +71,7 @@ function Otp() {
                 <div className="otp-form">
                     <h2>OTP VERIFICATION</h2>
                     <p>We will send the one time pin to this email address:</p>
-                    <h3>samth4@gmail.com</h3>
+                    <h3>{email}</h3>
                     <form onSubmit={e => e.preventDefault()}>
                         <div className="form-group">
                             <label>OTP</label>
@@ -78,6 +92,9 @@ function Otp() {
                         </div>
                     </form>
                     <div>{status}</div>
+                    <button className="otp-btn" type="button" onClick={handleSendOtp} disabled={otpSent}>
+                        Send OTP
+                    </button>
                 </div>
             </div>
         </div>
@@ -86,3 +103,10 @@ function Otp() {
 }
 
 export default Otp;
+
+
+// Server-side code (for reference)
+// if (record.otp === otp) {
+//     delete otpStore[email]; // Clear OTP after success
+//     return res.json({ success: true });
+// }
