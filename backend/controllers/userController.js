@@ -3,6 +3,7 @@ const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
+const pool = require('../config/db');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
@@ -13,6 +14,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+console.log("Pool loaded:", !!pool);
 
 const otpStore = {}; // { email: otp }
 
@@ -258,4 +260,38 @@ exports.verifyOtp = async (req, res) => {
         return res.json({ success: true });
     }
     return res.status(400).json({ error: "Invalid OTP" });
+};
+
+// userController.js
+exports.getTutorsBySubject = async (req, res) => {
+    const subject = req.params.subject;
+    try {
+        // Log the subject for debugging
+        console.log("Fetching tutors for subject:", subject);
+        console.log("Subject received:", subject);
+
+        // Adjust this query for your schema
+        const [rows] = await pool.query(
+            "SELECT Users.userID, Users.name FROM Users JOIN Tutors ON Users.userID = Tutors.userID WHERE Tutors.subjects LIKE ?",
+            [`%${subject}%`]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching tutors:", err); // Add this log
+        res.status(500).json({ error: "Failed to fetch tutors" });
+    }
+};
+
+exports.getTutorAvailability = async (req, res) => {
+    const userID = req.params.userID;
+    try {
+        const [rows] = await pool.query(
+            "SELECT availability FROM Tutors WHERE userID = ?",
+            [userID]
+        );
+        console.log("Raw availability string:", rows[0]?.availability);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch availability" });
+    }
 };

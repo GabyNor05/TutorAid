@@ -72,13 +72,11 @@
     justify-content:space-between;
     align-items: center;
     gap: 50px;
-    
 }
 
 .navcard-red-content{
    display: flex;
    flex-direction: column;
-
 }
 
 .navcard-red-icon{

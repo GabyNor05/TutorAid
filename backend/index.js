@@ -13,6 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
+const lessonRoutes = require('./routes/lessonRoutes');
+app.use('/api/lessons', lessonRoutes);
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

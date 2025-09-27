@@ -16,5 +16,7 @@ router.delete('/:id', userController.deleteUser);
 router.post('/login', userController.loginUser);
 router.post('/send-otp', userController.sendOtp);
 router.post('/verify-otp', userController.verifyOtp);
+router.get('/tutors/by-subject/:subject', userController.getTutorsBySubject);
+router.get('/tutor/:userID/availability', userController.getTutorAvailability);
 
 module.exports = router;

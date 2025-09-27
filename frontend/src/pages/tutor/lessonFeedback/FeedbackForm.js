@@ -28,7 +28,13 @@ function FeedbackForm() {
         doc.save("lesson-feedback.pdf");
     };
 
+    const subjectOptions = [
+    "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
+    "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
+    "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
+    ];
     return (
+        
         <div>
             <h2>Lesson Feedback</h2>
             <form className="lesson-feedback-form" onSubmit={handleSubmit}>
@@ -47,25 +53,10 @@ function FeedbackForm() {
                             required
                         >
                             <option value="">Select Subject</option>
-                            <option value="Math">Eastern Cape</option>
-                            <option value="Afrikaans">Afrikaans</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Biology">Biology</option>
-                            <option value="English">English</option>
-                            <option value="Zulu">Zulu</option>
-                            <option value="Sepedi">Sepedi</option>
-                            <option value="Math Literacy">Math Literacy</option>
-                            <option value="AP Math">AP Math</option>
-                            <option value="AP English">AP English</option>
-                            <option value="AP Biology">AP Biology</option>
-                            <option value="IT">IT</option>
-                            <option value="CAT">CAT</option>
-                            <option value="History">Western Cape</option>
-                            <option value="Geography">Geography</option>
-                            <option value="EMS">EMS</option>
-                            <option value="Business Studies">Business Studies</option>
-                            <option value="Accounting">Accounting</option>
-                            <option value="Homework">Homework</option>
+                            {subjectOptions.map(subject => (
+                                <option key={subject} value={subject.toLowerCase()}>{subject}</option>
+                            ))}
+                            
                         </select>
                     </div>
                 </div>
