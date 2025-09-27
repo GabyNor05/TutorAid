@@ -55,7 +55,7 @@ function Navbar() {
                     {/* Student only */}
                     {role === "Student" && (
                         <>
-                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/onboarding"); }}>Book Lessons</button>
+                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/booking"); }}>Book Lessons</button>
                             <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/onboarding"); }}>Request</button>
                         </>
                     )}

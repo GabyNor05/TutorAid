@@ -113,7 +113,7 @@ function Dashboard() {
                     {role === "Student" && (
                         <>
                             <div className="navcard-row">
-                               <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                               <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/booking")}>
                                 <div className="navcard-content">
                                     
                                     <Calendar size={120} className="navcard-icon opacity-30"/>

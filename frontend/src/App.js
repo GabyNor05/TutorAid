@@ -1,5 +1,5 @@
 import './App.css';
-/* import 'bootstrap/dist/css/bootstrap.min.css'; */
+
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
 import Signup from './pages/signup/Signup';
@@ -14,6 +14,7 @@ import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
 import ReportForm from './pages/tutor/reportForm/ReportForm';
 import StudentFileView from './pages/tutor/studentFileView/StudentFileView';
 import AddStaff from './pages/admin/addStaff/addStaff';
+import Booking from './pages/student/booking/Booking';
 
 function AppContent() {
   const location = useLocation();
@@ -34,6 +35,7 @@ function AppContent() {
         <Route path="/reportform" element={<ReportForm />} />
         <Route path="/studentfileview" element={<StudentFileView />} />
         <Route path="/addstaff" element={<AddStaff />} />
+        <Route path="/booking" element={<Booking />} />
       </Routes>
     </div>
   );

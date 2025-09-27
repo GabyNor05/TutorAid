@@ -3,6 +3,7 @@ import "./css/signup.css";
 import signupImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import { Alert } from "react-bootstrap"; // Add this import
 
 function Signup() {
     const navigate = useNavigate();
@@ -11,6 +12,8 @@ function Signup() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState("");
 
 
     const validate = () => {
@@ -49,12 +52,15 @@ function Signup() {
                     password,
                     role: "Student"
                 });
-                console.log(response);
-                localStorage.setItem("userID", response.data.userID); // or response.data.id
+                localStorage.setItem("userID", response.data.userID);
                 navigate("/onboarding");
             } catch (error) {
-                console.error(error);
-                setErrors({ api: "Signup failed. Please try again." });
+                if (error.response && error.response.status === 409) {
+                    setPopupMessage(error.response.data.error);
+                    setShowPopup(true);
+                } else {
+                    setErrors({ api: "Signup failed. Please try again." });
+                }
             }
         }
     };
@@ -68,6 +74,16 @@ function Signup() {
                 </div>
                 <div className="signup-form">
                     <h2>Create your account</h2>
+                    {/* Show React Bootstrap Alert */}
+                    <Alert
+                        show={showPopup}
+                        variant="danger"
+                        onClose={() => setShowPopup(false)}
+                        dismissible
+                        style={{ marginBottom: "16px" }}
+                    >
+                        {popupMessage}
+                    </Alert>
                     <form onSubmit={e => e.preventDefault()}>
                         <div className="signup-form-group">
                             <label>Username</label>

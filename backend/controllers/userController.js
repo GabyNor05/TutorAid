@@ -112,8 +112,11 @@ exports.createUser = async (req, res) => {
 
         res.json(createdUser);
     } catch (err) {
-        console.error("Error in createUser:", err); // <-- Add this line
-        res.status(500).json({ error: err.message });
+        // MySQL duplicate entry error code is 'ER_DUP_ENTRY'
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: "An account with this email already exists." });
+        }
+        res.status(500).json({ error: "Signup failed. Please try again." });
     }
 };
 
@@ -245,7 +248,7 @@ exports.verifyOtp = async (req, res) => {
     }
     
     // Check if OTP is expired (5 minutes = 300000 ms)
-    if (Date.now() - record.createdAt > 6000) {
+    if (Date.now() - record.createdAt > 60000) {
         delete otpStore[email];
         return res.status(400).json({ error: "OTP expired" });
     }
