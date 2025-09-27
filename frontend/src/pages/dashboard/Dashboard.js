@@ -11,6 +11,7 @@ import axios from "axios";
 
 function Dashboard() {
     const [role, setRole] = useState(null);
+    const [acceptedLessons, setAcceptedLessons] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -21,6 +22,16 @@ function Dashboard() {
                 .catch(err => setRole(null));
         }
     }, []);
+
+    useEffect(() => {
+        const userId = localStorage.getItem("userID");
+        if (userId && role) {
+            axios.get(`http://localhost:5000/api/lessons/accepted?userID=${userId}&role=${role}`)
+                .then(res => setAcceptedLessons(Array.isArray(res.data) ? res.data : []))
+                .catch(() => setAcceptedLessons([]));
+        }
+    }, [role]);
+
     const handleNavigation = (path) => {
         navigate(path);
     };
@@ -136,26 +147,20 @@ function Dashboard() {
                     )}   
             </div>
             <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
-                {role === "Tutor" && (
+                {(role === "Tutor" || role === "Student") && (
                     <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px", width: "1000px", margin: "0 auto"}}>
                         <h1 className="section-title" style={{display: "flex", justifyContent: "left", margin: "20px"}}>Upcoming Lessons</h1>
                         <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px"}}>
-                            <LessonCards image= "https://via.placeholder.com/150" name = "Bo Fin Arvin" date = "2025-09-25" time = "14:00" address = "321 Corner of Fae and Lewis" subject = "History"/>
-                            <LessonCards image ="https://via.placeholder.com/150" name = "Lauren Lewis" date = "2025-09-21" time = "10:00" address = "123 Main St" subject = "Math"/>
-                            <LessonCards image ="https://via.placeholder.com/150" name = "Kenzi Solo" date = "2025-09-22" time = "17:00" address = "456 Elm St" subject = "Science"/> 
+                            {acceptedLessons.map(lesson => (
+                                <LessonCards
+                                    key={lesson.lessonID}
+                                    lesson={lesson}
+                                    showStatus={false}
+                                />
+                            ))}
                         </div>  
                     </div>
-                    )}
-                {role === "Student" && (
-                    <div >
-                        <h1 className="section-title" style={{marginLeft: "290px"}}>Upcoming Lessons</h1>
-                        <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", paddingBottom: "30px"}}>
-                            <LessonCards image= "https://via.placeholder.com/150" name = "Bo Fin Arvin" date = "2025-09-25" time = "14:00" address = "321 Corner of Fae and Lewis" subject = "History"/>
-                            <LessonCards image ="https://via.placeholder.com/150" name = "Lauren Lewis" date = "2025-09-21" time = "10:00" address = "123 Main St" subject = "Math"/>
-                            <LessonCards image ="https://via.placeholder.com/150" name = "Kenzi Solo" date = "2025-09-22" time = "17:00" address = "456 Elm St" subject = "Science"/> 
-                        </div>  
-                    </div>
-                    )}
+                )}
             </div>
         </div>
         

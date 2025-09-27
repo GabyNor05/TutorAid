@@ -18,5 +18,8 @@ router.post('/send-otp', userController.sendOtp);
 router.post('/verify-otp', userController.verifyOtp);
 router.get('/tutors/by-subject/:subject', userController.getTutorsBySubject);
 router.get('/tutor/:userID/availability', userController.getTutorAvailability);
+router.get('/students/by-user/:userID', userController.getStudentIDByUserID);
 
 module.exports = router;
+
+

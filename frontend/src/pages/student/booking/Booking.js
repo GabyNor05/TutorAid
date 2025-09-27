@@ -119,13 +119,20 @@ function Booking() {
             alert("Please fill all fields.");
             return;
         }
-        const studentID = localStorage.getItem("userID");
+        const userID = localStorage.getItem("userID");
+        // Fetch studentID from backend
+        const res = await fetch(`http://localhost:5000/api/users/students/by-user/${userID}`);
+        const studentData = await res.json();
+        if (!studentData.studentID) {
+            alert("Student profile not found.");
+            return;
+        }
         const lessonData = {
             tutorID: selectedTutor,
-            studentID,
-            subject: selectedSubject, // <-- Add this line
-            date: selectedDate.toISOString().slice(0, 10), // "YYYY-MM-DD"
-            startTime: selectedDate.toTimeString().slice(0, 5), // "HH:MM"
+            studentID: studentData.studentID, // Use studentID from Students table
+            subject: selectedSubject,
+            date: selectedDate.toISOString().slice(0, 10),
+            startTime: selectedDate.toTimeString().slice(0, 5),
             duration: parseInt(duration, 10)
         };
         await fetch("http://localhost:5000/api/lessons", {
