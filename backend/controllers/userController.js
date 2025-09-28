@@ -19,7 +19,7 @@ console.log("Pool loaded:", !!pool);
 const otpStore = {}; // { email: otp }
 
 // GET all users
- exports.getUsers = async (req, res) => {
+exports.getUsers = async (req, res) => {
     try {
         const users = await userModel.getAllUsers();
         res.json(users);
@@ -27,7 +27,21 @@ const otpStore = {}; // { email: otp }
         res.status(500).json({ error: err.message });
     }
 }; 
- 
+
+// In userController.js
+exports.getAllUsers = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT u.*, s.status
+      FROM Users u
+      LEFT JOIN Students s ON u.userID = s.userID
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
+
 // // GET single user by ID
 exports.getUser = async (req, res) => {
     try {
@@ -212,7 +226,18 @@ exports.loginUser = async (req, res) => {
         if (!match) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
-        // Optionally return user info (never return password)
+        // Update lastLogin for all users
+        await pool.query(
+          "UPDATE Users SET lastLogin = NOW() WHERE userID = ?",
+          [user.userID]
+        );
+        // If user is a student, set status to Active
+        if (user.role === "Student") {
+          await pool.query(
+            "UPDATE Students SET status = 'Active' WHERE userID = ?",
+            [user.userID]
+          );
+        }
         res.json({ userID: user.userID, name: user.name, email: user.email, role: user.role });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
@@ -243,12 +268,15 @@ exports.sendOtp = async (req, res) => {
 };
 
 exports.verifyOtp = async (req, res) => {
-    const { email, otp } = req.body;
-    const record = otpStore[email];
-    if (!record) {
-        return res.status(400).json({ error: "Invalid OTP" });
-    }
-    
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ error: "Missing email or OTP" });
+  }
+  const record = otpStore[email];
+  if (!record) {
+    return res.status(400).json({ error: "Invalid OTP" });
+  }
+  
     // Check if OTP is expired (5 minutes = 300000 ms)
     if (Date.now() - record.createdAt > 60000) {
         delete otpStore[email];
@@ -311,5 +339,31 @@ exports.getStudentIDByUserID = async (req, res) => {
         }
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch studentID" });
+    }
+};
+
+exports.getAllStudents = async (req, res) => {
+  try {
+    await pool.query(`
+      UPDATE Students s
+      JOIN Users u ON s.userID = u.userID
+      SET s.status = 'Inactive'
+      WHERE u.lastLogin IS NULL OR u.lastLogin < (NOW() - INTERVAL 3 DAY)
+    `);
+    const [rows] = await pool.query('SELECT * FROM Students');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch students" });
+  }
+};
+
+exports.updateLastLogin = async (userID) => {
+    try {
+        await pool.query(
+            "UPDATE Users SET lastLogin = NOW() WHERE userID = ?",
+            [user.userID]
+        );
+    } catch (err) {
+        console.error("Error updating last login:", err);
     }
 };

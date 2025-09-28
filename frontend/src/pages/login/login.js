@@ -35,12 +35,22 @@ function Login() {
 
         if (Object.keys(newErrors).length === 0) {
             try {
-                const res = await axios.post("http://localhost:5000/api/users/login", {
-                    email,
-                    password
+                // Example using fetch:
+                const response = await fetch("http://localhost:5000/api/users/login", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password })
                 });
-                localStorage.setItem("userID", res.data.userID);
-                navigate("/otp");
+
+                const res = await response.json();
+                console.log("Login response:", res);
+
+                if (response.ok) {
+                  localStorage.setItem("userID", res.userID);
+                  navigate("/otp");
+                } else {
+                  setErrors({ general: res.error || "Login failed" });
+                }
             } catch (err) {
                 setErrors({ general: err.response?.data?.error || "Login failed" });
             }

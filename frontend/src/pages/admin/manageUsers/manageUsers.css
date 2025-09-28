@@ -1,23 +1,11 @@
-/*  */
-.student-files-container{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    padding: 20px;
-    background-color: var(--Background-Light);
-    width: 100%;
-    gap: 40px;
+.manage-users-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding: 24px;
 }
 
-.student-row{
-    display: flex;
-    flex-direction: row;
-    gap: 70px;
-    justify-content: space-between;
-}
-
-/* Student File Card */
-.student-file-card {
+.user-file-card {
     width: 230px;
     height: 330px;
     box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
@@ -29,20 +17,20 @@
     background: #fff;
 }
 
-.card-image {
+.user-file-card-image {
     position: relative;
     height: 60%;
     background-color: #E0E0E0;
 }
 
-.card-image img {
+.user-file-card-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
-.status-label {
+.user-file-card-status-label {
     position: absolute;
     bottom: 10px;
     left: 10px;
@@ -53,18 +41,18 @@
     color: white;
 }
 
-.status-label.active {
+.user-file-card-status-label.active {
     background-color: #399d23a1;
 }
-.status-label.inactive {
-    background-color: #f1b356ca;
-}
-.status-label.blocked {
+.user-file-card-status-label.blocked {
     background-color: #b22222b5;
+}
+.user-file-card-status-label.inactive {
+    background-color: #f1b356ca;
     color: #333;
 }
 
-.card-content {
+.user-file-card-content {
     padding: 15px;
     display: flex;
     flex-direction: column;
@@ -72,19 +60,19 @@
     height: 40%;
 }
 
-.card-content h3 {
+.user-file-card-content h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
 }
 
-.card-content p {
+.user-file-card-content p {
     margin: 5px 0;
     font-size: 14px;
     color: #555;
 }
 
-.student-card-grid {
+.user-file-card-grid {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: top;

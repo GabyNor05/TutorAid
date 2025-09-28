@@ -10,7 +10,7 @@ router.post('/test-user', userController.createTestUser);
 // Normal CRUD routes
 router.post('/', upload.single('image'), userController.createUser);
 router.put('/:id', upload.single('image'), userController.updateUser);
-router.get('/', userController.getUsers);
+router.get('/', userController.getAllUsers);
 router.get('/:id', userController.getUser);
 router.delete('/:id', userController.deleteUser);
 router.post('/login', userController.loginUser);
