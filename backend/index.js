@@ -16,6 +16,9 @@ app.use('/api/users', userRoutes);
 const lessonRoutes = require('./routes/lessonRoutes');
 app.use('/api/lessons', lessonRoutes);
 
+const studentRoutes = require('./routes/studentRoutes');
+app.use('/api/students', studentRoutes);
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

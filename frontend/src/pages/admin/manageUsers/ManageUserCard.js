@@ -19,7 +19,7 @@ function ManageUsersCard({ user, onEdit, onDelete }) {
                         <p>Role: {user.role}</p>
                     </div>
                     <div className="view-file-link">
-                        <a href="/studentfileview">View File</a>
+                        <a href={`/admin/manageUsers/edit/${user.userID}`}>View File</a>
                     </div>
                 </div>
                 <div className="user-file-card-actions">

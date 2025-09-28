@@ -1,19 +1,18 @@
 /*  */
 .student-files-container{
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    padding: 20px;
-    background-color: var(--Background-Light);
-    width: 100%;
-    gap: 40px;
+    flex-direction: column;
+
+    height: auto;
+    justify-content: space-between;
+    margin: 0 auto;
 }
 
-.student-row{
-    display: flex;
-    flex-direction: row;
-    gap: 70px;
-    justify-content: space-between;
+.student-files-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 24px;
 }
 
 /* Student File Card */
