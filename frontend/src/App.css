@@ -118,6 +118,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     background: linear-gradient(0deg, rgba(239, 246, 255, 0.70) 0%, rgba(239, 246, 255, 0.70) 100%), url('./pages/reusableAssets/whitepaper.png') lightgray 50% / cover; 
     background-size: cover;
     background-position: top;
+    padding: 24px;
 }
 
 .blue-page-background {
@@ -132,7 +133,6 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     font-family: 'Montserrat', sans-serif;
     font-size: 36px;
     color: var(--Wall-Teal);
-    margin-top: 20px;
     margin-bottom: 50px;
     font-weight: 600;
 }

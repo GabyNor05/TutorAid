@@ -94,6 +94,7 @@ function Signup() {
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
                                 required
+                                className="h-10 w-full p-2 rounded-lg border-2 border-gray-300 shadow-inner"
                             />
                             {errors.username && (
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.username}</span>
@@ -108,6 +109,7 @@ function Signup() {
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 required
+                                className="h-10 w-full p-2 rounded-lg border-2 border-gray-300 shadow-inner"
                             />
                             {errors.email && (
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.email}</span>
@@ -122,6 +124,7 @@ function Signup() {
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                                 required
+                                className="h-10 w-full p-2 rounded-lg border-2 border-gray-300 shadow-inner"
                             />
                             {errors.password && (
                                 <span style={{ color: "red", fontSize: "12px" }}>{errors.password}</span>
