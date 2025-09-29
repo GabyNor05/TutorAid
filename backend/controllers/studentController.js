@@ -32,3 +32,13 @@ exports.getStudentByUserID = async (req, res) => {
         res.status(500).json({ error: "Failed to fetch student" });
     }
 };
+
+exports.getAllStatuses = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT DISTINCT status FROM Students');
+        const statuses = rows.map(row => row.status).filter(Boolean);
+        res.json(statuses);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch statuses" });
+    }
+};

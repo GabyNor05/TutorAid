@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./reportForm.css";
 import { CaretLeft } from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 
 function ReportForm() {
     const [students, setStudents] = useState([]);
@@ -8,6 +9,7 @@ function ReportForm() {
     const [reportDate, setReportDate] = useState("");
     const [subject, setSubject] = useState("");
     const [comments, setComments] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
             async function fetchStudents() {
@@ -47,7 +49,7 @@ function ReportForm() {
             });
             if (res.ok) {
                 alert("Report submitted!");
-                // Optionally reset form here
+                navigate("/dashboard"); 
             } else {
                 alert("Failed to submit report.");
             }

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useNavigate } from "react";
 import "./css/addStaff.css";
 import axios from "axios";
+
 
 const subjectOptions = [
     "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
@@ -28,7 +29,7 @@ function AddStaff() {
     });
 
     const [subjects, setSubjects] = useState(["", "", ""]);
-
+    const navigate = useNavigate();
 
     const handleChange = e => {
         const { name, value, files } = e.target;
@@ -91,7 +92,7 @@ function AddStaff() {
             });
             console.log(response);
             alert("Staff member added!");
-            // Optionally, navigate or reset form here
+            navigate("/dashboard");
         } catch (error) {
             alert("Error adding staff: " + error.response?.data?.error || error.message);
         }

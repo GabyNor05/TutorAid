@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 const app = express();
 
 app.use(cors({
@@ -21,6 +22,21 @@ app.use('/api/students', studentRoutes);
 
 const lessonReportRoutes = require('./routes/lessonReportRoutes');
 app.use('/api/lessonReports', lessonReportRoutes);
+
+const progressNotesRoutes = require('./routes/progressNotesRoutes');
+app.use('/api/progressnotes', progressNotesRoutes);
+
+// Serve PDFs with inline disposition FIRST
+app.get('/uploads/progressnotes/:filename', (req, res) => {
+    console.log('Serving PDF inline:', req.params.filename);
+    const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    res.sendFile(filePath);
+});
+
+// Then serve other static files
+/* app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); */
 
 const PORT = 5000;
 app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useNavigate } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./booking.css";
@@ -15,6 +15,7 @@ function Booking() {
         "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
         "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
     ];
+    const navigate = useNavigate();
 
     // Calculate tomorrow's date
     const tomorrow = new Date();
@@ -141,6 +142,7 @@ function Booking() {
             body: JSON.stringify(lessonData)
         });
         alert("Lesson booked!");
+        navigate("/dashboard");
     };
 
     return (
