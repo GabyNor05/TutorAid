@@ -1,5 +1,5 @@
 const userModel = require('../models/userModel');
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
@@ -12,6 +12,12 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
+});
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 console.log("Pool loaded:", !!pool);
@@ -69,7 +75,7 @@ exports.createUser = async (req, res) => {
 
         // Build user object for Users table
         const user = {
-            image: req.file ? req.file.path : null,
+            image: imageUrl, // <-- USE CLOUDINARY LINK HERE
             name: req.body.name,
             email: req.body.email,
             password: hashedPassword,
@@ -365,5 +371,25 @@ exports.updateLastLogin = async (userID) => {
         );
     } catch (err) {
         console.error("Error updating last login:", err);
+    }
+};
+
+exports.addStaff = async (req, res) => {
+    try {
+        let imageUrl = null;
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "staff_profiles"
+            });
+            imageUrl = result.secure_url;
+        }
+        // Save imageUrl to DB (not req.file.path)
+        await pool.query(
+            "INSERT INTO Users (name, email, password, role, image, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [req.body.name, req.body.email, req.body.password, req.body.role, imageUrl, req.body.bio, req.body.subjects, req.body.qualifications, req.body.availability]
+        );
+        res.status(201).json({ message: "Staff member added!" });
+    } catch (err) {
+        res.status(500).json({ error: "Error adding staff" });
     }
 };

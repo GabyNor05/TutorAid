@@ -41,6 +41,17 @@ app.get('/uploads/progressnotes/:filename', (req, res) => {
     res.sendFile(filePath);
 });
 
+// Example Express handler
+app.post('/api/users/change-status', async (req, res) => {
+    const { userID, newStatus, adminPassword } = req.body;
+    // Replace 'yourAdminPassword' with your actual admin password logic
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+        return res.json({ success: false, message: "Incorrect admin password." });
+    }
+    await pool.query("UPDATE Users SET status = ? WHERE userID = ?", [newStatus, userID]);
+    res.json({ success: true });
+});
+
 
 const PORT = 5000;
 app.listen(PORT, () => {
