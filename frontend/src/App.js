@@ -17,6 +17,8 @@ import AddStaff from './pages/admin/addStaff/addStaff';
 import Booking from './pages/student/booking/Booking';
 import ManageUsers from './pages/admin/manageUsers/ManageUsers';
 import UserFileView from './pages/admin/manageUsers/UserFileView';
+import FeedbackRequests from './pages/student/feedbackRequests/FeedbackRequest';
+import RequestForm from './pages/student/requestForm/RequestForm';
 
 function AppContent() {
   const location = useLocation();
@@ -40,6 +42,8 @@ function AppContent() {
         <Route path="/booking" element={<Booking />} />
         <Route path="/manageusers" element={<ManageUsers />} />
         <Route path="/admin/manageUsers/edit/:userID" element={<UserFileView />} />
+        <Route path="/feedbackrequests" element={<FeedbackRequests />} />
+        <Route path="/requestform" element={<RequestForm />} />
       </Routes>
     </div>
   );

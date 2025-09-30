@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 function ReportForm() {
     const [students, setStudents] = useState([]);
+    const [subjects, setSubjects] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState("");
     const [reportDate, setReportDate] = useState("");
     const [subject, setSubject] = useState("");
@@ -21,7 +22,17 @@ function ReportForm() {
                     console.error("Error fetching students:", err);
                 }
             }
+            async function fetchSubjects() {
+                try {
+                    const res = await fetch("http://localhost:5000/api/subjects");
+                    const data = await res.json();
+                    setSubjects(data);
+                } catch (err) {
+                    console.error("Error fetching subjects:", err);
+                }
+            }
             fetchStudents();
+            fetchSubjects();
         }, []);
 
     const handleSubmit = async (e) => {
@@ -90,9 +101,9 @@ function ReportForm() {
                                     onChange={e => setSubject(e.target.value)}
                                 >
                                     <option value="">Select Subject</option>
-                                    <option value="Math">Math</option>
-                                    <option value="English">English</option>
-                                    <option value="Science">Science</option>
+                                    {subjects.map(sub => (
+                                        <option key={sub.subjectID} value={sub.name}>{sub.name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>

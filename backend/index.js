@@ -26,7 +26,13 @@ app.use('/api/lessonReports', lessonReportRoutes);
 const progressNotesRoutes = require('./routes/progressNotesRoutes');
 app.use('/api/progressnotes', progressNotesRoutes);
 
-// Serve PDFs with inline disposition FIRST
+const subjectRoutes = require('./routes/subjectRoutes');
+app.use('/api/subjects', subjectRoutes);
+
+const studentRequestsRoutes = require('./routes/studentRequestsRoutes');
+app.use('/api/studentRequests', studentRequestsRoutes);
+
+
 app.get('/uploads/progressnotes/:filename', (req, res) => {
     console.log('Serving PDF inline:', req.params.filename);
     const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
@@ -35,8 +41,6 @@ app.get('/uploads/progressnotes/:filename', (req, res) => {
     res.sendFile(filePath);
 });
 
-// Then serve other static files
-/* app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); */
 
 const PORT = 5000;
 app.listen(PORT, () => {

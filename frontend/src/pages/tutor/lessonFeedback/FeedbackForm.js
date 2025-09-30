@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useNavigate } from "react";
+import React, { useState, useEffect} from "react";
+import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "./lessonFeedback.css";
 
 function FeedbackForm() {
     const [rating, setRating] = useState(3);
-    const [subject, setSubject] = useState("");
+    const [subjects, setSubjects] = useState([]);
+    const [subject, setSubject] = useState(""); // <-- Add this line
     const [date, setDate] = useState("");
     const [punctual, setPunctual] = useState(false);
     const [setwork, setSetwork] = useState("");
@@ -15,6 +17,29 @@ function FeedbackForm() {
     const tutorID = localStorage.getItem("userID");
     const navigate = useNavigate();
 
+    useEffect(() => {
+                async function fetchStudents() {
+                    try {
+                        const res = await fetch("http://localhost:5000/api/students");
+                        const data = await res.json();
+                        setStudents(data);
+                    } catch (err) {
+                        console.error("Error fetching students:", err);
+                    }
+                }
+                async function fetchSubjects() {
+                    try {
+                        const res = await fetch("http://localhost:5000/api/subjects");
+                        const data = await res.json();
+                        setSubjects(data);
+                    } catch (err) {
+                        console.error("Error fetching subjects:", err);
+                    }
+                }
+                fetchStudents();
+                fetchSubjects();
+            }, []);
+    
     useEffect(() => {
         async function fetchStudents() {
             try {
@@ -89,10 +114,10 @@ function FeedbackForm() {
                             required
                             className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
                         >
-                            <option value="" className="">Select Subject</option>
-                            {subjectOptions.map(subject => (
-                                <option key={subject} value={subject.toLowerCase()}>{subject}</option>
-                            ))}
+                            <option value="" className="" onChange={e => setSubject(e.target.value)}>Select Subject</option>
+                            {subjects.map(sub => (
+                                        <option key={sub.subjectID} value={sub.name}>{sub.name}</option>
+                                    ))}
                             
                         </select>
                     </div>

@@ -42,3 +42,35 @@ exports.getAllStatuses = async (req, res) => {
         res.status(500).json({ error: "Failed to fetch statuses" });
     }
 };
+
+exports.createStudentRequest = async (req, res) => {
+    const { userID, status } = req.body;
+    try {
+        await pool.query(
+            `INSERT INTO Students (userID, status)
+             VALUES (?, ?)`,
+            [userID, status]
+        );
+        res.status(201).json({ message: "Request submitted successfully" });
+    } catch (err) {
+        console.error("Error in createStudentRequest:", err);
+        res.status(500).json({ error: "Failed to submit request" });
+    }
+};
+
+exports.getStudentIDByUserID = async (req, res) => {
+    const { userID } = req.params;
+    try {
+        const [rows] = await pool.query(
+            `SELECT studentID FROM Students WHERE userID = ?`,
+            [userID]
+        );
+        if (rows.length > 0) {
+            res.json({ studentID: rows[0].studentID });
+        } else {
+            res.status(404).json({ error: "Student not found" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch studentID" });
+    }
+};

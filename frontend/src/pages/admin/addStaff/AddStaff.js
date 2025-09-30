@@ -1,13 +1,6 @@
-import React, { useState, useNavigate } from "react";
+import React, { useState, useEffect, useNavigate } from "react";
 import "./css/addStaff.css";
 import axios from "axios";
-
-
-const subjectOptions = [
-    "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
-    "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
-    "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
-];
 
 function AddStaff() {
     const [form, setForm] = useState({
@@ -29,7 +22,21 @@ function AddStaff() {
     });
 
     const [subjects, setSubjects] = useState(["", "", ""]);
+    const [subjectOptions, setSubjectOptions] = useState([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        async function fetchSubjects() {
+            try {
+                const res = await fetch("http://localhost:5000/api/subjects");
+                const data = await res.json();
+                setSubjectOptions(data.map(s => s.name));
+            } catch (err) {
+                console.error("Error fetching subjects:", err);
+            }
+        }
+        fetchSubjects();
+    }, []);
 
     const handleChange = e => {
         const { name, value, files } = e.target;
@@ -39,8 +46,6 @@ function AddStaff() {
             setForm({ ...form, [name]: value });
         }
     };
-
-    
 
     const handleAvailabilityChange = (period, field, value) => {
         setAvailability(prev => ({

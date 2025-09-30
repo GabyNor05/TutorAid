@@ -134,11 +134,11 @@ function Dashboard() {
                                 </div>
                                 
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentprofiles")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/requestform")}>
                                     <div className="navcard-content">
                                         <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
                                         <div className="navcard-text -bottom-3">
-                                            <h2>Request Progress Notes</h2>
+                                            <h2>Request Form</h2>
                                         </div>
                                     </div>
                                 </button>
@@ -146,22 +146,26 @@ function Dashboard() {
                         </>
                     )}   
             </div>
-            <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
-                {(role === "Tutor" || role === "Student") && (
-                    <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px", width: "1000px", margin: "0 auto"}}>
-                        <h1 className="section-title" style={{display: "flex", justifyContent: "left", margin: "20px"}}>Upcoming Lessons</h1>
-                        <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px"}}>
-                            {acceptedLessons.map(lesson => (
-                                <LessonCards
-                                    key={lesson.lessonID}
-                                    lesson={lesson}
-                                    showStatus={false}
-                                />
-                            ))}
-                        </div>  
-                    </div>
+            {(role === "Tutor" || role === "Student") && (
+    <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
+        <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px", width: "1000px", margin: "0 auto"}}>
+            <h1 className="section-title" style={{display: "flex", justifyContent: "left", margin: "20px"}}>Upcoming Lessons</h1>
+            <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px"}}>
+                {acceptedLessons.length === 0 ? (
+                    <p style={{marginLeft: "20px", color: "#fff"}}>No upcoming lessons scheduled.</p>
+                ) : (
+                    acceptedLessons.map(lesson => (
+                        <LessonCards
+                            key={lesson.lessonID}
+                            lesson={lesson}
+                            showStatus={false}
+                        />
+                    ))
                 )}
-            </div>
+            </div>  
+        </div>
+    </div>
+)}
         </div>
         
     );
