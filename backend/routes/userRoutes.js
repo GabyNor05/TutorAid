@@ -23,7 +23,7 @@ router.get('/tutor/:userID/availability', userController.getTutorAvailability);
 router.get('/students/by-user/:userID', userController.getStudentIDByUserID);
 router.post('/add-staff', userController.addStaff);
 
-// Change user status with admin password check
+// Change user status with correct admin password
 router.post('/change-status', async (req, res) => {
     const { studentID, newStatus, adminPassword } = req.body;
     console.log("Change status request:", req.body);
@@ -39,27 +39,42 @@ router.post('/change-status', async (req, res) => {
     }
 });
 
-// Remove user with admin password check
+// User removal with correct admin password
 router.post('/remove-user', async (req, res) => {
     const { userID, adminPassword } = req.body;
-    console.log("Remove user request:", req.body); // Debug log
     try {
-        // Compare with .env value
         if (adminPassword !== process.env.ADMIN_PASSWORD) {
-            console.log("Admin password incorrect."); // Debug log
             return res.json({ success: false, message: "Incorrect admin password." });
         }
         const [result] = await pool.query("DELETE FROM Users WHERE userID = ?", [userID]);
-        console.log("SQL DELETE result:", result); // Log SQL result
         if (result.affectedRows === 0) {
-            console.log("No user deleted. User not found for userID:", userID);
             return res.json({ success: false, message: "User not found." });
         }
-        console.log("User deleted successfully for userID:", userID);
         res.json({ success: true });
     } catch (err) {
-        console.error("Error removing user:", err); // Log error details
         res.json({ success: false, message: "Error removing user.", error: err.message });
+    }
+});
+
+// Get user avatars and names for a studentID
+router.post('/user-avatars', async (req, res) => {
+    const { studentIDs } = req.body;
+    if (!studentIDs || !studentIDs.length) return res.json({});
+    try {
+        const [rows] = await pool.query(
+            `SELECT Students.studentID, Users.image, Users.name
+             FROM Students 
+             JOIN Users ON Students.userID = Users.userID 
+             WHERE Students.studentID IN (?)`,
+            [studentIDs]
+        );
+        const images = {};
+        rows.forEach(row => {
+            images[row.studentID] = { image: row.image, name: row.name };
+        });
+        res.json(images);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch user images" });
     }
 });
 

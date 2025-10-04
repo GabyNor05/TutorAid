@@ -94,11 +94,11 @@ function Dashboard() {
                                         </div>
                                     </div>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentrequests")}>
                                     <div className="navcard-content">
                                         <File size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
-                                            <h2>Student Feedback Requests</h2>
+                                            <h2>Student Requests</h2>
                                         </div>
                                     </div>
                                 </button>

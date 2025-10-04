@@ -92,14 +92,14 @@ function RequestForm() {
                                     className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
                                 >
                                     <option value="">Select Request Category</option>
-                                    <option value="progress_note">Request Progress Note</option>
-                                    <option value="add_subject">Request New Subject</option>
-                                    <option value="general">General Query</option>
+                                    <option value="Progress_Note">Request Progress Note</option>
+                                    <option value="New_Subject">Request New Subject</option>
+                                    <option value="General_Query">General Query</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    {requestType === "progress_note" && (
+                    {requestType === "Progress_Note" && (
                         <div className="flex flex-col gap-8 w-9/12 lesson-feedback-particulars">
                             <div className="lesson-feedback-date w-2/5" style={{ display: "flex", flexDirection: "column" }}>
                                 <label className="feedback-label mb-2">Date of Lesson:</label>
@@ -124,7 +124,7 @@ function RequestForm() {
                         </div>
                     )}
 
-                    {requestType === "add_subject" && (
+                    {requestType === "New_Subject" && (
                         <div className="lesson-feedback-new-subject w-9/12 flex flex-col items-start">
                             <label className="feedback-label mb-2">New Subject Name:</label>
                             <input type="text" value={newSubjectName} onChange={e => setNewSubjectName(e.target.value)} className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full" />
@@ -143,7 +143,7 @@ function RequestForm() {
                         </div>
                     )}
 
-                    {requestType === "general" && (
+                    {requestType === "General_Query" && (
                         <div className="lesson-feedback-general w-9/12" style={{ display: "flex", flexDirection: "column" }}>
                             <label className="feedback-label mb-2">Your Query:</label>
                             <textarea

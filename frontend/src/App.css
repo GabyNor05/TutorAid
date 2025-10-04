@@ -127,6 +127,7 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     background: url('./pages/reusableAssets/blueWallpaper.png') lightgray 50% / cover no-repeat; 
     background-size: cover;
     background-position: top;
+    padding-top: 24px;
 }
 
 .page-title {
