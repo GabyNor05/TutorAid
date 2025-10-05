@@ -19,6 +19,8 @@ function StudentRequests() {
   const [responseSubject, setResponseSubject] = useState("");
   const [responseMessage, setResponseMessage] = useState("");
   const [responseStatus, setResponseStatus] = useState("");
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectMessage, setRejectMessage] = useState("");
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -29,7 +31,7 @@ function StudentRequests() {
 
   const statusColors = {
     Pending: "bg-yellow-100 text-yellow-800",
-    Approved: "bg-green-100 text-green-800",
+    Completed: "bg-green-100 text-green-800",
     Postponed: "bg-blue-100 text-gray-700",
     Rejected: "bg-red-100 text-red-800",
     Default: "bg-gray-100 text-gray-800",
@@ -61,6 +63,21 @@ function StudentRequests() {
   const filteredRequests = filter
     ? requests.filter(r => r.requestType === filter)
     : requests;
+
+  // Grouped and ordered requests
+  const statusOrder = ["Pending", "Completed", "Postponed", "Rejected"]; // Order you want to display
+
+  const groupedRequests = statusOrder.reduce((acc, status) => {
+    acc[status] = [];
+    return acc;
+  }, {});
+
+  filteredRequests.forEach(req => {
+    const status = req.status || "Pending";
+    if (groupedRequests[status]) {
+      groupedRequests[status].push(req);
+    }
+  });
 
   // Handle Postpone action
   const handlePostpone = async () => {
@@ -121,6 +138,36 @@ function StudentRequests() {
     setLoadingNotes(false);
   };
 
+  // Handle Reject action
+  const handleReject = async () => {
+    if (!selectedRequest) return;
+    try {
+      const res = await axios.post("http://localhost:5000/api/studentRequests/reject", {
+        studentRequestID: selectedRequest.studentRequestID,
+        adminPassword
+      });
+      if (res.data.success) {
+        setRejectMessage("Request status updated to Rejected!");
+        setRequests(prev =>
+          prev.map(r =>
+            r.studentRequestID === selectedRequest.studentRequestID
+              ? { ...r, status: "Rejected" }
+              : r
+          )
+        );
+        setTimeout(() => {
+          setRejectModalOpen(false);
+          setRejectMessage("");
+        }, 1200);
+      } else {
+        setRejectMessage(res.data.message || "Failed to update status.");
+      }
+    } catch (err) {
+      setRejectMessage("Error updating status.");
+    }
+    setAdminPassword("");
+  };
+
   return (
     <div className="blue-page-background">
       <div className="bg-white max-w-4xl mx-auto rounded-xl shadow p-6">
@@ -140,87 +187,110 @@ function StudentRequests() {
           </div>
         </div>
 
-        <div className="divide-y-2 divide-gray-200">
-          {filteredRequests.map((req) => {
-            const userInfo = userImages[req.studentID] || {};
-            return (
-              <div
-                key={req.studentRequestID}
-                className="flex items-center justify-between py-4 hover:bg-gray-50 hover:rounded-lg transition pl-2 relative"
-              >
-                {/* Left: User image or initials */}
-                <div className="flex items-center gap-3 w-1/3">
-                  {userInfo.image ? (
-                    <img
-                      src={userInfo.image}
-                      alt={userInfo.name || "User"}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg">
-                      {getInitials(userInfo.name)}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-gray-800">
-                      {req.requestType.replace(/_/g, " ")}
-                    </p>
-                  </div>
+        <div className="">
+          {statusOrder.map(status => (
+            groupedRequests[status].length > 0 && (
+              <div key={status}>
+                <div className="">
+                  <h3 className="text-xl text-left text-gray-700 mt-8 mb-2">{status}</h3>
+                  <div className="border-b-2 border-gray-200"></div>
                 </div>
 
-                {/* Middle: Student ID */}
-                <div className="w-1/5 text-gray-600 text-sm">
-                  Student: {req.studentID}
-                </div>
-
-                {/* Status (from DB) */}
-                <div className="w-1/5">
-                  <span className={`px-3 py-1 text-sm rounded-full font-medium ${statusColors[req.status] || statusColors.Default}`}>
-                    {req.status}
-                  </span>
-                </div>
-
-                {/* Date */}
-                <div className="w-1/6 text-sm text-gray-500">
-                  {req.createdAt?.slice(0, 10)}
-                </div>
-
-                {/* Actions: Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setDropdownOpen(dropdownOpen === req.studentRequestID ? null : req.studentRequestID)}
-                    className="focus:outline-none"
-                  >
-                    <DotsThreeVertical size={24} weight="bold" />
-                  </button>
-                  {dropdownOpen === req.studentRequestID && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => {
-                          setSelectedRequest(req);
-                          setViewModalOpen(true);
-                          setDropdownOpen(null);
-                        }}
+                <div className="divide-y divide-gray-200">
+                  {groupedRequests[status].map((req) => {
+                    const userInfo = userImages[req.studentID] || {};
+                    return (
+                      <div
+                        key={req.studentRequestID}
+                        className="flex items-center justify-between py-4 hover:bg-gray-50 hover:rounded-lg transition pl-2 relative"
                       >
-                        View Request
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => {
-                          setSelectedRequest(req);
-                          setPostponeModalOpen(true);
-                          setDropdownOpen(null);
-                        }}
-                      >
-                        Postpone
-                      </button>
-                    </div>
-                  )}
+                        {/* Left: User image or initials */}
+                        <div className="flex items-center gap-3 w-1/3">
+                          {userInfo.image ? (
+                            <img
+                              src={userInfo.image}
+                              alt={userInfo.name || "User"}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg">
+                              {getInitials(userInfo.name)}
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-800">
+                              {req.requestType.replace(/_/g, " ")}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Middle: Student ID */}
+                        <div className="w-1/5 text-gray-600 text-sm">
+                          Student: {req.studentID}
+                        </div>
+
+                        {/* Status (from DB) */}
+                        <div className="w-1/5">
+                          <span className={`px-3 py-1 text-sm rounded-full font-medium ${statusColors[req.status] || statusColors.Default}`}>
+                            {req.status}
+                          </span>
+                        </div>
+
+                        {/* Date */}
+                        <div className="w-1/6 text-sm text-gray-500">
+                          {req.createdAt?.slice(0, 10)}
+                        </div>
+
+                        {/* Actions: Dropdown */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setDropdownOpen(dropdownOpen === req.studentRequestID ? null : req.studentRequestID)}
+                            className="focus:outline-none"
+                          >
+                            <DotsThreeVertical size={24} weight="bold" />
+                          </button>
+                          {dropdownOpen === req.studentRequestID && (
+                            <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
+                              <button
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                onClick={() => {
+                                  setSelectedRequest(req);
+                                  setViewModalOpen(true);
+                                  setDropdownOpen(null);
+                                }}
+                              >
+                                View Request
+                              </button>
+                              <button
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                onClick={() => {
+                                  setSelectedRequest(req);
+                                  setPostponeModalOpen(true);
+                                  setDropdownOpen(null);
+                                }}
+                              >
+                                Postpone
+                              </button>
+                              <button
+                                className="block w-full text-red-500 text-left px-4 py-2 hover:bg-gray-100"
+                                onClick={() => {
+                                  setSelectedRequest(req);
+                                  setRejectModalOpen(true);
+                                  setDropdownOpen(null);
+                                }}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            );
-          })}
+            )
+          ))}
         </div>
       </div>
 
@@ -353,12 +423,12 @@ function StudentRequests() {
               ) : progressNotes.length === 0 ? (
                 <div>No progress notes found for this student.</div>
               ) : (
-                progressNotes.map(note => {
+                progressNotes.map((note, idx) => {
                   // Extract lesson date from file_name
                   const match = note.file_name.match(/lesson-feedback-(\d{4}-\d{2}-\d{2})\.pdf/);
                   const lessonDate = match ? match[1] : "Unknown";
                   return (
-                    <div key={note.progressNoteID} className="border rounded p-2 mb-2 flex flex-col">
+                    <div key={note.progressNoteID || idx} className="border rounded p-2 mb-2 flex flex-col">
                       <span className="font-semibold">{note.file_name}</span>
                       <span className="text-sm text-gray-600">Lesson Date: {lessonDate}</span>
                       <a
@@ -387,11 +457,19 @@ function StudentRequests() {
               e.preventDefault();
               try {
                 await axios.post("http://localhost:5000/api/studentRequests/respond", {
-                  toUserID: selectedRequest.studentID, // or userID if available
+                  toUserID: selectedRequest.studentID,
                   subject: responseSubject,
                   message: responseMessage,
+                  studentRequestID: selectedRequest.studentRequestID
                 });
                 setResponseStatus("Response sent!");
+                setRequests(prev =>
+                  prev.map(r =>
+                    r.studentRequestID === selectedRequest.studentRequestID
+                      ? { ...r, status: "Completed" }
+                      : r
+                  )
+                );
                 setTimeout(() => {
                   setRespondModalOpen(false);
                   setResponseStatus("");
@@ -436,6 +514,51 @@ function StudentRequests() {
                 onClick={() => {
                   setRespondModalOpen(false);
                   setResponseStatus("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectModalOpen && selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <form
+            className="bg-white rounded-lg shadow-lg p-6 w-96 flex flex-col gap-4"
+            onSubmit={e => {
+              e.preventDefault();
+              handleReject();
+            }}
+          >
+            <h3 className="text-lg font-semibold mb-2">Reject Request</h3>
+            <p className="text-sm mb-2">Enter admin password to change status to "Rejected".</p>
+            <input
+              type="password"
+              placeholder="Admin Password"
+              value={adminPassword}
+              onChange={e => setAdminPassword(e.target.value)}
+              className="border rounded p-2 w-full"
+              required
+            />
+            {rejectMessage && (
+              <div className="text-center text-sm text-red-600">{rejectMessage}</div>
+            )}
+            <div className="flex gap-2 mt-2">
+              <button
+                type="submit"
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Submit
+              </button>
+              <button
+                type="button"
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                onClick={() => {
+                  setRejectModalOpen(false);
+                  setRejectMessage("");
                 }}
               >
                 Cancel

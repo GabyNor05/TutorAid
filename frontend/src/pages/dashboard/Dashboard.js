@@ -102,7 +102,7 @@ function Dashboard() {
                                         </div>
                                     </div>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/userexperiencefeedback")}>
                                     <div className="navcard-content">
                                         <ClipboardText size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
@@ -110,7 +110,7 @@ function Dashboard() {
                                         </div>
                                     </div>
                                 </button>
-                                <button className="navcard-red transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 bg-gradient-to-r from-red-950 via-red-800  to-red-600 relative" onClick={() => handleNavigation("/lessonrequests")}>
+                                <button className="navcard-red transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 bg-gradient-to-r from-red-950 via-red-800  to-red-600 relative" onClick={() => handleNavigation("/managereports")}>
                                     <div className="navcard-content">
                                         <WarningIcon size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">

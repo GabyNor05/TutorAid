@@ -19,6 +19,7 @@ import ManageUsers from './pages/admin/manageUsers/ManageUsers';
 import UserFileView from './pages/admin/manageUsers/UserFileView';
 import RequestForm from './pages/student/requestForm/RequestForm';
 import StudentRequests from './pages/admin/studentRequests/StudentRequests';
+import ManageReports from './pages/admin/manageReports/ManageReports';
 
 
 function AppContent() {
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/admin/manageUsers/edit/:userID" element={<UserFileView />} />
         <Route path="/requestform" element={<RequestForm />} />
         <Route path="/studentrequests" element={<StudentRequests />} />
+        <Route path="/managereports" element={<ManageReports />} />
       </Routes>
     </div>
   );

@@ -46,17 +46,17 @@ function Navbar() {
                     {role === "Admin" && (
                         <>
                             <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/addstaff"); }}>Add Staff</button>
-                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/addstaff"); }}>Manage Users</button>
-                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/addstaff"); }}>Student Feedback Requests</button>
-                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/addstaff"); }}>User Experience Feedback</button>
-                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/addstaff"); }}>Manage Reports</button>
+                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/manageusers"); }}>Manage Users</button>
+                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/studentrequests"); }}>Student Requests</button>
+                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/userexperiencefeedback"); }}>User Experience Feedback</button>
+                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/managereports"); }}>Manage Reports</button>
                         </>
                     )}
                     {/* Student only */}
                     {role === "Student" && (
                         <>
                             <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/booking"); }}>Book Lessons</button>
-                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/onboarding"); }}>Request</button>
+                            <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/requestform"); }}>Request Form</button>
                         </>
                     )}
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/userprofile"); }}>My Profile</button>
