@@ -171,6 +171,23 @@ function StudentRequests() {
     setAdminPassword("");
   };
 
+  const handlePublishNote = async (noteID) => {
+    try {
+      await axios.post("http://localhost:5000/api/progressNotes/publish", {
+        noteID: noteID
+      });
+      setProgressNotes(prev =>
+        prev.map(n =>
+          n.noteID === noteID
+            ? { ...n, published: true }
+            : n
+        )
+      );
+    } catch (err) {
+      alert("Failed to publish note.");
+    }
+  };
+
   return (
     <div className="blue-page-background">
       <div className="bg-white max-w-4xl mx-auto rounded-xl shadow p-6">
@@ -442,13 +459,22 @@ function StudentRequests() {
                 <div>No progress notes found for this student.</div>
               ) : (
                 progressNotes.map((note, idx) => {
-                  // Extract lesson date from file_name
                   const match = note.file_name.match(/lesson-feedback-(\d{4}-\d{2}-\d{2})\.pdf/);
                   const lessonDate = match ? match[1] : "Unknown";
                   return (
                     <div key={note.progressNoteID || idx} className="border rounded p-2 mb-2 flex flex-col">
                       <span className="font-semibold">{note.file_name}</span>
                       <span className="text-sm text-gray-600">Lesson Date: {lessonDate}</span>
+                      {note.published ? (
+                        <span className="text-green-600 font-semibold mt-1">Published</span>
+                      ) : (
+                        <button
+                          className="bg-blue-600 text-white px-3 py-1 rounded mt-1 hover:bg-blue-700"
+                          onClick={() => handlePublishNote(note.noteID)}
+                        >
+                          Publish PDF
+                        </button>
+                      )}
                       <a
                         href={note.file_url}
                         target="_blank"

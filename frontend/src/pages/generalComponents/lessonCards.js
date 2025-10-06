@@ -37,83 +37,66 @@ function LessonCards({ lesson, showStatus = true, onAccept, onDecline }) {
     return (
         <div
             key={lesson.lessonID}
-            className="lesson-cards transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-[102%]"
-            style={{ display: "flex", alignItems: "center" }}
+            className="transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-102"
         >
             <div
-                className="lesson-info"
-                style={{
-                    borderRadius: "8px",
-                    padding: "30px",
-                    margin: "0 auto",
-                    display: "grid",
-                    alignItems: "center",
-                    gridTemplateColumns: "1fr 2fr 1fr",
-                    gap: "20px",
-                    width: "1000px",
-                    backgroundColor: "#f9f9f9",
-                    height: "200px"
-                }}
+                className="rounded-lg p-8 mx-auto grid items-center grid-cols-3 gap-5 w-full max-w-4xl bg-gray-50 h-52"
             >
-                <div className="card-imageCol">
-                    <div
-                        style={{
-                            height: "150px",
-                            width: "200px",
-                            backgroundColor: "#E0E0E0",
-                            borderRadius: "8px"
-                        }}
-                    >
-                        <img src={lesson.studentImage || "https://via.placeholder.com/150"} alt={lesson.studentName} />
+                {/* Image */}
+                <div className="flex justify-center items-center">
+                    <div className="h-36 w-36 rounded-lg overflow-hidden  flex justify-center items-center">
+                        <img
+                            src={lesson.studentImage || "https://via.placeholder.com/150"}
+                            alt={lesson.studentName}
+                            className=""
+                        />
                     </div>
                 </div>
-                <div
-                    className="card-contentCol"
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "flex-start",
-                        gap: "10px"
-                    }}
-                >
-                    <h3>{lesson.studentName}</h3>
-                    <p>Date: {formatDate(lesson.date)}, Time: {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}</p>
-                    <p>Address: {lesson.address}</p>
+                {/* Content */}
+                <div className="flex flex-col justify-center items-start gap-2">
+                    <h3 className="text-lg font-semibold">{lesson.studentName}</h3>
+                    <p className="text-gray-700">
+                        Date: <span className="font-medium">{formatDate(lesson.date)}</span>, Time: <span className="font-medium">{formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}</span>
+                    </p>
+                    <p className="text-gray-600">Address: {lesson.address}</p>
                 </div>
-                <div
-                    className="card-subjectCol"
-                    style={{
-                        display: "grid",
-                        gridTemplateRows: "1fr 2fr 1fr",
-                        justifyItems: "right",
-                        alignItems: "center"
-                    }}
-                >
-                    <div
-                        className="subject-badge"
-                        style={{
-                            background: "#F1B356",
-                            width: "65px",
-                            height: "30px",
-                            borderRadius: "10px",
-                            textAlign: "center"
-                        }}
-                    >
+                {/* Subject & Actions */}
+                <div className="grid grid-rows-3 justify-items-end items-center h-full">
+                    <div className="bg-yellow-300 text-yellow-900 font-semibold w-20 h-8 rounded-lg flex items-center justify-center mb-2">
                         {lesson.subject}
                     </div>
                     <div></div>
                     {showStatus && (
-                        <div className="card-status">
-                            <button className="accept text-green-600 cursor-pointer" onClick={handleAccept}>Accept</button>
-                            <button className="decline text-red-600 cursor-pointer" onClick={handleDecline}>Decline</button>
+                        <div className="flex gap-2">
+                            <button
+                                className="text-green-600 font-semibold hover:underline"
+                                onClick={handleAccept}
+                            >
+                                Accept
+                            </button>
+                            <button
+                                className="text-red-600 font-semibold hover:underline"
+                                onClick={handleDecline}
+                            >
+                                Decline
+                            </button>
                         </div>
                     )}
                     {!showStatus && onDecline && (
-                        <button className="move-to-pending" onClick={onDecline}>Move to Pending</button>
+                        <button
+                            className="text-blue-600 font-semibold hover:underline"
+                            onClick={onDecline}
+                        >
+                            Move to Pending
+                        </button>
                     )}
                     {!showStatus && onAccept && (
-                        <button className="move-to-pending" onClick={onAccept}>Move to Pending</button>
+                        <button
+                            className="text-blue-600 font-semibold hover:underline"
+                            onClick={onAccept}
+                        >
+                            Move to Pending
+                        </button>
                     )}
                 </div>
             </div>

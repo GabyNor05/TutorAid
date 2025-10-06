@@ -53,6 +53,14 @@ exports.getUser = async (req, res) => {
     try {
         const user = await userModel.getUserById(req.params.id);
         if (!user) return res.status(404).json({ error: "User not found" });
+        
+        // Fetch studentID if user is a student
+        if (user.role === "Student") {
+          const [studentRows] = await pool.query("SELECT studentID FROM students WHERE userID = ?", [user.userID]);
+          if (studentRows.length) {
+            user.studentID = studentRows[0].studentID;
+          }
+        }
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });

@@ -34,7 +34,7 @@ function PdfCard({ title, date, size, filePath }) {
                 <div className="pdf-modified">
                     <p>{date}</p>
                 </div>
-                <div className="pdf-size">
+                <div className="pdf-size w-12">
                     <h3>{displaySize ? `${displaySize}` : ""}</h3>
                 </div>
                 <div className="pdf-actions flex flex-row gap-2">
@@ -53,7 +53,7 @@ function PdfCard({ title, date, size, filePath }) {
                     >
                         Download
                     </a>
-                    <a href="http://localhost:5000/uploads/progressnotes/1759179251376-lesson-feedback(1).pdf" target="_blank">Test PDF</a>
+                    
                 </div>
                 <div></div>
             </div>

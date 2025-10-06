@@ -19,20 +19,17 @@
     gap: 16px;
     max-width: 1000px;
     margin: 10px auto;
+    
 }
 
 .pdf-card-content{
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px; /* Match parent grid */
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 200px; /* Match parent grid */
     align-items: center;
     gap: 16px;
     max-width: 1000px;
 }
 
-.pdf-card-content > * {
-    box-sizing: border-box;
-    border: 1px dashed #342c2c;
-}
 
 /*  */
 
@@ -41,7 +38,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    min-width: 200px;
+    min-width: 400px;
     gap: 8px;
 }
 

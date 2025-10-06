@@ -24,7 +24,7 @@ const lessonReportRoutes = require('./routes/lessonReportRoutes');
 app.use('/api/lessonReports', lessonReportRoutes);
 
 const progressNotesRoutes = require('./routes/progressNotesRoutes');
-app.use('/api/progressnotes', progressNotesRoutes);
+app.use('/api/progressNotes', progressNotesRoutes);
 
 const subjectRoutes = require('./routes/subjectRoutes');
 app.use('/api/subjects', subjectRoutes);
