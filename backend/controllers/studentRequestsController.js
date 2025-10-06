@@ -4,21 +4,25 @@ exports.createStudentRequest = async (req, res) => {
     const {
         studentID,
         requestType,
-        lessonDate,
-        subjectID,
-        newSubjectName,
-        newSubjectDescription,
-        query
+        lessonDate = null,
+        subjectID = null,
+        newSubjectName = null,
+        newSubjectDescription = null,
+        query = null
     } = req.body;
 
     if (!studentID) {
         return res.status(400).json({ error: "studentID is required" });
     }
+    if (!requestType) {
+        return res.status(400).json({ error: "requestType is required" });
+    }
+    // For Appeal_Block, query is required
+    if (requestType === "Appeal_Block" && !query) {
+        return res.status(400).json({ error: "query is required for Appeal_Block" });
+    }
 
     try {
-        const requestData = { studentID, requestType, lessonDate, subjectID, newSubjectName, newSubjectDescription, query };
-        console.log("Submitting request:", requestData);
-
         await pool.query(
             `INSERT INTO StudentRequests 
             (studentID, requestType, lessonDate, subjectID, newSubjectName, newSubjectDescription, query) 

@@ -106,11 +106,12 @@ function ManageReports() {
             reports.map(report => (
               <div key={report.lessonReportID} className="flex items-center justify-between py-4 hover:bg-gray-50 hover:rounded-lg transition pl-2 relative">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">
-                     {report.subject}
+                  <span className="font-semibold text-gray-800 mr-16">
+                    {report.studentName}
                   </span>
+                  
                   <span className="text-sm text-gray-500">
-                    {report.reportDate}
+                    {report.reportDate?.slice(0, 10)}
                   </span>
                 </div>
                 <div className="text-sm text-gray-600">

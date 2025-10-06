@@ -237,13 +237,29 @@ exports.loginUser = async (req, res) => {
           "UPDATE Users SET lastLogin = NOW() WHERE userID = ?",
           [user.userID]
         );
-        // If user is a student, set status to Active
+
+        // Get student record if user is a student
+        let student = null;
         if (user.role === "Student") {
-          await pool.query(
-            "UPDATE Students SET status = 'Active' WHERE userID = ?",
-            [user.userID]
-          );
+            const [studentRows] = await pool.query("SELECT * FROM students WHERE userID = ?", [user.userID]);
+            if (studentRows.length) {
+                student = studentRows[0];
+                if (student.status === "Blocked") {
+                    // Do NOT allow login, return blocked status AND studentID
+                    return res.json({ userID: user.userID, student: { studentID: student.studentID, status: "Blocked" } });
+                }
+                if (student.status === "Inactive") {
+                    // Reactivate student
+                    await pool.query("UPDATE students SET status = 'Active' WHERE studentID = ?", [student.studentID]);
+                    student.status = "Active";
+                }
+            }
         }
+
+        if (student) {
+            return res.json({ userID: user.userID, student });
+        }
+        // For admin/tutor
         res.json({ userID: user.userID, name: user.name, email: user.email, role: user.role });
     } catch (err) {
         res.status(500).json({ error: "Server error" });

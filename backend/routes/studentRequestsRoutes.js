@@ -78,4 +78,15 @@ router.post('/respond', async (req, res) => {
     }
 });
 
+router.post('/revoke-appeal', async (req, res) => {
+  const { studentRequestID, studentID } = req.body;
+  try {
+    await pool.query("UPDATE students SET status = 'Active' WHERE studentID = ?", [studentID]);
+    await pool.query("UPDATE StudentRequests SET status = 'Completed' WHERE studentRequestID = ?", [studentRequestID]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error revoking block." });
+  }
+});
+
 module.exports = router;

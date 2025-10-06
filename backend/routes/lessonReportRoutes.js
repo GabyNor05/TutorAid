@@ -5,7 +5,14 @@ const pool = require('../config/db'); // <-- Add this line
 
 router.post('/', lessonReportController.createLessonReport);
 router.get('/', async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM LessonReports ORDER BY reportDate DESC');
+  const [rows] = await pool.query(`
+    SELECT 
+      lr.*, 
+      u.name AS studentName
+    FROM LessonReports lr
+    JOIN Users u ON lr.studentID = u.userID
+    ORDER BY lr.reportDate DESC
+  `);
   res.json(rows);
 });
 

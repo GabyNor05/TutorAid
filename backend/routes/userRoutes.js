@@ -25,17 +25,32 @@ router.post('/add-staff', userController.addStaff);
 
 // Change user status with correct admin password
 router.post('/change-status', async (req, res) => {
-    const { studentID, newStatus, adminPassword } = req.body;
-    console.log("Change status request:", req.body);
+    const { userID, newStatus, adminPassword } = req.body;
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+        return res.json({ success: false, message: "Incorrect admin password." });
+    }
     try {
-        if (adminPassword !== process.env.ADMIN_PASSWORD) {
-            return res.json({ success: false, message: "Incorrect admin password." });
+        // Find studentID for this userID
+        const [studentRows] = await pool.query(
+            "SELECT studentID FROM students WHERE userID = ?",
+            [userID]
+        );
+        if (!studentRows.length) {
+            return res.json({ success: false, message: "Student not found." });
         }
-        await pool.query("UPDATE Students SET status = ? WHERE studentID = ?", [newStatus, studentID]);
+        const studentID = studentRows[0].studentID;
+
+        // Update status
+        const [result] = await pool.query(
+            "UPDATE students SET status = ? WHERE studentID = ?",
+            [newStatus, studentID]
+        );
+        if (result.affectedRows === 0) {
+            return res.json({ success: false, message: "Student not found." });
+        }
         res.json({ success: true });
     } catch (err) {
-        console.error("Change status error:", err);
-        res.json({ success: false, message: "Error updating status." });
+        res.status(500).json({ success: false, message: "Error updating status." });
     }
 });
 

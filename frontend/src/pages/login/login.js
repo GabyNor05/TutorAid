@@ -3,12 +3,17 @@ import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import {X} from "@phosphor-icons/react";
 
 function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
+    const [blockedModalOpen, setBlockedModalOpen] = useState(false);
+    const [appealModalOpen, setAppealModalOpen] = useState(false);
+    const [appealQuery, setAppealQuery] = useState("");
+    const [studentID, setStudentID] = useState(null); // <-- Change made here
 
     const handleLoginClick = async () => {
         const newErrors = {};
@@ -46,8 +51,16 @@ function Login() {
                 console.log("Login response:", res);
 
                 if (response.ok) {
-                  localStorage.setItem("userID", res.userID);
-                  navigate("/otp");
+                  // If student, check block status
+                  if (res.student && res.student.status === "Blocked") {
+                    setBlockedModalOpen(true);
+                    setStudentID(res.student.studentID); // <-- Add this line
+                  } else if (res.userID) {
+                    localStorage.setItem("userID", res.userID);
+                    navigate("/otp");
+                  } else {
+                    setErrors({ general: "Login failed" });
+                  }
                 } else {
                   setErrors({ general: res.error || "Login failed" });
                 }
@@ -115,6 +128,80 @@ function Login() {
                 </div>
             </div>
         </div>
+        {blockedModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-96 text-center gap-2 flex flex-col">
+      
+      <h3 className="text-lg font-semibold mb-2">Account Blocked</h3>
+      
+      <p className="mb-4">Your account has been blocked due to repeated violations. You cannot log in.</p>
+      
+      <div className="flex gap-2 mt-2">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          onClick={() => setBlockedModalOpen(true)}
+        >
+          Appeal Block
+        </button>
+        <button
+          type="button"
+          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          onClick={() => setBlockedModalOpen(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{appealModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <form
+      className="bg-white rounded-lg shadow-lg p-6 w-96 flex flex-col gap-4"
+      onSubmit={async e => {
+        e.preventDefault();
+        await axios.post("http://localhost:5000/api/studentRequests", {
+          studentID: studentID,
+          requestType: "Appeal_Block",
+          query: appealQuery
+        });
+        setAppealModalOpen(false);
+        alert("Your appeal has been submitted!");
+      }}
+    >
+      <div className="modal-header flex flex-row items-center mb-4 justify-between">
+                    <h3 className="text-lg font-semibold">Request Details</h3>
+                    <button onClick={() => setAppealModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+                      <X size={24} weight="bold" />
+                    </button>
+                  </div>
+      <textarea
+        placeholder="Explain why you think your block should be reviewed..."
+        value={appealQuery}
+        onChange={e => setAppealQuery(e.target.value)}
+        className="border rounded p-2 w-full"
+        rows={4}
+        required
+      />
+      <div className="flex gap-2 mt-2">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Submit Appeal
+        </button>
+        <button
+          type="button"
+          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          onClick={() => setAppealModalOpen(false)}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+)}
     </div>
     );
 }

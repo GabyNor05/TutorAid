@@ -21,6 +21,9 @@ function StudentRequests() {
   const [responseStatus, setResponseStatus] = useState("");
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectMessage, setRejectMessage] = useState("");
+  // Add state for the Appeal Block modal
+  const [appealModalOpen, setAppealModalOpen] = useState(false);
+  const [appealActionMessage, setAppealActionMessage] = useState("");
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -183,6 +186,7 @@ function StudentRequests() {
               <option value="Progress_Note">Request Progress Note</option>
               <option value="New_Subject">Request New Subject</option>
               <option value="General_Query">General Query</option>
+              <option value="Appeal_Block">Appeal Block</option>
             </select>
           </div>
         </div>
@@ -261,6 +265,19 @@ function StudentRequests() {
                               >
                                 View Request
                               </button>
+                              {/* In your dropdown menu, add a button to open the Appeal Block modal for Appeal_Block requests */}
+                              {req.requestType === "Appeal_Block" && (
+                                <button
+                                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                  onClick={() => {
+                                    setSelectedRequest(req);
+                                    setAppealModalOpen(true);
+                                    setDropdownOpen(null);
+                                  }}
+                                >
+                                  Manage Appeal
+                                </button>
+                              )}
                               <button
                                 className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                                 onClick={() => {
@@ -281,6 +298,7 @@ function StudentRequests() {
                               >
                                 Reject
                               </button>
+                              
                             </div>
                           )}
                         </div>
@@ -565,6 +583,72 @@ function StudentRequests() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Appeal Block Modal */}
+      {appealModalOpen && selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+            <div className="modal-header flex flex-row items-center mb-4 justify-between">
+              <h3 className="text-lg font-semibold">Appeal Block Details</h3>
+              <button onClick={() => setAppealModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+                <X size={24} weight="bold" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              <p><span className="font-semibold">Type:</span> {selectedRequest.requestType.replace(/_/g, " ")}</p>
+              <p><span className="font-semibold">Student ID:</span> {selectedRequest.studentID}</p>
+              <p><span className="font-semibold">Status:</span> {selectedRequest.status}</p>
+              <p><span className="font-semibold">Date:</span> {selectedRequest.createdAt?.slice(0, 10)}</p>
+              {selectedRequest.query && (
+                <p><span className="font-semibold">Appeal Query:</span> {selectedRequest.query}</p>
+              )}
+            </div>
+            {appealActionMessage && (
+              <div className="text-center text-sm text-green-600 my-2">{appealActionMessage}</div>
+            )}
+            <div className="flex gap-2 mt-6">
+              <button
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                onClick={async () => {
+                  // Revoke: set student status to Blocked and mark request as Completed/Revoked
+                  try {
+                    await axios.post("http://localhost:5000/api/studentRequests/revoke-appeal", {
+                      studentRequestID: selectedRequest.studentRequestID,
+                      studentID: selectedRequest.studentID
+                    });
+                    setAppealActionMessage("Block has been revoked and student is unblocked.");
+                    setRequests(prev =>
+                      prev.map(r =>
+                        r.studentRequestID === selectedRequest.studentRequestID
+                          ? { ...r, status: "Completed" }
+                          : r
+                      )
+                    );
+                    setTimeout(() => {
+                      setAppealModalOpen(false);
+                      setAppealActionMessage("");
+                    }, 1200);
+                  } catch (err) {
+                    setAppealActionMessage("Failed to revoke block.");
+                  }
+                }}
+              >
+                Revoke
+              </button>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={() => {
+                  setAppealModalOpen(false);
+                  setSelectedRequest(selectedRequest);
+                  setRespondModalOpen(true);
+                }}
+              >
+                Respond
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -32,7 +32,7 @@ function UserFileView() {
     const handleStatusChange = async () => {
         try {
             const res = await axios.post("http://localhost:5000/api/users/change-status", {
-                studentID: user.studentID, // Only for students
+                userID: user.userID,
                 newStatus,
                 adminPassword
             });
