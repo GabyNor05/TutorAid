@@ -8,15 +8,15 @@ function Navbar() {
     const [showMenu, setShowMenu] = useState(false);
     const [role, setRole] = useState(null);
     const navigate = useNavigate();
+    const userId = localStorage.getItem("userID");
 
     useEffect(() => {
-        const userId = localStorage.getItem("userID");
         if (userId) {
             axios.get(`http://localhost:5000/api/users/${userId}`)
                 .then(res => setRole(res.data.role))
                 .catch(err => setRole(null));
         }
-    }, []);
+    }, [userId]);
 
     const handleNavigation = (path) => {
         navigate(path);
@@ -28,10 +28,23 @@ function Navbar() {
                 <img src={Logo} alt="Logo" className="logo" onClick={() => handleNavigation("/dashboard")} style={{ cursor: "pointer" }}/>
             </div>
             <div className="nav-links"></div>
-            <div className="navMenu" style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setShowMenu((prev) => !prev)} tabIndex={0} title="Profile menu">
-                <List size={32} color={"#fff"} weight="bold"/>
-            </div>
-            {showMenu && (
+            {userId ? (
+                <div className="navMenu" style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setShowMenu((prev) => !prev)} tabIndex={0} title="Profile menu">
+                    <List size={32} color={"#fff"} weight="bold"/>
+                </div>
+            ) : (
+                <div className="flex gap-4 ml-auto mr-11">
+                    <button className="login-button "
+                        onClick={() => navigate("/login")}>
+                        Login
+                    </button>
+                    <button className="signup-button text-white border border-yellow-400 px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-5"
+                        onClick={() => navigate("/signup")}>
+                        Sign Up
+                    </button>
+                </div>
+            )}
+            {showMenu && userId && (
                 <div className="nav-dropdown">
                     <button className="dropdown-item " onClick={() => { setShowMenu(false); navigate("/"); }}>Home</button>
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/dashboard"); }}>Dashboard</button>

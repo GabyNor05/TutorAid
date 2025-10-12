@@ -25,7 +25,7 @@ import Home from './pages/home/Home';
 
 function AppContent() {
   const location = useLocation();
-  const hideNavbar = location.pathname === "/" || location.pathname === "/signup" || location.pathname === "/onboarding";
+  const hideNavbar = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/onboarding";
   return (
     <div className="App">
       {!hideNavbar && <Navbar />}

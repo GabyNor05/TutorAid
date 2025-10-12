@@ -7,12 +7,15 @@ import { useNavigate } from 'react-router-dom';
 import './home.css';
 import logo from '../reusableAssets/logo.png';
 import TutorCards from './TutorCards';
-import HeaderSection from './HeaderSection';
+import HeroSection from './HeroSection';  
+import FAQSection from './FAQSection';  
 
 function Home() {
     const navigate = useNavigate();
     const [tutors, setTutors] = useState([]);
     const [subjects, setSubjects] = useState([]);
+    const [selectedTutor, setSelectedTutor] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
         // Replace with your actual backend endpoint
@@ -30,33 +33,61 @@ function Home() {
             .catch(err => console.error("Failed to fetch subjects:", err));
     }, []);
 
+    // After fetching tutors and subjects
+    const tutorSubjectsSet = new Set();
+    tutors.forEach(tutor => {
+        // If subjects is a comma-separated string
+        if (typeof tutor.subjects === 'string') {
+            tutor.subjects.split(',').forEach(subj => tutorSubjectsSet.add(subj.trim()));
+        }
+        // If subjects is an array
+        if (Array.isArray(tutor.subjects)) {
+            tutor.subjects.forEach(subj => tutorSubjectsSet.add(subj.trim()));
+        }
+    });
+
+    // Filter subjects to only those taught by tutors
+    const filteredSubjects = subjects.filter(subject => tutorSubjectsSet.has(subject.name));
+
     return (
         <div className="">
             
             <div className="home-background min-h-screen flex flex-col">
                 <header className="home-header">
-                    <HeaderSection />
+                    <HeroSection />   
                 </header>
                 <main className="main-content">
-                <h1>Welcome to TutorAid</h1>
-                <p>Your one-stop solution for finding the best tutors.</p>
-                <div className="subject-tags flex flex-wrap gap-2 mb-4">
-                    {subjects.map(subject => (
-                        <span key={subject.subjectID} className="tag bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full font-medium">
+                    <div className="w-full px-4">
+                        <h2 className="mt-8 mb-11">Available Subjects</h2>
+                
+                <div className="subject-tags flex flex-wrap gap-2 mb-4 items-center justify-center ">
+                    {filteredSubjects.map(subject => (
+                        <span key={subject.subjectID} className="tag bg-cyan-800 text-white px-3 py-1 rounded-lg font-medium">
                             {subject.name}
                         </span>
                     ))}
                 </div>
-                <div className="carousel flex gap-4 overflow-x-auto py-4">
+                    </div>
+                
+                <div className="carousel flex gap-4 overflow-x-auto py-4 ">
                     <div className="w-full px-4">
-                        <h2 className="text-lg font-semibold mb-3">Popular tutors</h2>
-                        <div className="flex space-x-4 m-5 gap-2">
+                        <h2 className="mt-8 mb-11">Available tutors</h2>
+                        <div className="flex space-x-4 m-5 gap-2 items-center justify-center">
                         {Array.isArray(tutors) && tutors.map(tutor => (
-                            <TutorCards key={tutor.tutorID} tutor={tutor} />
+                            <TutorCards
+                                key={tutor.tutorID}
+                                tutor={tutor}
+                                onClick={() => {
+                                    setSelectedTutor(tutor);
+                                    setModalOpen(true);
+                                }}
+                            />
                         ))}
                         </div>
                     </div>
                 </div>
+                <h2 className="mt-8 mb-11">Frequently Asked Questions</h2>
+                <FAQSection />
             </main>
             </div>
             <footer className="footer">
@@ -66,6 +97,39 @@ function Home() {
                     <li><a href="#terms">Terms of Service</a></li>
                 </ul>
             </footer>
+
+            {modalOpen && selectedTutor && (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg shadow-lg flex w-[900px] h-[500px] overflow-hidden relative">
+            {/* Close button */}
+            <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-5xl"
+                onClick={() => setModalOpen(false)}
+            >
+                &times;
+            </button>
+            {/* Image section */}
+            <div className="flex-shrink-0 w-1/3 h-full flex items-center justify-center bg-gray-100">
+                <img
+                    src={selectedTutor.image}
+                    alt={selectedTutor.name}
+                    className="h-full w-full rounded-s object-cover"
+                />
+            </div>
+            {/* Details section */}
+            <div className="flex flex-col justify-center p-8 w-2/3">
+                <h2 className="text-2xl font-bold mb-5">{selectedTutor.name}</h2>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Subjects:</span> {selectedTutor.subjects}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Fee per hour:</span> R{selectedTutor.fee_per_hour}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Experience:</span> {selectedTutor.experience}</p>
+                {selectedTutor.bio && (
+                    <p className="text-gray-600 mt-4">{selectedTutor.bio}</p>
+                )}
+                {/* Add more details as needed */}
+            </div>
+        </div>
+    </div>
+)}
         </div>
     );
 }

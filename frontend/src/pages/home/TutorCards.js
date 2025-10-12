@@ -11,11 +11,12 @@ const STAR_ICON = () => (
   </svg>
 );
 
-function TutorCards({ tutor }) {
+function TutorCards({ tutor, onClick }) {
   return (
     <div
       key={tutor.tutorID}
       className="w-56 h-72 bg-white rounded-2xl shadow-md flex flex-col items-left text-left shrink-0 overflow-hidden transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110"
+      onClick={onClick}
     >
       <img
         src={tutor.image}
