@@ -42,7 +42,7 @@ router.get('/student/:studentID/published', async (req, res) => {
 });
 router.post('/publish', async (req, res) => {
   const { noteID } = req.body;
-  console.log("Publish payload:", req.body);
+  
   try {
     await pool.query(
       "UPDATE ProgressNotes SET published = 1 WHERE noteID = ?",

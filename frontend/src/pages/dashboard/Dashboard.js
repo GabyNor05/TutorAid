@@ -12,6 +12,11 @@ import axios from "axios";
 function Dashboard() {
     const [role, setRole] = useState(null);
     const [acceptedLessons, setAcceptedLessons] = useState([]);
+    const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [rateModalOpen, setRateModalOpen] = useState(false);
+    const [selectedTutor, setSelectedTutor] = useState(null);
+    const [ratingValue, setRatingValue] = useState("");
+    const [ratingComment, setRatingComment] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,6 +39,27 @@ function Dashboard() {
 
     const handleNavigation = (path) => {
         navigate(path);
+    };
+
+    const handleRateSubmit = async (e) => {
+        e.preventDefault();
+        const userId = localStorage.getItem("userID");
+        const response = await axios.get(`http://localhost:5000/api/students/by-user/${userId}`);
+        const studentID = response.data.studentID;
+        try {
+            await axios.post("http://localhost:5000/api/ratings", {
+                tutorID: selectedTutor,
+                studentID: studentID,
+                rating: ratingValue,
+                comment: ratingComment
+            });
+            setRateModalOpen(false);
+            setRatingValue("");
+            setRatingComment("");
+            // Optionally show a success message
+        } catch (err) {
+            // Optionally show an error message
+        }
     };
 
     return (
@@ -158,13 +184,73 @@ function Dashboard() {
                         <LessonCards
                             key={lesson.lessonID}
                             lesson={lesson}
+                            role={role}
+                            tutorImage={lesson.tutorImage}   // should be set from backend
+                            tutorName={lesson.tutorName}     // should be set from backend
                             showStatus={false}
+                            onContactTutor={() => {
+                                setSelectedTutor(lesson.tutorID);
+                                setContactModalOpen(true);
+                            }}
+                            onRateTutor={() => {
+                                setSelectedTutor(lesson.tutorID);
+                                setRateModalOpen(true);
+                            }}
                         />
                     ))
                 )}
             </div>  
         </div>
     </div>
+)}
+            {contactModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
+      <h3 className="text-lg font-semibold mb-4">Contact Tutor</h3>
+      <form>
+        <input type="text" placeholder="Subject" className="w-full border rounded p-2 mb-2" />
+        <textarea placeholder="Message" className="w-full border rounded p-2 mb-2" rows={4} />
+        <div className="flex justify-end gap-2">
+          <button type="submit" className="px-4 py-2 rounded bg-cyan-600 text-white">Send</button>
+          <button type="button" className="px-4 py-2 rounded bg-gray-300" onClick={() => setContactModalOpen(false)}>Cancel</button>
+          
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+{rateModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
+      <h3 className="text-lg font-semibold mb-4">Rate Tutor</h3>
+      <form onSubmit={handleRateSubmit}>
+    <label className="block mb-2">Rating:</label>
+    <select
+        className="w-full border rounded p-2 mb-2"
+        value={ratingValue}
+        onChange={e => setRatingValue(e.target.value)}
+        required
+    >
+        <option value="">Select rating</option>
+        {[1,2,3,4,5].map(num => (
+            <option key={num} value={num}>{num} Star{num > 1 ? "s" : ""}</option>
+        ))}
+    </select>
+    <textarea
+        placeholder="Comment"
+        className="w-full border rounded p-2 mb-2"
+        rows={4}
+        value={ratingComment}
+        onChange={e => setRatingComment(e.target.value)}
+        required
+    />
+    <div className="flex justify-end gap-2">
+        <button type="submit" className="px-4 py-2 rounded bg-yellow-500 text-white">Submit</button>
+        <button type="button" className="px-4 py-2 rounded bg-gray-300" onClick={() => setRateModalOpen(false)}>Cancel</button>
+    </div>
+</form>
+    </div>
+  </div>
 )}
         </div>
         

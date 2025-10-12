@@ -38,6 +38,8 @@ app.use('/api/studentRequests', studentRequestsRoutes);
 const newSubjectRequestsRoutes = require('./routes/newSubjectRequestsRoutes');
 app.use('/api/newSubjectRequests', newSubjectRequestsRoutes);
 
+const ratingRoutes = require('./routes/ratingRoutes');
+app.use('/api/ratings', ratingRoutes);
 
 app.get('/uploads/progressnotes/:filename', (req, res) => {
     console.log('Serving PDF inline:', req.params.filename);

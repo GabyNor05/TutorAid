@@ -5,11 +5,15 @@ exports.getAllTutors = async (req, res) => {
     try {
         const [rows] = await pool.query(`
             SELECT 
-                t.*, 
-                u.name, 
-                u.image
+                t.*,
+                u.name,
+                u.image,
+                ROUND(IFNULL(AVG(r.rating), 0), 1) AS rating,
+                COUNT(r.ratingID) AS num_ratings
             FROM Tutors t
             JOIN Users u ON t.userID = u.userID
+            LEFT JOIN Rating r ON t.tutorID = r.tutorID
+            GROUP BY t.tutorID
         `);
         res.json(rows);
     } catch (err) {

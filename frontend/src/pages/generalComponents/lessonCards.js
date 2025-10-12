@@ -13,8 +13,16 @@ function formatTime(timeString) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function LessonCards({ lesson, showStatus = true, onAccept, onDecline }) {
+function LessonCards({ lesson, role, tutorImage, tutorName, showStatus = true, onAccept, onDecline, onContactTutor, onRateTutor }) {
     if (!lesson) return null;
+
+    // Use tutor info if role is Student, else use student info
+    const displayImage = role === "Student"
+        ? tutorImage || "https://via.placeholder.com/150"
+        : lesson.studentImage || "https://via.placeholder.com/150";
+    const displayName = role === "Student"
+        ? tutorName
+        : lesson.studentName;
 
     const handleAccept = async () => {
         await fetch("http://localhost:5000/api/lessons/update-status", {
@@ -37,7 +45,7 @@ function LessonCards({ lesson, showStatus = true, onAccept, onDecline }) {
     return (
         <div
             key={lesson.lessonID}
-            className="transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-102"
+            className="transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-105"
         >
             <div
                 className="rounded-lg p-8 mx-auto grid items-center grid-cols-3 gap-5 w-full max-w-4xl bg-gray-50 h-52"
@@ -46,26 +54,44 @@ function LessonCards({ lesson, showStatus = true, onAccept, onDecline }) {
                 <div className="flex justify-center items-center">
                     <div className="h-36 w-36 rounded-lg overflow-hidden  flex justify-center items-center">
                         <img
-                            src={lesson.studentImage || "https://via.placeholder.com/150"}
-                            alt={lesson.studentName}
+                            src={displayImage}
+                            alt={displayName}
                             className=""
                         />
                     </div>
                 </div>
                 {/* Content */}
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h3 className="text-lg font-semibold">{lesson.studentName}</h3>
+                    <h3 className="text-lg font-semibold">{displayName}</h3>
                     <p className="text-gray-700">
                         Date: <span className="font-medium">{formatDate(lesson.date)}</span>, Time: <span className="font-medium">{formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}</span>
                     </p>
                     <p className="text-gray-600">Address: {lesson.address}</p>
+                    <div>
+                        <div className="flex gap-2 mt-2">
+                            <button
+                                className="bg-cyan-600 text-white px-3 py-1 rounded hover:bg-cyan-700"
+                                onClick={onContactTutor}
+                            >
+                                Contact Tutor
+                            </button>
+                            <button
+                                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                                onClick={onRateTutor}
+                            >
+                                Rate Tutor
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 {/* Subject & Actions */}
                 <div className="grid grid-rows-3 justify-items-end items-center h-full">
                     <div className="bg-yellow-300 text-yellow-900 font-semibold w-20 h-8 rounded-lg flex items-center justify-center mb-2">
                         {lesson.subject}
                     </div>
-                    <div></div>
+                    <div>
+                        
+                    </div>
                     {showStatus && (
                         <div className="flex gap-2">
                             <button
@@ -100,6 +126,7 @@ function LessonCards({ lesson, showStatus = true, onAccept, onDecline }) {
                     )}
                 </div>
             </div>
+            
         </div>
     );
 }

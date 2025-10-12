@@ -75,25 +75,55 @@ exports.deleteLesson = async (req, res) => {
 
 exports.getAcceptedLessons = async (req, res) => {
     const { userID, role } = req.query;
-    let whereClause = "";
-    if (role === "Tutor") {
-        whereClause = "l.tutorID = ?";
-    } else if (role === "Student") {
-        whereClause = "s.userID = ?"; // Match by userID in Students table
-    } else {
-        return res.json([]);
-    }
-    try {
-        const [rows] = await pool.query(
-            `SELECT l.lessonID, u.name AS studentName, u.image AS studentImage, l.date, l.startTime, l.endTime, l.subject, s.address as studentAddress
-             FROM Lessons l
-             LEFT JOIN Students s ON l.studentID = s.studentID
-             LEFT JOIN Users u ON s.userID = u.userID
-             WHERE ${whereClause} AND l.status = 'accepted'`,
+
+    let query = "";
+    let params = [];
+
+    if (role === "Student") {
+        const [studentRows] = await pool.query(
+            "SELECT studentID FROM Students WHERE userID = ?",
             [userID]
         );
+        if (studentRows.length === 0) {
+            return res.json([]);
+        }
+        const studentID = studentRows[0].studentID;
+
+        query = `
+            SELECT l.*, u.name AS tutorName, u.image AS tutorImage
+            FROM Lessons l
+            JOIN Tutors t ON l.tutorID = t.tutorID
+            JOIN Students s ON l.studentID = s.studentID
+            JOIN Users u ON t.userID = u.userID
+            WHERE l.studentID = ?
+            AND l.status = 'accepted'
+            ORDER BY l.date ASC
+        `;
+        params = [studentID];
+    } else if (role === "Tutor") {
+        // Get lessons for this tutor, join Users for student info
+        query = `
+            SELECT l.*, u.name AS studentName, u.image AS studentImage
+            FROM Lessons l
+            JOIN Students s ON l.studentID = s.studentID
+            JOIN Users u ON s.userID = u.userID
+            WHERE l.tutorID = ?
+            AND l.status = 'accepted'
+            ORDER BY l.date ASC
+        `;
+        params = [userID];
+    } else {
+        // For admin or other roles, return empty or handle as needed
+        return res.json([]);
+    }
+
+    try {
+        
+        const [rows] = await pool.query(query, params);
+        
         res.json(rows);
     } catch (err) {
-        res.status(500).json({ error: "Failed to fetch lessons" });
+        console.error("Failed to fetch accepted lessons:", err);
+        res.status(500).json({ error: "Failed to fetch accepted lessons" });
     }
 };

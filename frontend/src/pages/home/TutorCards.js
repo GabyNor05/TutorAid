@@ -29,7 +29,9 @@ function TutorCards({ tutor, onClick }) {
         <div className="flex flex-row justify-between items-center mt-auto">
           <div className="flex items-left justify-left mt-1 space-x-1">
             <STAR_ICON />
-            <span className="text-xs text-gray-700">{tutor.rating} ({tutor.num_ratings})</span>
+            <span className="text-xs text-gray-700">
+              {tutor.rating} ({tutor.num_ratings})
+            </span>
           </div>
           <div>
             <span className="text-xs text-gray-700">R{tutor.fee_per_hour} / hr</span>

@@ -20,7 +20,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-console.log("Pool loaded:", !!pool);
 
 const otpStore = {}; // { email: otp }
 
@@ -70,8 +69,6 @@ exports.getUser = async (req, res) => {
 // CREATE new user with role-specific data
 exports.createUser = async (req, res) => {
     try {
-        console.log("BODY:", req.body);
-        console.log("FILE:", req.file);
         // Handle image upload
         let imageUrl = null;
         if (req.file) {
@@ -221,7 +218,6 @@ exports.createTestUser = async (req, res) => {
         };
 
         const createdUser = await userModel.createUser(testUser);
-        console.log("Created user:", createdUser);
         res.json(createdUser);
     } catch (err) {
         console.error("Error creating test user:", err);
@@ -324,18 +320,14 @@ exports.verifyOtp = async (req, res) => {
 exports.getTutorsBySubject = async (req, res) => {
     const subject = req.params.subject;
     try {
-        // Log the subject for debugging
-        console.log("Fetching tutors for subject:", subject);
-        console.log("Subject received:", subject);
-
-        // Adjust this query for your schema
+        
         const [rows] = await pool.query(
             "SELECT Users.userID, Users.name FROM Users JOIN Tutors ON Users.userID = Tutors.userID WHERE Tutors.subjects LIKE ?",
             [`%${subject}%`]
         );
         res.json(rows);
     } catch (err) {
-        console.error("Error fetching tutors:", err); // Add this log
+        console.error("Error fetching tutors:", err); 
         res.status(500).json({ error: "Failed to fetch tutors" });
     }
 };
@@ -347,7 +339,6 @@ exports.getTutorAvailability = async (req, res) => {
             "SELECT availability FROM Tutors WHERE userID = ?",
             [userID]
         );
-        console.log("Raw availability string:", rows[0]?.availability);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch availability" });

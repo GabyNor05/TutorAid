@@ -100,7 +100,7 @@ function AddStaff() {
             const response = await axios.post('http://localhost:5000/api/users', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            console.log(response);
+            
             alert("Staff member added!");
             navigate("/dashboard");
         } catch (error) {

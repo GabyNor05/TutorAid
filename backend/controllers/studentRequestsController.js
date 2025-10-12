@@ -39,7 +39,7 @@ exports.createStudentRequest = async (req, res) => {
 exports.getAllStudentRequests = async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM StudentRequests ORDER BY createdAt DESC');
-        console.log("Fetched requests from DB:", rows); // Should log array of objects
+        
         res.json(rows);
     } catch (err) {
         console.error("Error fetching student requests:", err);
