@@ -13,7 +13,9 @@ function AddStaff() {
         bio: "",
         subjects: "",
         qualifications: "",
-        availability: ""
+        availability: "",
+        fee_per_hour: "",
+        experience: ""
     });
 
     // Availability state
@@ -89,6 +91,8 @@ function AddStaff() {
         data.append("qualifications", form.qualifications);
         data.append("availability", availabilityStr.trim());
         data.append("role", form.role);
+        data.append("fee_per_hour", form.fee_per_hour);
+        data.append("experience", form.experience);
         
 
         // TODO: Send data to backend
@@ -225,6 +229,41 @@ function AddStaff() {
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                            <div className="addStaff-form-group">
+                                <label>Fee per hour (Rand)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    name="fee_per_hour"
+                                    placeholder="Fee per hour (Rand)"
+                                    value={form.fee_per_hour}
+                                    onChange={handleChange}
+                                    className="border rounded p-2 w-full"
+                                    required
+                                />
+                            </div>
+                            <div className="addStaff-form-group">
+                                <label>Experience</label>
+                                <input
+                                    type="text"
+                                    name="experience"
+                                    placeholder="Experience"
+                                    value={form.experience}
+                                    onChange={handleChange}
+                                    className="border rounded p-2 w-full"
+                                    required
+                                />
+                                <select
+                                    name="experience_unit"
+                                    value={form.experience_unit}
+                                    onChange={handleChange}
+                                    className="border rounded p-2 w-full"
+                                    required
+                                >
+                                    <option value="months">Months</option>
+                                    <option value="years">Years</option>
+                                </select>
                             </div>
                         </>
                     )}

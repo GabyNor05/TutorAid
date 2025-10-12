@@ -33,7 +33,9 @@ function Navbar() {
             </div>
             {showMenu && (
                 <div className="nav-dropdown">
+                    <button className="dropdown-item " onClick={() => { setShowMenu(false); navigate("/"); }}>Home</button>
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate("/dashboard"); }}>Dashboard</button>
+
                     {/* Tutor only */}
                     {role === "Tutor" && (
                         <>
@@ -64,7 +66,7 @@ function Navbar() {
                         onClick={() => {
                             setShowMenu(false);
                             localStorage.removeItem("userID");
-                            navigate("/");
+                            navigate("/login");
                         }}>
                         Log out
                     </button>

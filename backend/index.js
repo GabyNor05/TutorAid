@@ -14,6 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
+const tutorRoutes = require('./routes/tutorRoutes');
+app.use('/api/tutors', tutorRoutes);
+
 const lessonRoutes = require('./routes/lessonRoutes');
 app.use('/api/lessons', lessonRoutes);
 

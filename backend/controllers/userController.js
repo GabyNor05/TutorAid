@@ -307,7 +307,7 @@ exports.verifyOtp = async (req, res) => {
     return res.status(400).json({ error: "Invalid OTP" });
   }
   
-    // Check if OTP is expired (5 minutes = 300000 ms)
+    // Check if OTP is expired (5 minutes = 300000 ms) for demo purposes, set to 1 minute (60000 ms)
     if (Date.now() - record.createdAt > 60000) {
         delete otpStore[email];
         return res.status(400).json({ error: "OTP expired" });
@@ -320,7 +320,7 @@ exports.verifyOtp = async (req, res) => {
     return res.status(400).json({ error: "Invalid OTP" });
 };
 
-// userController.js
+
 exports.getTutorsBySubject = async (req, res) => {
     const subject = req.params.subject;
     try {
@@ -354,7 +354,7 @@ exports.getTutorAvailability = async (req, res) => {
     }
 };
 
-// filepath: d:\TutorAid\backend\controllers\userController.js
+
 exports.getStudentIDByUserID = async (req, res) => {
     const { userID } = req.params;
     try {
@@ -409,8 +409,8 @@ exports.addStaff = async (req, res) => {
         }
         // Save imageUrl to DB (not req.file.path)
         await pool.query(
-            "INSERT INTO Users (name, email, password, role, image, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [req.body.name, req.body.email, req.body.password, req.body.role, imageUrl, req.body.bio, req.body.subjects, req.body.qualifications, req.body.availability]
+            "INSERT INTO Users (name, email, password, role, image, bio, subjects, qualifications, availability, fee_per_hour, experience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [req.body.name, req.body.email, req.body.password, req.body.role, imageUrl, req.body.bio, req.body.subjects, req.body.qualifications, req.body.availability, req.body.fee_per_hour, req.body.experience]
         );
         res.status(201).json({ message: "Staff member added!" });
     } catch (err) {

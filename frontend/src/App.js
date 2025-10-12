@@ -20,6 +20,7 @@ import UserFileView from './pages/admin/manageUsers/UserFileView';
 import RequestForm from './pages/student/requestForm/RequestForm';
 import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
+import Home from './pages/home/Home';
 
 
 function AppContent() {
@@ -31,7 +32,7 @@ function AppContent() {
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/" element={<Login />} />   
+        <Route path="/login" element={<Login />} />   
         <Route path="/onboarding" element={<Onboarding />} /> 
         <Route path="/otp" element={<Otp />} /> 
         <Route path="/userprofile" element={<UserProfile />} />
@@ -47,6 +48,7 @@ function AppContent() {
         <Route path="/requestform" element={<RequestForm />} />
         <Route path="/studentrequests" element={<StudentRequests />} />
         <Route path="/managereports" element={<ManageReports />} />
+        <Route path="/" element={<Home />} />
       </Routes>
     </div>
   );

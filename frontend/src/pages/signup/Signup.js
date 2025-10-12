@@ -136,7 +136,7 @@ function Signup() {
                     </form>
                     <div className="login-link">
                         <p>Don't have an account?</p> 
-                        <a href="/">Login</a>
+                        <a href="/login">Login</a>
                     </div>
                     <div className="Google-signup">
                         <button className="google-button-container" >
