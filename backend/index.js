@@ -41,6 +41,9 @@ app.use('/api/newSubjectRequests', newSubjectRequestsRoutes);
 const ratingRoutes = require('./routes/ratingRoutes');
 app.use('/api/ratings', ratingRoutes);
 
+const messagesRoutes = require('./routes/messagesRoutes');
+app.use('/api/messages', messagesRoutes);
+
 app.get('/uploads/progressnotes/:filename', (req, res) => {
     console.log('Serving PDF inline:', req.params.filename);
     const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);

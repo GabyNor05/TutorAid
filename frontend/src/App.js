@@ -1,4 +1,5 @@
 import './App.css';
+import React, { useState } from "react";
 
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
@@ -21,11 +22,15 @@ import RequestForm from './pages/student/requestForm/RequestForm';
 import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
+import { EnvelopeSimple } from "@phosphor-icons/react"; // or any inbox/mail icon
 
 
 function AppContent() {
   const location = useLocation();
   const hideNavbar = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/onboarding";
+  const userId = localStorage.getItem("userID");
+  const [inboxOpen, setInboxOpen] = useState(false); // Add this
+
   return (
     <div className="App">
       {!hideNavbar && <Navbar />}
@@ -50,6 +55,17 @@ function AppContent() {
         <Route path="/managereports" element={<ManageReports />} />
         <Route path="/" element={<Home />} />
       </Routes>
+      {userId && (
+        <div
+          className="fixed bottom-6 right-6 z-50 bg-cyan-600 rounded-full shadow-lg flex items-center justify-center cursor-pointer w-16 h-16 hover:bg-cyan-700 transition"
+          // onClick={() => navigate("/inbox")}
+          title="Inbox"
+        >
+          <EnvelopeSimple size={32} color="#fff" weight="bold" />
+          {/* Optionally add a badge for unread count */}
+          {/* <span className="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full px-2">3</span> */}
+        </div>
+      )}
     </div>
   );
 }
