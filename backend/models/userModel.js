@@ -1,4 +1,3 @@
-const pool = require('../config/db');
 
 const getAllUsers = async () => {
     const pool = require('../config/db');
