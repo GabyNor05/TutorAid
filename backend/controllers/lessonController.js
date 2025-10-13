@@ -1,4 +1,3 @@
-
 const nodemailer = require('nodemailer'); // For sending emails
 
 exports.createLesson = async (req, res) => {
@@ -81,52 +80,47 @@ exports.getAcceptedLessons = async (req, res) => {
     const pool = require('../config/db');
     const { userID, role } = req.query;
 
-    let query = "";
-    let params = [];
+    try {
+        let query = "";
+        let params = [];
 
-    if (role === "Student") {
-        const [studentRows] = await pool.query(
-            "SELECT studentID FROM Students WHERE userID = ?",
-            [userID]
-        );
-        if (studentRows.length === 0) {
+        if (role === "Student") {
+            const [studentRows] = await pool.query(
+                "SELECT studentID FROM Students WHERE userID = ?",
+                [userID]
+            );
+            if (studentRows.length === 0) {
+                return res.json([]);
+            }
+            const studentID = studentRows[0].studentID;
+
+            query = `
+                SELECT l.*, u.name AS tutorName, u.image AS tutorImage
+                FROM Lessons l
+                JOIN Tutors t ON l.tutorID = t.tutorID
+                JOIN Students s ON l.studentID = s.studentID
+                JOIN Users u ON t.userID = u.userID
+                WHERE l.studentID = ? AND l.status = 'accepted'
+                ORDER BY l.date ASC
+            `;
+            params = [studentID];
+        } else if (role === "Tutor") {
+            query = `
+                SELECT l.*, u.name AS studentName, u.image AS studentImage
+                FROM Lessons l
+                JOIN Students s ON l.studentID = s.studentID
+                JOIN Users u ON s.userID = u.userID
+                WHERE l.tutorID = ? AND l.status = 'accepted'
+                ORDER BY l.date ASC
+            `;
+            params = [userID];
+        } else {
             return res.json([]);
         }
-        const studentID = studentRows[0].studentID;
-
-        query = `
-            SELECT l.*, u.name AS tutorName, u.image AS tutorImage
-            FROM Lessons l
-            JOIN Tutors t ON l.tutorID = t.tutorID
-            JOIN Students s ON l.studentID = s.studentID
-            JOIN Users u ON t.userID = u.userID
-            WHERE l.studentID = ?
-            AND l.status = 'accepted'
-            ORDER BY l.date ASC
-        `;
-        params = [studentID];
-    } else if (role === "Tutor") {
-        // Get lessons for this tutor, join Users for student info
-        query = `
-            SELECT l.*, u.name AS studentName, u.image AS studentImage
-            FROM Lessons l
-            JOIN Students s ON l.studentID = s.studentID
-            JOIN Users u ON s.userID = u.userID
-            WHERE l.tutorID = ?
-            AND l.status = 'accepted'
-            ORDER BY l.date ASC
-        `;
-        params = [userID];
-    } else {
-        // For admin or other roles, return empty or handle as needed
-        return res.json([]);
-    }
-
-    try {
         
         const [rows] = await pool.query(query, params);
-        
         res.json(rows);
+
     } catch (err) {
         console.error("Failed to fetch accepted lessons:", err);
         res.status(500).json({ error: "Failed to fetch accepted lessons" });
