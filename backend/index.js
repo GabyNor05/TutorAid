@@ -4,29 +4,38 @@ require('dotenv').config();
 
 const app = express();
 
+// --- START: Temporary Debugging Middleware ---
+// This will run for EVERY request and log information to your Vercel logs.
+app.use((req, res, next) => {
+  console.log('--- INCOMING REQUEST ---');
+  console.log('Request Origin:', req.headers.origin);
+  console.log('Request Path:', req.path);
+  console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
+  console.log('------------------------');
+  next(); // Pass the request to the next middleware
+});
+// --- END: Temporary Debugging Middleware ---
+
+
 // --- START: CORS Configuration ---
 const allowedOrigins = [
-  'http://localhost:3000',      // Your local frontend for development
-  process.env.FRONTEND_URL      // Your deployed frontend URL from Vercel env vars
+  'http://localhost:3000',
+  process.env.FRONTEND_URL
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.error('CORS ERROR: Origin not allowed:', origin); // Log CORS errors
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200 // This is important for handling preflight OPTIONS requests
+  optionsSuccessStatus: 200
 };
 
-// Use the configured CORS options for all requests.
-// The cors middleware will automatically handle preflight OPTIONS requests.
 app.use(cors(corsOptions));
 // --- END: CORS Configuration ---
 
