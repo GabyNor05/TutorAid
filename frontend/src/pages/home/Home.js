@@ -17,9 +17,11 @@ function Home() {
     const [selectedTutor, setSelectedTutor] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
 
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
     useEffect(() => {
         // Replace with your actual backend endpoint
-        fetch("http://localhost:5000/api/tutors")
+        fetch(`${API_URL}/api/tutors`)
             .then(res => res.json())
             .then(data => {
                 console.log("Tutors data:", data);
@@ -27,7 +29,7 @@ function Home() {
             })
             .catch(err => console.error("Failed to fetch tutors:", err));
 
-        fetch("http://localhost:5000/api/subjects")
+        fetch(`${API_URL}/api/subjects`)
             .then(res => res.json())
             .then(data => setSubjects(data))
             .catch(err => console.error("Failed to fetch subjects:", err));

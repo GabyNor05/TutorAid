@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function getDateLabel(dateString) {
   if (!dateString) return "";
   const msgDate = new Date(dateString);
@@ -20,7 +22,7 @@ function MessageCard({ senderID, time, message, unread, online, subject }) {
 
   useEffect(() => {
     if (senderID) {
-      axios.get(`http://localhost:5000/api/users/${senderID}`)
+      axios.get(`${API_URL}/api/users/${senderID}`)
         .then(res => setSender({
           name: res.data.name,
           image: res.data.image || "https://via.placeholder.com/40"
