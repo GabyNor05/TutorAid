@@ -2,10 +2,18 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
+const { createServerlessHandler } = require('vercel-express');
+const admin = require('firebase-admin');
 const app = express();
 
+admin.initializeApp({
+  credential: admin.credential.cert(require('./serviceAccountKey.json')),
+  storageBucket: 'tutoraid-8db60.appspot.com'
+});
+const bucket = admin.storage().bucket();
+
 app.use(cors({
-  origin: 'http://localhost:3000'
+  origin: '*'
 }));
 
 app.use(express.json());
@@ -44,14 +52,6 @@ app.use('/api/ratings', ratingRoutes);
 const messagesRoutes = require('./routes/messagesRoutes');
 app.use('/api/messages', messagesRoutes);
 
-app.get('/uploads/progressnotes/:filename', (req, res) => {
-    console.log('Serving PDF inline:', req.params.filename);
-    const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline');
-    res.sendFile(filePath);
-});
-
 // Example Express handler
 app.post('/api/users/change-status', async (req, res) => {
     const { userID, newStatus, adminPassword } = req.body;
@@ -64,7 +64,4 @@ app.post('/api/users/change-status', async (req, res) => {
 });
 
 
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+module.exports = createServerlessHandler(app);
