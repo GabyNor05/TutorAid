@@ -2,29 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
-const admin = require('firebase-admin');
-
-let serviceAccount;
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  // Use base64 env variable on Vercel
-  serviceAccount = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString());
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: 'tutoraid-8db60.appspot.com'
-  });
-} else if (process.env.NODE_ENV !== 'production') {
-  // Only use local file for development
-  serviceAccount = require('./serviceAccountKey.json');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: 'tutoraid-8db60.appspot.com'
-  });
-} else {
-  throw new Error('Service account credentials not found for production!');
-}
 
 const app = express();
-const bucket = admin.storage().bucket();
 
 app.use(cors({
   origin: '*'
@@ -69,13 +48,11 @@ app.use('/api/messages', messagesRoutes);
 // Example Express handler
 app.post('/api/users/change-status', async (req, res) => {
     const { userID, newStatus, adminPassword } = req.body;
-    // Replace 'yourAdminPassword' with your actual admin password logic
     if (adminPassword !== process.env.ADMIN_PASSWORD) {
         return res.json({ success: false, message: "Incorrect admin password." });
     }
     await pool.query("UPDATE Users SET status = ? WHERE userID = ?", [newStatus, userID]);
     res.json({ success: true });
 });
-
 
 module.exports = app;
