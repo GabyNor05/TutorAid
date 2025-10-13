@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db');
 
 router.post('/', async (req, res) => {
+    const pool = require('../config/db');
     const { tutorID, studentID, rating, comment } = req.body;
     try {
         await pool.query(

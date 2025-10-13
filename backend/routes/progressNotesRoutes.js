@@ -3,9 +3,9 @@ const router = express.Router();
 const cloudinary = require('../config/cloudinary');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
-const pool = require('../config/db');
 
 router.post('/upload', upload.single('file'), async (req, res) => {
+    const pool = require('../config/db');
   try {
     const studentID = req.body.studentID;
     const fileBuffer = req.file.buffer;
