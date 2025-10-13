@@ -74,16 +74,5 @@ app.use('/api/ratings', ratingRoutes);
 const messagesRoutes = require('./routes/messagesRoutes');
 app.use('/api/messages', messagesRoutes);
 
-// Example Express handler
-app.post('/api/users/change-status', async (req, res) => {
-    const { userID, newStatus, adminPassword } = req.body;
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-        return res.json({ success: false, message: "Incorrect admin password." });
-    }
-    // Note: You need to require your 'pool' from './config/db'
-    const pool = require('./config/db'); 
-    await pool.query("UPDATE Users SET status = ? WHERE userID = ?", [newStatus, userID]);
-    res.json({ success: true });
-});
 
 module.exports = app;
