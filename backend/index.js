@@ -5,12 +5,6 @@ require('dotenv').config();
 const app = express();
 
 // --- START: CORS Configuration ---
-
-// Handle preflight OPTIONS requests for all routes
-// This will respond to the browser's permission check before any other middleware runs.
-app.options('*', cors()); 
-
-// Define the list of allowed frontend URLs
 const allowedOrigins = [
   'http://localhost:3000',      // Your local frontend for development
   process.env.FRONTEND_URL      // Your deployed frontend URL from Vercel env vars
@@ -21,19 +15,18 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // If the origin is in our allowed list, allow it.
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // Otherwise, block it.
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // This allows cookies to be sent
-  optionsSuccessStatus: 200 // For legacy browser support
+  credentials: true,
+  optionsSuccessStatus: 200 // This is important for handling preflight OPTIONS requests
 };
 
-// Use the configured CORS options for all other requests
+// Use the configured CORS options for all requests.
+// The cors middleware will automatically handle preflight OPTIONS requests.
 app.use(cors(corsOptions));
 // --- END: CORS Configuration ---
 
@@ -41,6 +34,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- Routes ---
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
