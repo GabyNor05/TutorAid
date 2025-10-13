@@ -1,13 +1,37 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const path = require('path');
 
 const app = express();
 
-app.use(cors({
-  origin: '*'
-}));
+// --- START: CORS Configuration ---
+// Define the list of allowed frontend URLs
+const allowedOrigins = [
+  'http://localhost:3000',      // Your local frontend for development
+  process.env.FRONTEND_URL      // Your deployed frontend URL from Vercel env vars
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // If the origin is in our allowed list, allow it.
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // Otherwise, block it.
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // This allows cookies to be sent
+  optionsSuccessStatus: 200 // For legacy browser support
+};
+
+// Use the configured CORS options
+app.use(cors(corsOptions));
+// --- END: CORS Configuration ---
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -51,6 +75,8 @@ app.post('/api/users/change-status', async (req, res) => {
     if (adminPassword !== process.env.ADMIN_PASSWORD) {
         return res.json({ success: false, message: "Incorrect admin password." });
     }
+    // Note: You need to require your 'pool' from './config/db'
+    const pool = require('./config/db'); 
     await pool.query("UPDATE Users SET status = ? WHERE userID = ?", [newStatus, userID]);
     res.json({ success: true });
 });
