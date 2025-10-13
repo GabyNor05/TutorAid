@@ -1,7 +1,7 @@
-const pool = require('../config/db');
 
 // Get inbox messages for a user
 exports.getInbox = async (req, res) => {
+    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -16,6 +16,7 @@ exports.getInbox = async (req, res) => {
 
 // Get sent messages for a user
 exports.getSent = async (req, res) => {
+    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -30,6 +31,7 @@ exports.getSent = async (req, res) => {
 
 // Send a new message
 exports.sendMessage = async (req, res) => {
+    const pool = require('../config/db');
     const { senderID, receiverID, subject, body } = req.body;
     try {
         await pool.query(
@@ -44,6 +46,7 @@ exports.sendMessage = async (req, res) => {
 
 // Mark a message as read
 exports.markAsRead = async (req, res) => {
+    const pool = require('../config/db');
     const { messageID } = req.params;
     try {
         await pool.query(
@@ -58,6 +61,7 @@ exports.markAsRead = async (req, res) => {
 
 // Delete a message
 exports.deleteMessage = async (req, res) => {
+    const pool = require('../config/db');
     const { messageID } = req.params;
     try {
         await pool.query(

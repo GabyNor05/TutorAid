@@ -1,7 +1,8 @@
-const pool = require('../config/db');
+
 const nodemailer = require('nodemailer'); // For sending emails
 
 exports.createLesson = async (req, res) => {
+    const pool = require('../config/db');
     const { tutorID, studentID, date, startTime, duration, subject } = req.body;
     try {
         await pool.query(
@@ -18,6 +19,7 @@ exports.createLesson = async (req, res) => {
 
 // Example controller for GET /api/lessons
 exports.getLessonsForTutor = async (req, res) => {
+    const pool = require('../config/db');
     const tutorID = req.query.tutorID;
     try {
         const [rows] = await pool.query(
@@ -37,6 +39,7 @@ exports.getLessonsForTutor = async (req, res) => {
 };
 
 exports.updateLessonStatus = async (req, res) => {
+    const pool = require('../config/db');
     const { lessonID, status } = req.body;
     try {
         await pool.query(
@@ -50,6 +53,7 @@ exports.updateLessonStatus = async (req, res) => {
 };
 
 exports.deleteLesson = async (req, res) => {
+    const pool = require('../config/db');
     const { lessonID, studentEmail } = req.body;
     try {
         await pool.query(`DELETE FROM Lessons WHERE lessonID = ?`, [lessonID]);
@@ -74,6 +78,7 @@ exports.deleteLesson = async (req, res) => {
 };
 
 exports.getAcceptedLessons = async (req, res) => {
+    const pool = require('../config/db');
     const { userID, role } = req.query;
 
     let query = "";

@@ -1,6 +1,6 @@
-const pool = require('../config/db');
 
 exports.getAllStudents = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const [rows] = await pool.query(`
             SELECT s.*, u.name, u.image
@@ -14,6 +14,7 @@ exports.getAllStudents = async (req, res) => {
 };
 
 exports.getStudentByUserID = async (req, res) => {
+    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -34,6 +35,7 @@ exports.getStudentByUserID = async (req, res) => {
 };
 
 exports.getAllStatuses = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const [rows] = await pool.query('SELECT DISTINCT status FROM Students');
         const statuses = rows.map(row => row.status).filter(Boolean);
@@ -44,6 +46,7 @@ exports.getAllStatuses = async (req, res) => {
 };
 
 exports.createStudentRequest = async (req, res) => {
+    const pool = require('../config/db');
     const { userID, status } = req.body;
     try {
         await pool.query(
@@ -59,6 +62,7 @@ exports.createStudentRequest = async (req, res) => {
 };
 
 exports.getStudentIDByUserID = async (req, res) => {
+    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(

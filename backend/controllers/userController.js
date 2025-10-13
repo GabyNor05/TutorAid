@@ -3,7 +3,6 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const pool = require('../config/db');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
@@ -25,6 +24,7 @@ const otpStore = {}; // { email: otp }
 
 // GET all users
 exports.getUsers = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const users = await userModel.getAllUsers();
         res.json(users);
@@ -35,6 +35,7 @@ exports.getUsers = async (req, res) => {
 
 // In userController.js
 exports.getAllUsers = async (req, res) => {
+    const pool = require('../config/db');
   try {
     const [rows] = await pool.query(`
       SELECT u.*, s.status
@@ -49,6 +50,7 @@ exports.getAllUsers = async (req, res) => {
 
 // // GET single user by ID
 exports.getUser = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const user = await userModel.getUserById(req.params.id);
         if (!user) return res.status(404).json({ error: "User not found" });
@@ -68,6 +70,7 @@ exports.getUser = async (req, res) => {
 
 // CREATE new user with role-specific data
 exports.createUser = async (req, res) => {
+    const pool = require('../config/db');
     try {
         // Handle image upload
         let imageUrl = null;
@@ -149,6 +152,7 @@ exports.createUser = async (req, res) => {
 
 // UPDATE existing user
 exports.updateUser = async (req, res) => {
+    const pool = require('../config/db');
     try {
         let imageUrl;
         if (req.file) {
@@ -191,6 +195,7 @@ exports.updateUser = async (req, res) => {
 
 // DELETE user
 exports.deleteUser = async (req, res) => {
+    const pool = require('../config/db');
     try {
         await userModel.deleteUser(req.params.id);
         res.json({ message: 'User deleted' });
@@ -201,6 +206,7 @@ exports.deleteUser = async (req, res) => {
 
 // test
 exports.createTestUser = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const randomImage = "https://picsum.photos/id/28/200/300";
         const hashedPassword = await bcrypt.hash("testpassword", 10);
@@ -226,6 +232,7 @@ exports.createTestUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
+    const pool = require('../config/db');
     const { email, password } = req.body;
     try {
         const user = await userModel.getUserByEmail(email);
@@ -271,6 +278,7 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.sendOtp = async (req, res) => {
+    const pool = require('../config/db');
     const { email } = req.body;
     try {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -294,6 +302,7 @@ exports.sendOtp = async (req, res) => {
 };
 
 exports.verifyOtp = async (req, res) => {
+    const pool = require('../config/db');
   const { email, otp } = req.body;
   if (!email || !otp) {
     return res.status(400).json({ error: "Missing email or OTP" });
@@ -318,6 +327,7 @@ exports.verifyOtp = async (req, res) => {
 
 
 exports.getTutorsBySubject = async (req, res) => {
+    const pool = require('../config/db');
     const subject = req.params.subject;
     try {
         
@@ -333,6 +343,7 @@ exports.getTutorsBySubject = async (req, res) => {
 };
 
 exports.getTutorAvailability = async (req, res) => {
+    const pool = require('../config/db');
     const userID = req.params.userID;
     try {
         const [rows] = await pool.query(
@@ -347,6 +358,7 @@ exports.getTutorAvailability = async (req, res) => {
 
 
 exports.getStudentIDByUserID = async (req, res) => {
+    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -364,6 +376,7 @@ exports.getStudentIDByUserID = async (req, res) => {
 };
 
 exports.getAllStudents = async (req, res) => {
+    const pool = require('../config/db');
   try {
     await pool.query(`
       UPDATE Students s
@@ -379,6 +392,7 @@ exports.getAllStudents = async (req, res) => {
 };
 
 exports.updateLastLogin = async (userID) => {
+    const pool = require('../config/db');
     try {
         await pool.query(
             "UPDATE Users SET lastLogin = NOW() WHERE userID = ?",
@@ -390,6 +404,7 @@ exports.updateLastLogin = async (userID) => {
 };
 
 exports.addStaff = async (req, res) => {
+    const pool = require('../config/db');
     try {
         let imageUrl = null;
         if (req.file) {
