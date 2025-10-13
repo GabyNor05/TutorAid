@@ -14,7 +14,7 @@ import StudentFiles from './pages/tutor/studentFiles/StudentFiles';
 import LessonFeedback from './pages/tutor/lessonFeedback/LessonFeedback';
 import ReportForm from './pages/tutor/reportForm/ReportForm';
 import StudentFileView from './pages/tutor/studentFileView/StudentFileView';
-
+import AddStaff from './pages/admin/addStaff/AddStaff';
 import Booking from './pages/student/booking/Booking';
 import ManageUsers from './pages/admin/manageUsers/ManageUsers';
 import UserFileView from './pages/admin/manageUsers/UserFileView';
