@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
-const { createServerlessHandler } = require('vercel-express');
 const admin = require('firebase-admin');
 const app = express();
 
@@ -64,4 +63,4 @@ app.post('/api/users/change-status', async (req, res) => {
 });
 
 
-module.exports = createServerlessHandler(app);
+module.exports = app;
