@@ -230,7 +230,8 @@ CREATE TABLE `students` (
   `status` enum('Active','Inactive','Blocked') NOT NULL DEFAULT 'Active',
   `city` varchar(100) DEFAULT NULL,
   `province` varchar(100) DEFAULT NULL,
-  `strikes` int(11) NOT NULL DEFAULT 0
+  `strikes` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`studentID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -416,13 +417,6 @@ ALTER TABLE `studentrequests`
   ADD PRIMARY KEY (`studentRequestID`),
   ADD KEY `studentID` (`studentID`),
   ADD KEY `subjectID` (`subjectID`);
-
---
--- Indexes for table `students`
---
-ALTER TABLE `students`
-  ADD PRIMARY KEY (`studentID`),
-  ADD UNIQUE KEY `userID` (`userID`);
 
 --
 -- Indexes for table `subjects`
