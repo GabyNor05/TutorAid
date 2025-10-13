@@ -5,6 +5,11 @@ require('dotenv').config();
 const app = express();
 
 // --- START: CORS Configuration ---
+
+// Handle preflight OPTIONS requests for all routes
+// This will respond to the browser's permission check before any other middleware runs.
+app.options('*', cors()); 
+
 // Define the list of allowed frontend URLs
 const allowedOrigins = [
   'http://localhost:3000',      // Your local frontend for development
@@ -28,7 +33,7 @@ const corsOptions = {
   optionsSuccessStatus: 200 // For legacy browser support
 };
 
-// Use the configured CORS options
+// Use the configured CORS options for all other requests
 app.use(cors(corsOptions));
 // --- END: CORS Configuration ---
 
