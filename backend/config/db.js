@@ -10,7 +10,6 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   ssl: {
-    // This is required to connect to Azure
     rejectUnauthorized: true
   }
 });
