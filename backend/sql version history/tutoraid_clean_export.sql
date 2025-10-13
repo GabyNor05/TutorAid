@@ -185,7 +185,19 @@ CREATE TABLE `users` (
   PRIMARY KEY (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `users` (`userID`, `image`, `name`, `email`, `password`, `role`, `lastLogin`) VALUES (35, NULL, 'Darian Martin', '241355@virtualwindow.co.za', '$2b$10$1F2QBVFfN5MY9NnbqfXM2u5qiKyBKIg4ZT8ngdNXBAi.VdGASvta2', 'Student', '2025-09-24 10:00:16'), (36, NULL, 'Andre van Heerden2', '241155@virtualwindow.co.za', '$2b$10$E5051LjwjLVXfg7sG7npHuA7l40RNkKdRthg4Xt6JBQ5GcL.QFWMK', 'Student', '2025-09-24 10:00:16'), (40, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1758746693/uploads/saiid1yv7osyuugtvueb.png', 'Megan-Lilly Smith', 'meganlillySmith895@gmail.com', '$2b$10$66sPU8Y2E0AlDHsjxrQjn./wbS2W7Fyf/zDBVR5CH3eSXThy.Tvw6', 'Tutor', '2025-09-30 10:07:07'), (60, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759006221/uploads/g0jv5xa1eggrusrmpoud.png', 'Mpho Norris', 'gmmnorris@gmail.com', '$2b$10$VRimRNUamIAHxEBgKI3ipeuTWJnjoprCsZTmQKAgVRPMit2pl/1iW', 'Student', '2025-10-12 23:07:30'), (61, NULL, 'Gabrielle Norris', 'gabriellenor05@gmail.com', '$2b$10$Ok0NZjIGSwhLOVUBCKgeAO2b7D76Or59agoGGOA3xo9ixUIDRrd.i', 'Student', '2025-10-06 00:37:32'), (65, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759214391/users/bph0frnlfpqlpfviekzz.jpg', 'Admin', 'tutoraid.dv200@gmail.com', '$2b$10$UeOL0CxG5N1JPVv73IWh4OpXvbHFcDFHPAvo1OjFEHu83nsJ51liG', 'Admin', '2025-10-06 00:38:53'), (67, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759607935/users/nec2llfivmr9pzmatedb.jpg', 'Thea O'Brien', '241143@virtualwindow.co.za', '$2b$10$2ncx4xIGrLRcoIsGFSvMSu/h78wk1yykFWhxl/1f4VX7MXG8HabKS', 'Tutor', '2025-10-05 18:55:11'), (68, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759608299/users/puyj8sxuwgj8xblao9ka.jpg', 'Gaby Norris', 'gabynorris616@gmail.com', '$2b$10$2XjqpZsaYWHtw0uGCM9yPO5QBlWWiQ.xLl//JacllkueGs/XREQ4y', 'Tutor', NULL);
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`userID`, `image`, `name`, `email`, `password`, `role`, `lastLogin`) VALUES
+(35, NULL, 'Darian Martin', '241355@virtualwindow.co.za', '$2b$10$1F2QBVFfN5MY9NnbqfXM2u5qiKyBKIg4ZT8ngdNXBAi.VdGASvta2', 'Student', '2025-09-24 10:00:16'),
+(36, NULL, 'Andre van Heerden2', '241155@virtualwindow.co.za', '$2b$10$E5051LjwjLVXfg7sG7npHuA7l40RNkKdRthg4Xt6JBQ5GcL.QFWMK', 'Student', '2025-09-24 10:00:16'),
+(40, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1758746693/uploads/saiid1yv7osyuugtvueb.png', 'Megan-Lilly Smith', 'meganlillySmith895@gmail.com', '$2b$10$66sPU8Y2E0AlDHsjxrQjn./wbS2W7Fyf/zDBVR5CH3eSXThy.Tvw6', 'Tutor', '2025-09-30 10:07:07'),
+(60, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759006221/uploads/g0jv5xa1eggrusrmpoud.png', 'Mpho Norris', 'gmmnorris@gmail.com', '$2b$10$VRimRNUamIAHxEBgKI3ipeuTWJnjoprCsZTmQKAgVRPMit2pl/1iW', 'Student', '2025-10-12 23:07:30'),
+(61, NULL, 'Gabrielle Norris', 'gabriellenor05@gmail.com', '$2b$10$Ok0NZjIGSwhLOVUBCKgeAO2b7D76Or59agoGGOA3xo9ixUIDRrd.i', 'Student', '2025-10-06 00:37:32'),
+(65, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759214391/users/bph0frnlfpqlpfviekzz.jpg', 'Admin', 'tutoraid.dv200@gmail.com', '$2b$10$UeOL0CxG5N1JPVv73IWh4OpXvbHFcDFHPAvo1OjFEHu83nsJ51liG', 'Admin', '2025-10-06 00:38:53'),
+(67, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759607935/users/nec2llfivmr9pzmatedb.jpg', 'Thea O\'Brien', '241143@virtualwindow.co.za', '$2b$10$2ncx4xIGrLRcoIsGFSvMSu/h78wk1yykFWhxl/1f4VX7MXG8HabKS', 'Tutor', '2025-10-05 18:55:11'),
+(68, 'https://res.cloudinary.com/dvkt6agj3/image/upload/v1759608299/users/puyj8sxuwgj8xblao9ka.jpg', 'Gaby Norris', 'gabynorris616@gmail.com', '$2b$10$2XjqpZsaYWHtw0uGCM9yPO5QBlWWiQ.xLl//JacllkueGs/XREQ4y', 'Tutor', NULL);
 
 --
 -- Indexes for dumped tables
