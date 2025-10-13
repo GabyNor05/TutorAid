@@ -1,6 +1,11 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
+// Conditionally set SSL options based on the environment
+const sslOptions = process.env.NODE_ENV === 'production' 
+  ? { ssl: { rejectUnauthorized: true } } 
+  : {};
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -9,9 +14,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: true
-  }
+  ...sslOptions // Spread the SSL options here
 });
 
 pool.getConnection()
