@@ -444,12 +444,6 @@ ALTER TABLE `tutors`
   ADD PRIMARY KEY (`tutorID`),
   ADD KEY `fk_tutor_user` (`userID`);
 
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`userID`),
-  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- AUTO_INCREMENT for dumped tables
