@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../config/db');
 
 router.post('/', async (req, res) => {
+    const pool = require('../config/db');
     const { subjectName, subjectDescription, dateRequested } = req.body;
     try {
         await pool.query(

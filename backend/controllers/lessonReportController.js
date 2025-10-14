@@ -1,6 +1,7 @@
-const pool = require('../config/db');
+
 
 exports.createLessonReport = async (req, res) => {
+    const pool = require('../config/db');
     const { studentID, subject, reportDate, comments } = req.body;
     try {
         await pool.query(

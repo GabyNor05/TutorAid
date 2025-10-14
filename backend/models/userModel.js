@@ -1,11 +1,13 @@
-const pool = require('../config/db');
+
 
 const getAllUsers = async () => {
+    const pool = require('../config/db');
     const [rows] = await pool.query('SELECT * FROM Users');
     return rows;
 };
 
 const getUserById = async (userID) => {
+    const pool = require('../config/db');
     // Get basic user info
     const [users] = await pool.query('SELECT * FROM Users WHERE userID = ?', [userID]);
     const user = users[0];
@@ -35,6 +37,7 @@ const getUserById = async (userID) => {
 };
 
 const createUser = async (user) => {
+    const pool = require('../config/db');
     console.log("Creating user:", user);
     const [result] = await pool.query(
         'INSERT INTO Users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
@@ -65,6 +68,7 @@ const createUser = async (user) => {
 };
 
 const updateUser = async (userID, user) => {
+    const pool = require('../config/db');
     const fields = [];
     const values = [];
 
@@ -98,11 +102,13 @@ const updateUser = async (userID, user) => {
 };
 
 const deleteUser = async (userID) => {
+    const pool = require('../config/db');
     await pool.query('DELETE FROM Users WHERE userID = ?', [userID]);
     return { message: 'User deleted' };
 };
 
 const createTutor = async ({ userID, bio, subjects, qualifications, availability }) => {
+    const pool = require('../config/db');
     await pool.query(
         'INSERT INTO Tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
         [userID, bio, subjects, qualifications, availability]
@@ -110,6 +116,7 @@ const createTutor = async ({ userID, bio, subjects, qualifications, availability
 };
 
 const updateTutor = async (userID, tutor) => {
+    const pool = require('../config/db');
     await pool.query(
         'UPDATE Tutors SET bio = ?, subjects = ?, qualifications = ?, availability = ? WHERE userID = ?',
         [tutor.bio, tutor.subjects, tutor.qualifications, tutor.availability, userID]
@@ -117,6 +124,7 @@ const updateTutor = async (userID, tutor) => {
 };
 
 const createStudent = async (student) => {
+    const pool = require('../config/db');
     // Check if student row already exists
     const [rows] = await pool.query('SELECT * FROM Students WHERE userID = ?', [student.userID]);
     if (rows.length === 0) {
@@ -137,6 +145,7 @@ const createStudent = async (student) => {
 };
 
 const updateStudent = async (userID, student) => {
+    const pool = require('../config/db');
     const [result] = await pool.query(
         'UPDATE Students SET grade = ?, school = ?, address = ?, city = ?, province = ?, status = ? WHERE userID = ?',
         [
@@ -153,6 +162,7 @@ const updateStudent = async (userID, student) => {
 };
 
 const createTutorAvailability = async ({ tutorID, day_group, start_time, end_time }) => {
+    const pool = require('../config/db');
     await pool.query(
         'INSERT INTO TutorAvailability (tutorID, day_group, start_time, end_time) VALUES (?, ?, ?, ?)',
         [tutorID, day_group, start_time, end_time]
@@ -160,6 +170,7 @@ const createTutorAvailability = async ({ tutorID, day_group, start_time, end_tim
 };
 
 const getUserByEmail = async (email) => {
+    const pool = require('../config/db');
     const [rows] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
     return rows[0];
 };

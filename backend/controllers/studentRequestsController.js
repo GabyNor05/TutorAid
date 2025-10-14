@@ -1,6 +1,7 @@
-const pool = require('../config/db');
+
 
 exports.createStudentRequest = async (req, res) => {
+    const pool = require('../config/db');
     const {
         studentID,
         requestType,
@@ -37,6 +38,7 @@ exports.createStudentRequest = async (req, res) => {
 };
 
 exports.getAllStudentRequests = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const [rows] = await pool.query('SELECT * FROM StudentRequests ORDER BY createdAt DESC');
         

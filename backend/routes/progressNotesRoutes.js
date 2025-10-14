@@ -17,6 +17,7 @@ const upload = multer({ storage });
 router.post('/upload', upload.single('file'), progressNotesController.uploadProgressNote);
 router.get('/student/:studentID', progressNotesController.getNotesByStudentID);
 router.get('/student/:studentID/lesson-notes', async (req, res) => {
+    const pool = require('../config/db');
     const { studentID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -29,6 +30,7 @@ router.get('/student/:studentID/lesson-notes', async (req, res) => {
     }
 });
 router.get('/student/:studentID/published', async (req, res) => {
+    const pool = require('../config/db');
     const { studentID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -41,6 +43,7 @@ router.get('/student/:studentID/published', async (req, res) => {
     }
 });
 router.post('/publish', async (req, res) => {
+    const pool = require('../config/db');
   const { noteID } = req.body;
   
   try {

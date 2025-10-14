@@ -1,7 +1,8 @@
-const pool = require('../config/db');
+
 
 // Get all tutors
 exports.getAllTutors = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const [rows] = await pool.query(`
             SELECT 
@@ -24,6 +25,7 @@ exports.getAllTutors = async (req, res) => {
 
 // Get single tutor by ID
 exports.getTutorById = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const tutorID = req.params.id;
         const [rows] = await pool.query(
@@ -40,6 +42,7 @@ exports.getTutorById = async (req, res) => {
 
 // Create a new tutor
 exports.createTutor = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const { userID, fee_per_hour, experience, bio, subjects, qualifications, availability } = req.body;
         await pool.query(
@@ -54,6 +57,7 @@ exports.createTutor = async (req, res) => {
 
 // Update tutor
 exports.updateTutor = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const tutorID = req.params.id;
         const { fee_per_hour, experience, bio, subjects, qualifications, availability } = req.body;
@@ -69,6 +73,7 @@ exports.updateTutor = async (req, res) => {
 
 // Delete tutor
 exports.deleteTutor = async (req, res) => {
+    const pool = require('../config/db');
     try {
         const tutorID = req.params.id;
         await pool.query("DELETE FROM Tutors WHERE tutorID = ?", [tutorID]);

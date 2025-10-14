@@ -25,7 +25,9 @@ router.post('/add-staff', userController.addStaff);
 
 // Change user status with correct admin password
 router.post('/change-status', async (req, res) => {
+    const pool = require('../config/db');
     const { userID, newStatus, adminPassword } = req.body;
+
     if (adminPassword !== process.env.ADMIN_PASSWORD) {
         return res.json({ success: false, message: "Incorrect admin password." });
     }
@@ -56,6 +58,7 @@ router.post('/change-status', async (req, res) => {
 
 // User removal with correct admin password
 router.post('/remove-user', async (req, res) => {
+    const pool = require('../config/db');
     const { userID, adminPassword } = req.body;
     try {
         if (adminPassword !== process.env.ADMIN_PASSWORD) {
@@ -73,6 +76,7 @@ router.post('/remove-user', async (req, res) => {
 
 // Get user avatars and names for a studentID
 router.post('/user-avatars', async (req, res) => {
+    const pool = require('../config/db');
     const { studentIDs } = req.body;
     if (!studentIDs || !studentIDs.length) return res.json({});
     try {

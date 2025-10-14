@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
@@ -8,6 +8,7 @@ cloudinary.config({
 });
 
 exports.uploadProgressNote = async (req, res) => {
+    const pool = require('../config/db');
     const { studentID } = req.body;
     const file = req.file;
     if (!file || !studentID) {
@@ -31,6 +32,7 @@ exports.uploadProgressNote = async (req, res) => {
 };
 
 exports.getNotesByStudentID = async (req, res) => {
+    const pool = require('../config/db');
     const { studentID } = req.params;
     try {
         const [rows] = await pool.query(

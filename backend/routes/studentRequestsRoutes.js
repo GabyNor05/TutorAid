@@ -8,6 +8,7 @@ router.post('/', studentRequestsController.createStudentRequest);
 router.get('/', studentRequestsController.getAllStudentRequests);
 
 router.post('/postpone', async (req, res) => {
+    const pool = require('../config/db');
     const { studentRequestID, adminPassword } = req.body;
     if (adminPassword !== process.env.ADMIN_PASSWORD) {
         return res.json({ success: false, message: "Incorrect admin password." });
@@ -24,6 +25,7 @@ router.post('/postpone', async (req, res) => {
 });
 
 router.post('/reject', async (req, res) => {
+    const pool = require('../config/db');
     const { studentRequestID, adminPassword } = req.body;
     if (adminPassword !== process.env.ADMIN_PASSWORD) {
         return res.json({ success: false, message: "Incorrect admin password." });
@@ -40,6 +42,7 @@ router.post('/reject', async (req, res) => {
 });
 
 router.post('/respond', async (req, res) => {
+    const pool = require('../config/db');
     const { toUserID, subject, message, studentRequestID } = req.body;
     try {
         // Get user's email
@@ -79,6 +82,7 @@ router.post('/respond', async (req, res) => {
 });
 
 router.post('/revoke-appeal', async (req, res) => {
+    const pool = require('../config/db');
   const { studentRequestID, studentID } = req.body;
   try {
     await pool.query("UPDATE students SET status = 'Active' WHERE studentID = ?", [studentID]);

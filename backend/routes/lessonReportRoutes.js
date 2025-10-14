@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const lessonReportController = require('../controllers/lessonReportController');
-const pool = require('../config/db'); // <-- Add this line
+const pool = require('../config/db'); 
 
 router.post('/', lessonReportController.createLessonReport);
 router.get('/', async (req, res) => {
+  const pool = require('../config/db');
   const [rows] = await pool.query(`
     SELECT 
       lr.*, 
@@ -17,6 +18,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/escalate', async (req, res) => {
+  const pool = require('../config/db');
   const { lessonReportID, adminPassword } = req.body;
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return res.json({ success: false, message: "Incorrect admin password." });
@@ -63,6 +65,7 @@ router.post('/escalate', async (req, res) => {
 });
 
 router.post('/ignore', async (req, res) => {
+  const pool = require('../config/db');
   const { lessonReportID, adminPassword } = req.body;
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return res.json({ success: false, message: "Incorrect admin password." });

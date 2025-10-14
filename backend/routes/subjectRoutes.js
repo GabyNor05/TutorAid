@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../config/db');
 
 router.get('/', async (req, res) => {
+    const pool = require('../config/db');
     try {
         const [rows] = await pool.query('SELECT * FROM Subjects');
         res.json(rows);
