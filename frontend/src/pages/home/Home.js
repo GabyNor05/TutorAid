@@ -9,28 +9,37 @@ import logo from '../reusableAssets/logo.png';
 import TutorCards from './TutorCards';
 import HeroSection from './HeroSection';  
 import FAQSection from './FAQSection';  
+import { api, endpoints } from '../../api/client';
 
 function Home() {
     const navigate = useNavigate();
     const [tutors, setTutors] = useState([]);
     const [subjects, setSubjects] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [err, setErr] = useState(null);
     const [selectedTutor, setSelectedTutor] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
-        // Replace with your actual backend endpoint
-        fetch("http://localhost:5000/api/tutors")
-            .then(res => res.json())
-            .then(data => {
-                console.log("Tutors data:", data);
-                setTutors(data);
-            })
-            .catch(err => console.error("Failed to fetch tutors:", err));
+        const load = async () => {
+            try {
+                const [tutorsJson, subjectsJson] = await Promise.all([
+                    api.get(endpoints.tutors()),
+                    api.get(endpoints.subjects()),
+                ]);
 
-        fetch("http://localhost:5000/api/subjects")
-            .then(res => res.json())
-            .then(data => setSubjects(data))
-            .catch(err => console.error("Failed to fetch subjects:", err));
+                setTutors(Array.isArray(tutorsJson) ? tutorsJson : []);
+                setSubjects(Array.isArray(subjectsJson) ? subjectsJson : []);
+            } catch (e) {
+                console.error('Home load error:', e);
+                setErr(e.message || 'Failed to load');
+                setTutors([]);     // ensure arrays to avoid .forEach/.filter crashes
+                setSubjects([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, []);
 
     // After fetching tutors and subjects

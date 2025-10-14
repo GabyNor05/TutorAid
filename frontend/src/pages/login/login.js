@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { api, endpoints } from "../../api/client";
 import {X} from "@phosphor-icons/react";
 
 function Login() {
@@ -16,59 +16,46 @@ function Login() {
     const [studentID, setStudentID] = useState(null); // <-- Change made here
 
     const handleLoginClick = async () => {
-        const newErrors = {};
-        if (!email) {
-            newErrors.email = "Email is required";
-        } else {
-            // Simple email regex
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                newErrors.email = "Enter a valid email address";
-            }
-        }
-        if (!password) {
-            newErrors.password = "Password is required";
-        } else {
-            // Regex: min 8 chars, 1 uppercase, 1 number, 1 special char
-            const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-            if (!passwordRegex.test(password)) {
-                newErrors.password =
-                    "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.";
-            }
-        }
-        setErrors(newErrors);
+         const newErrors = {};
+         if (!email) {
+             newErrors.email = "Email is required";
+         } else {
+             // Simple email regex
+             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+             if (!emailRegex.test(email)) {
+                 newErrors.email = "Enter a valid email address";
+             }
+         }
+         if (!password) {
+             newErrors.password = "Password is required";
+         } else {
+             // Regex: min 8 chars, 1 uppercase, 1 number, 1 special char
+             const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+             if (!passwordRegex.test(password)) {
+                 newErrors.password =
+                     "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.";
+             }
+         }
+         setErrors(newErrors);
 
-        if (Object.keys(newErrors).length === 0) {
-            try {
-                // Example using fetch:
-                const response = await fetch("http://localhost:5000/api/users/login", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email, password })
-                });
-
-                const res = await response.json();
-                console.log("Login response:", res);
-
-                if (response.ok) {
-                  // If student, check block status
-                  if (res.student && res.student.status === "Blocked") {
-                    setBlockedModalOpen(true);
-                    setStudentID(res.student.studentID); // <-- Add this line
-                  } else if (res.userID) {
-                    localStorage.setItem("userID", res.userID);
-                    navigate("/otp");
-                  } else {
-                    setErrors({ general: "Login failed" });
-                  }
+         if (Object.keys(newErrors).length === 0) {
+             try {
+                const res = await api.post(endpoints.login(), { email, password });
+                // If student, check block status
+                if (res.student && res.student.status === "Blocked") {
+                  setBlockedModalOpen(true);
+                  setStudentID(res.student.studentID);
+                } else if (res.userID) {
+                  localStorage.setItem("userID", res.userID);
+                  navigate("/otp");
                 } else {
-                  setErrors({ general: res.error || "Login failed" });
+                  setErrors({ general: "Login failed" });
                 }
-            } catch (err) {
-                setErrors({ general: err.response?.data?.error || "Login failed" });
-            }
-        }
-    };
+             } catch (err) {
+                setErrors({ general: err.message || "Login failed" });
+             }
+         }
+     };
 
     return(
     <div>
@@ -117,14 +104,7 @@ function Login() {
                         <p>Don't have an account?</p> 
                         <a href="/signup">Sign up</a>
                     </div>
-                    <div className="Google-login">
-                        <button className="google-button-container" >
-                        <div className="google-button">
-                            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google Logo" />
-                            <p>Login with Google</p>
-                        </div>
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -140,7 +120,7 @@ function Login() {
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={() => setBlockedModalOpen(true)}
+          onClick={() => { setBlockedModalOpen(false); setAppealModalOpen(true); }}
         >
           Appeal Block
         </button>
@@ -161,13 +141,13 @@ function Login() {
       className="bg-white rounded-lg shadow-lg p-6 w-96 flex flex-col gap-4"
       onSubmit={async e => {
         e.preventDefault();
-        await axios.post("http://localhost:5000/api/studentRequests", {
-          studentID: studentID,
+        await api.post('/api/studentRequests', {
+          studentID,
           requestType: "Appeal_Block",
-          query: appealQuery
+          query: appealQuery,
         });
-        setAppealModalOpen(false);
-        alert("Your appeal has been submitted!");
+         setAppealModalOpen(false);
+         alert("Your appeal has been submitted!");
       }}
     >
       <div className="modal-header flex flex-row items-center mb-4 justify-between">
