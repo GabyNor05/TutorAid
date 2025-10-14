@@ -13,9 +13,9 @@ const corsOptions = {
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     try {
-      const isAllowed =
-        allowedOrigins.includes(origin) ||
-        (/\.vercel\.app$/.test(new URL(origin).host) && process.env.ALLOW_VERCEL_WILDCARD === 'true');
+      const host = new URL(origin).host;
+      const isAllowed = allowedOrigins.includes(origin) ||
+                        (/\.vercel\.app$/.test(host) && process.env.ALLOW_VERCEL_WILDCARD === 'true');
       return isAllowed ? cb(null, true) : cb(new Error('CORS blocked'), false);
     } catch {
       return cb(new Error('CORS blocked'), false);
@@ -60,29 +60,13 @@ app.use('/api/ratings', ratingRoutes);
 const messagesRoutes = require('./routes/messagesRoutes');
 app.use('/api/messages', messagesRoutes);
 
+app.get('/api/health', (req, res) => res.send('ok'));
+
 app.get('/uploads/progressnotes/:filename', (req, res) => {
-    console.log('Serving PDF inline:', req.params.filename);
-    const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline');
-    res.sendFile(filePath);
-});
-
-// Example Express handler
-app.post('/api/users/change-status', async (req, res) => {
-    const { userID, newStatus, adminPassword } = req.body;
-    // Replace 'yourAdminPassword' with your actual admin password logic
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-        return res.json({ success: false, message: "Incorrect admin password." });
-    }
-    await pool.query("UPDATE Users SET status = ? WHERE userID = ?", [newStatus, userID]);
-    res.json({ success: true });
-});
-
-
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline');
+  res.sendFile(filePath);
 });
 
 module.exports = app;

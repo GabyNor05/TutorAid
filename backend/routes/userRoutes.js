@@ -1,10 +1,8 @@
-require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
-const pool = require('../config/db');
 
 // Test user route
 router.post('/test-user', userController.createTestUser);
