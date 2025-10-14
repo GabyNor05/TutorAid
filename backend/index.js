@@ -4,10 +4,26 @@ require('dotenv').config();
 const path = require('path');
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:3000'
-}));
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,        // https://gabydv.dpdns.org
+].filter(Boolean);
 
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    try {
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        (/\.vercel\.app$/.test(new URL(origin).host) && process.env.ALLOW_VERCEL_WILDCARD === 'true');
+      return isAllowed ? cb(null, true) : cb(new Error('CORS blocked'), false);
+    } catch {
+      return cb(new Error('CORS blocked'), false);
+    }
+  }
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -68,3 +84,5 @@ const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app;
