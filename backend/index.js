@@ -7,6 +7,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',
   process.env.FRONTEND_URL,        // https://gabydv.dpdns.org
+  'https://www.gabydv.dpdns.org',
 ].filter(Boolean);
 
 const corsOptions = {
