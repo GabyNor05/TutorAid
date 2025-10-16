@@ -1,43 +1,50 @@
-
-
 // Get all tutors
 exports.getAllTutors = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        const [rows] = await pool.query(`
-            SELECT 
-                t.*,
-                u.name,
-                u.image,
-                ROUND(IFNULL(AVG(r.rating), 0), 1) AS rating,
-                COUNT(r.ratingID) AS num_ratings
-            FROM tutors t
-            JOIN users u ON t.userID = u.userID
-            LEFT JOIN Rating r ON t.tutorID = r.tutorID
-            GROUP BY t.tutorID
-        `);
-        res.json(rows);
-    } catch (err) {
-        console.error("Failed to fetch tutors:", err);
-        res.status(500).json({ error: "Failed to fetch tutors" });
-    }
+  const pool = require('../config/db');
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        t.*,
+        u.name,
+        u.image,
+        COALESCE(r.avg_rating, 0) AS rating,
+        COALESCE(r.num_ratings, 0) AS num_ratings
+      FROM tutors t
+      JOIN users u ON t.userID = u.userID
+      LEFT JOIN (
+        SELECT tutorID, ROUND(AVG(rating), 1) AS avg_rating, COUNT(ratingID) AS num_ratings
+        FROM rating
+        GROUP BY tutorID
+      ) r ON r.tutorID = t.tutorID
+      ORDER BY t.tutorID DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('Failed to fetch tutors:', err.code, err.sqlMessage || err.message);
+    res.status(500).json({ error: 'Failed to fetch tutors' });
+  }
 };
 
 // Get single tutor by ID
 exports.getTutorById = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        const tutorID = req.params.id;
-        const [rows] = await pool.query(
-            "SELECT t.*, u.name, u.image, u.bio, u.subjects, u.qualifications, u.availability " +
-            "FROM tutors t JOIN users u ON t.userID = u.userID WHERE t.tutorID = ?",
-            [tutorID]
-        );
-        if (rows.length === 0) return res.status(404).json({ error: "Tutor not found" });
-        res.json(rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch tutor" });
-    }
+  const pool = require('../config/db');
+  try {
+    const tutorID = req.params.id;
+    const [rows] = await pool.query(
+      `
+      SELECT t.*, u.name, u.image, u.bio, u.subjects, u.qualifications, u.availability
+      FROM tutors t 
+      JOIN users u ON t.userID = u.userID 
+      WHERE t.tutorID = ?
+      `,
+      [tutorID]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Tutor not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Failed to fetch tutor:', err.code, err.sqlMessage || err.message);
+    res.status(500).json({ error: 'Failed to fetch tutor' });
+  }
 };
 
 // Create a new tutor
