@@ -4,26 +4,35 @@ require('dotenv').config();
 const path = require('path');
 const app = express();
 
+const extra = (process.env.FRONTEND_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   'http://localhost:3000',
-  process.env.FRONTEND_URL,        // https://gabydv.dpdns.org
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,  // e.g. https://gabydv.xyz
+  ...extra,                  // e.g. your Vercel preview URL
 ].filter(Boolean);
 
-const corsOptions = {
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    try {
-      const host = new URL(origin).host;
-      const isAllowed = allowedOrigins.includes(origin) ||
-                        (/\.vercel\.app$/.test(host) && process.env.ALLOW_VERCEL_WILDCARD === 'true');
-      return isAllowed ? cb(null, true) : cb(new Error('CORS blocked'), false);
-    } catch {
-      return cb(new Error('CORS blocked'), false);
-    }
-  }
-};
+app.use((req, _res, next) => {
+  console.log('CORS origin:', req.headers.origin, 'allowed:', allowedOrigins);
+  next();
+});
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // curl/Postman
+    return allowedOrigins.includes(origin)
+      ? cb(null, true)
+      : cb(new Error('CORS: origin not allowed'));
+  },
+  // credentials: true, // enable only if you send cookies
+}));
+
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

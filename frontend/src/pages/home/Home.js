@@ -9,6 +9,7 @@ import logo from '../reusableAssets/logo.png';
 import TutorCards from './TutorCards';
 import HeroSection from './HeroSection';  
 import FAQSection from './FAQSection';  
+import { api, endpoints } from '../../api/client';
 
 
 function Home() {
@@ -19,28 +20,29 @@ function Home() {
     const [err, setErr] = useState(null);
     const [selectedTutor, setSelectedTutor] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const API_URL =  process.env.REACT_APP_API_URL;
-
+    // API base is centralized in api/client.js
    useEffect(() => {
-        fetch(`${API_URL}/api/tutors`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("Tutors data:", data);
-                setTutors(data);
-            })
-            .catch(err => console.error("Failed to fetch tutors:", err));
-
-
-        fetch(`${API_URL}/api/subjects`)
-            .then(res => res.json())
-            .then(data => setSubjects(data))
-            .catch(err => console.error("Failed to fetch subjects:", err));
+        const load = async () => {
+          try {
+            const [tutorsJson, subjectsJson] = await Promise.all([
+              api.get(endpoints.tutors()),
+              api.get(endpoints.subjects()),
+            ]);
+            setTutors(Array.isArray(tutorsJson) ? tutorsJson : []);
+            setSubjects(Array.isArray(subjectsJson) ? subjectsJson : []);
+          } catch (e) {
+            console.error("Home load error:", e);
+            setTutors([]);
+            setSubjects([]);
+          }
+        };
+        load();
     }, []);
 
 
     // After fetching tutors and subjects
     const tutorSubjectsSet = new Set();
-    tutors.forEach(tutor => {
+    Array.isArray(tutors) && tutors.forEach(tutor => {
         // If subjects is a comma-separated string
         if (typeof tutor.subjects === 'string') {
             tutor.subjects.split(',').forEach(subj => tutorSubjectsSet.add(subj.trim()));
@@ -52,7 +54,9 @@ function Home() {
     });
 
     // Filter subjects to only those taught by tutors
-    const filteredSubjects = subjects.filter(subject => tutorSubjectsSet.has(subject.name));
+    const filteredSubjects = (Array.isArray(subjects) ? subjects : []).filter(
+      subject => subject && subject.name && tutorSubjectsSet.has(subject.name)
+    );
 
     return (
         <div className="">
