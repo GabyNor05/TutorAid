@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db');
 
-router.get('/', async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        const [rows] = await pool.query('SELECT * FROM Subjects ORDER BY name ASC');
-        res.json(rows);
-    } catch (err) {
-        console.error('Error fetching subjects:', err);
-        res.status(500).json({ error: 'Failed to fetch subjects' });
-    }
+router.get('/', async (_req, res) => {
+  const pool = require('../config/db');
+  try {
+    const [rows] = await pool.query('SELECT * FROM Subjects ORDER BY name ASC');
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching subjects:', err);
+    res.status(500).json({ error: 'Failed to fetch subjects' });
+  }
 });
 
 module.exports = router;

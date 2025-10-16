@@ -3,21 +3,21 @@ In the header, I want a logo on the left and navigation links on the right. The 
 
 This page should be responsive and work well on both desktop and mobile devices.*/
 import React, { useEffect, useState } from 'react';
+import { api, endpoints } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
 import './home.css';
 import logo from '../reusableAssets/logo.png';
 import TutorCards from './TutorCards';
 import HeroSection from './HeroSection';  
 import FAQSection from './FAQSection';  
-import { api, endpoints } from '../../api/client';
 
 
 function Home() {
   const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
 
@@ -43,18 +43,19 @@ function Home() {
     load();
   }, []);
 
-  // derive safely
+  const tutorsArr = Array.isArray(tutors) ? tutors : [];
+  const subjectsArr = Array.isArray(subjects) ? subjects : [];
+
   const tutorSubjectsSet = new Set();
-  (Array.isArray(tutors) ? tutors : []).forEach(t => {
+  tutorsArr.forEach(t => {
     if (typeof t?.subjects === 'string') {
-      t.subjects.split(',').forEach(s => tutorSubjectsSet.add(s.trim()));
+      t.subjects.split(',').forEach(s => s && tutorSubjectsSet.add(s.trim()));
     } else if (Array.isArray(t?.subjects)) {
       t.subjects.forEach(s => s && tutorSubjectsSet.add(s.trim()));
     }
   });
-  const filteredSubjects = (Array.isArray(subjects) ? subjects : []).filter(
-    s => s?.name && tutorSubjectsSet.has(s.name)
-  );
+
+  const filteredSubjects = subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
 
   return (
     <div className="">
