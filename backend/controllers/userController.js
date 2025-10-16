@@ -6,15 +6,10 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT || 465), // 465 (SSL) or 587 (STARTTLS)
-  secure: (process.env.SMTP_SECURE || 'true') === 'true', // true for 465, false for 587
-  auth: {
-    user: process.env.EMAIL_USER, // full Gmail address
-    pass: process.env.EMAIL_PASS  // App Password (16 chars), not your login password
-  },
-  connectionTimeout: 10000, // 10s
-  greetingTimeout: 10000,
-  socketTimeout: 20000
+  port: Number(process.env.SMTP_PORT || 465),
+  secure: (process.env.SMTP_SECURE || 'true') === 'true',
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 20000
 });
 
 cloudinary.config({
@@ -316,6 +311,9 @@ exports.emailHealth = async (req, res) => {
     await transporter.verify();
     res.json({ ok: true });
   } catch (e) {
+    console.error('SMTP verify failed:', {
+      code: e.code, message: e.message, response: e.response, responseCode: e.responseCode
+    });
     res.status(500).json({
       ok: false,
       code: e.code,
