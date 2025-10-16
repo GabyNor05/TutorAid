@@ -4,10 +4,7 @@ const userController = require('../controllers/userController');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
-// Test user route
-router.post('/test-user', userController.createTestUser);
-
-// Auth/OTP and health BEFORE :id
+// Auth & OTP (must be before '/:id')
 router.post('/login', userController.loginUser);
 router.post('/send-otp', userController.sendOtp);
 router.post('/verify-otp', userController.verifyOtp);
@@ -97,9 +94,9 @@ router.post('/user-avatars', async (req, res) => {
 
 // Normal CRUD routes
 router.post('/', upload.single('image'), userController.createUser);
-router.get('/', userController.getAllUsers);
-router.put('/:id', upload.single('image'), userController.updateUser);
+router.get('/', userController.getAllUsers); // or userController.getUsers
 router.get('/:id', userController.getUser);
+router.put('/:id', upload.single('image'), userController.updateUser);
 router.delete('/:id', userController.deleteUser);
 
 module.exports = router;
