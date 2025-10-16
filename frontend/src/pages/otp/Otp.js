@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import "./css/otp.css";
 import otpImage from "./assets/calendarImage.png";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { api, endpoints } from "../../api/client";
 
 function Otp() {
     const navigate = useNavigate();
@@ -15,14 +15,14 @@ function Otp() {
     const [canResend, setCanResend] = useState(false);
     const userId = localStorage.getItem("userID");
     const intervalRef = useRef();
-    const API_URL =  process.env.REACT_APP_API_URL;  
+    // API base is handled in src/api/client.js
 
     // Send OTP and start timer
     const sendOtpAndStartTimer = async () => {
         try {
-            const userRes = await axios.get(`${API_URL}/api/users/${userId}`);
-            setEmail(userRes.data.email);
-            await axios.post(`${API_URL}/api/users/send-otp`, { email: userRes.data.email });
+            const userRes = await api.get(endpoints.userById(userId));
+            setEmail(userRes.email);
+            await api.post(endpoints.sendOtp(), { email: userRes.email });
             setStatus("OTP sent to your email!");
             setCanResend(false);
             setTimer(90);
@@ -65,19 +65,19 @@ function Otp() {
 
         if (Object.keys(newErrors).length === 0) {
             try {
-                await axios.post(`${API_URL}/api/users/verify-otp`, { email, otp });
+                await api.post(endpoints.verifyOtp(), { email, otp });
                 navigate("/dashboard");
             } catch (err) {
-                setOtpError(err.response?.data?.error || "Invalid OTP");
+                setOtpError(err.message || "Invalid OTP");
             }
         }
     };
 
     const handleResendOtp = async () => {
         try {
-            const userRes = await axios.get(`${API_URL}/api/users/${userId}`);
-            setEmail(userRes.data.email); // Always update email before sending OTP
-            await axios.post(`${API_URL}/api/users/send-otp`, { email: userRes.data.email });
+            const userRes = await api.get(endpoints.userById(userId));
+            setEmail(userRes.email); // Always update email before sending OTP
+            await api.post(endpoints.sendOtp(), { email: userRes.email });
             setStatus("New OTP sent to your email!");
             setCanResend(false);
             setTimer(90);
