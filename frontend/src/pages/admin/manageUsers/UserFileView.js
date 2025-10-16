@@ -16,11 +16,12 @@ function UserFileView() {
     const [removePassword, setRemovePassword] = useState("");
     const [removeMessage, setRemoveMessage] = useState("");
     const [statuses] = useState(["Active", "Inactive", "Blocked"]);
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/users/${userID}`);
+                const response = await axios.get(`${API_URL}/api/users/${userID}`);
                 setUser(response.data);
             } catch (error) {
                 console.error("Error fetching user:", error);
@@ -31,7 +32,7 @@ function UserFileView() {
 
     const handleStatusChange = async () => {
         try {
-            const res = await axios.post("http://localhost:5000/api/users/change-status", {
+            const res = await axios.post(`${API_URL}/api/users/change-status`, {
                 userID: user.userID,
                 newStatus,
                 adminPassword
@@ -53,7 +54,7 @@ function UserFileView() {
 
     const handleRemoveUser = async () => {
         try {
-            const res = await axios.post("http://localhost:5000/api/users/remove-user", {
+            const res = await axios.post(`${API_URL}/api/users/remove-user`, {
                 userID,
                 adminPassword: removePassword
             });

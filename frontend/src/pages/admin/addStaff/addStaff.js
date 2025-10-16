@@ -4,6 +4,7 @@ import "./css/addStaff.css";
 import axios from "axios";
 
 function AddStaff() {
+    const API_URL =  process.env.REACT_APP_API_URL;  
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -31,7 +32,7 @@ function AddStaff() {
     useEffect(() => {
         async function fetchSubjects() {
             try {
-                const res = await fetch("http://localhost:5000/api/subjects");
+                const res = await fetch(`${API_URL}/api/subjects`);
                 const data = await res.json();
                 setSubjectOptions(data.map(s => s.name));
             } catch (err) {
@@ -97,7 +98,7 @@ function AddStaff() {
 
         // TODO: Send data to backend
         try {
-            const response = await axios.post('http://localhost:5000/api/users', data, {
+            const response = await axios.post(`${API_URL}/api/users`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
-import { api, endpoints } from "../../api/client";
 import {X} from "@phosphor-icons/react";
 
 function Login() {
@@ -13,49 +12,66 @@ function Login() {
     const [blockedModalOpen, setBlockedModalOpen] = useState(false);
     const [appealModalOpen, setAppealModalOpen] = useState(false);
     const [appealQuery, setAppealQuery] = useState("");
-    const [studentID, setStudentID] = useState(null); // <-- Change made here
+    const [studentID, setStudentID] = useState(null); 
+    const API_URL =  process.env.REACT_APP_API_URL;
 
     const handleLoginClick = async () => {
-         const newErrors = {};
-         if (!email) {
-             newErrors.email = "Email is required";
-         } else {
-             // Simple email regex
-             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-             if (!emailRegex.test(email)) {
-                 newErrors.email = "Enter a valid email address";
-             }
-         }
-         if (!password) {
-             newErrors.password = "Password is required";
-         } else {
-             // Regex: min 8 chars, 1 uppercase, 1 number, 1 special char
-             const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-             if (!passwordRegex.test(password)) {
-                 newErrors.password =
-                     "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.";
-             }
-         }
-         setErrors(newErrors);
+        const newErrors = {};
+        if (!email) {
+            newErrors.email = "Email is required";
+        } else {
+            // Simple email regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                newErrors.email = "Enter a valid email address";
+            }
+        }
+        if (!password) {
+            newErrors.password = "Password is required";
+        } else {
+            // Regex: min 8 chars, 1 uppercase, 1 number, 1 special char
+            const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                newErrors.password =
+                    "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.";
+            }
+        }
+        setErrors(newErrors);
 
-         if (Object.keys(newErrors).length === 0) {
-             try {
-                const res = await api.post(endpoints.login(), { email, password });
-                // If student, check block status
-                if (res.student && res.student.status === "Blocked") {
-                  setBlockedModalOpen(true);
-                  setStudentID(res.student.studentID);
-                } else if (res.userID) {
-                  localStorage.setItem("userID", res.userID);
-                  navigate("/otp");
+
+        if (Object.keys(newErrors).length === 0) {
+            try {
+                const response = await fetch(`${API_URL}/api/users/login`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password })
+                });
+
+
+                const res = await response.json();
+                console.log("Login response:", res);
+
+
+                if (response.ok) {
+                  // If student, check block status
+                  if (res.student && res.student.status === "Blocked") {
+                    setBlockedModalOpen(true);
+                    setStudentID(res.student.studentID); // <-- Add this line
+                  } else if (res.userID) {
+                    localStorage.setItem("userID", res.userID);
+                    navigate("/otp");
+                  } else {
+                    setErrors({ general: "Login failed" });
+                  }
                 } else {
-                  setErrors({ general: "Login failed" });
+                  setErrors({ general: res.error || "Login failed" });
                 }
-             } catch (err) {
-                setErrors({ general: err.message || "Login failed" });
-             }
-         }
-     };
+            } catch (err) {
+                setErrors({ general: err.response?.data?.error || "Login failed" });
+            }
+        }
+    };
+
 
     return(
     <div>

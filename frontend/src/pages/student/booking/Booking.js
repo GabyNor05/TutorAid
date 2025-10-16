@@ -16,6 +16,7 @@ function Booking() {
         "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
         "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
     ];
+    const API_URL =  process.env.REACT_APP_API_URL;  
     const navigate = useNavigate();
 
     // Calculate tomorrow's date
@@ -123,7 +124,7 @@ function Booking() {
         }
         const userID = localStorage.getItem("userID");
         // Fetch studentID from backend
-        const res = await fetch(`http://localhost:5000/api/users/students/by-user/${userID}`);
+        const res = await fetch(`${API_URL}/api/users/students/by-user/${userID}`);
         const studentData = await res.json();
         if (!studentData.studentID) {
             alert("Student profile not found.");
@@ -137,7 +138,7 @@ function Booking() {
             startTime: selectedDate.toTimeString().slice(0, 5),
             duration: parseInt(duration, 10)
         };
-        await fetch("http://localhost:5000/api/lessons", {
+        await fetch(`${API_URL}/api/lessons`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(lessonData)
@@ -162,7 +163,7 @@ function Booking() {
                                 setSelectedSubject(subject);
                                 setSelectedTutor(""); // Reset tutor selection
                                 if (subject) {
-                                    const res = await fetch(`http://localhost:5000/api/users/tutors/by-subject/${encodeURIComponent(subject)}`);
+                                    const res = await fetch(`${API_URL}/api/users/tutors/by-subject/${encodeURIComponent(subject)}`);
                                     const data = await res.json();
                                     setTutors(data);
                                 } else {
@@ -186,7 +187,7 @@ function Booking() {
                                     setSelectedTutor(tutorID);
                                     setSelectedDate(null); // <-- Reset date when tutor changes
                                     if (tutorID) {
-                                        const res = await fetch(`http://localhost:5000/api/users/tutor/${tutorID}/availability`);
+                                        const res = await fetch(`${API_URL}/api/users/tutor/${tutorID}/availability`);
                                         const data = await res.json();
                                         const parsed = parseAvailabilityString(data[0]?.availability);
                                         setAvailability(parsed);

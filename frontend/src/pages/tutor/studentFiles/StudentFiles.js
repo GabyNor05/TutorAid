@@ -13,11 +13,12 @@ function StudentFiles() {
     const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
     const [showSortMenu, setShowSortMenu] = useState(false);
     const navigate = useNavigate();
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const response = await axios.get("http://localhost:5000/api/students");
+                const response = await axios.get(`${API_URL}/api/students`);
                 setStudents(response.data);
             } catch (error) {
                 console.error('Error fetching students:', error);
@@ -30,7 +31,7 @@ function StudentFiles() {
     useEffect(() => {
         const fetchStatuses = async () => {
             try {
-                const response = await axios.get("http://localhost:5000/api/students/statuses");
+                const response = await axios.get(`${API_URL}/api/students/statuses`);
                 setStatuses(response.data); // Should be an array of status strings
             } catch (error) {
                 console.error('Error fetching statuses:', error);

@@ -13,6 +13,7 @@ function Onboarding() {
     const [province, setProvince] = useState("");
     const [status, setStatus] = useState("");
     const [errors, setErrors] = useState({});
+    const API_URL =  process.env.REACT_APP_API_URL;
 
     const handleOnboardingClick = async () => {
         const newErrors = {};
@@ -29,7 +30,7 @@ function Onboarding() {
                 const userID = localStorage.getItem("userID"); // Example
                 console.log("userID from localStorage:", userID);
                 // Send a PUT request to update user and student info
-                await axios.put(`http://localhost:5000/api/users/${userID}`, {
+                await axios.put(`${API_URL}/api/users/${userID}`, {
                     role: "Student", // Make sure this is included!
                     grade,
                     school,

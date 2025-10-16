@@ -9,11 +9,12 @@ function ManageUsers() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState(""); // Add searchTerm state
   const navigate = useNavigate();
+  const API_URL =  process.env.REACT_APP_API_URL;  
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/users");
+        const response = await axios.get(`${API_URL}/api/users`);
         setUsers(response.data);
       } catch (error) {
         console.error('Error fetching users:', error);

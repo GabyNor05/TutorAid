@@ -11,11 +11,12 @@ function ReportForm() {
     const [subject, setSubject] = useState("");
     const [comments, setComments] = useState("");
     const navigate = useNavigate();
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
             async function fetchStudents() {
                 try {
-                    const res = await fetch("http://localhost:5000/api/students");
+                    const res = await fetch(`${API_URL}/api/students`);
                     const data = await res.json();
                     setStudents(data);
                 } catch (err) {
@@ -24,7 +25,7 @@ function ReportForm() {
             }
             async function fetchSubjects() {
                 try {
-                    const res = await fetch("http://localhost:5000/api/subjects");
+                    const res = await fetch(`${API_URL}/api/subjects`);
                     const data = await res.json();
                     setSubjects(data);
                 } catch (err) {
@@ -53,7 +54,7 @@ function ReportForm() {
         };
 
         try {
-            const res = await fetch("http://localhost:5000/api/lessonReports", {
+            const res = await fetch(`${API_URL}/api/lessonReports`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(reportData)

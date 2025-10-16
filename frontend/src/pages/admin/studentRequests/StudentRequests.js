@@ -24,6 +24,7 @@ function StudentRequests() {
   // Add state for the Appeal Block modal
   const [appealModalOpen, setAppealModalOpen] = useState(false);
   const [appealActionMessage, setAppealActionMessage] = useState("");
+  const API_URL =  process.env.REACT_APP_API_URL;  
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -43,13 +44,13 @@ function StudentRequests() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/studentRequests");
+        const res = await axios.get(`${API_URL}/api/studentRequests`);
         setRequests(res.data);
 
         // Fetch user images for all studentIDs
         const studentIDs = res.data.map(r => r.studentID);
         if (studentIDs.length) {
-          const avatarRes = await axios.post("http://localhost:5000/api/users/user-avatars", { studentIDs });
+          const avatarRes = await axios.post(`${API_URL}/api/users/user-avatars`, { studentIDs });
           setUserImages(avatarRes.data);
         }
       } catch (err) {
@@ -86,7 +87,7 @@ function StudentRequests() {
   const handlePostpone = async () => {
     if (!selectedRequest) return;
     try {
-      const res = await axios.post("http://localhost:5000/api/studentRequests/postpone", {
+      const res = await axios.post(`${API_URL}/api/studentRequests/postpone`, {
         studentRequestID: selectedRequest.studentRequestID,
         adminPassword
       });
@@ -117,7 +118,7 @@ function StudentRequests() {
   const fetchProgressNotes = async (requestID) => {
     setLoadingNotes(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/progressNotes/${requestID}`);
+      const res = await axios.get(`${API_URL}/api/progressNotes/${requestID}`);
       setProgressNotes(res.data);
     } catch (err) {
       console.error("Error fetching progress notes:", err);
@@ -131,7 +132,7 @@ function StudentRequests() {
     setProgressNotes([]);
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/progressNotes/student/${selectedRequest.studentID}/lesson-notes`
+        `${API_URL}/api/progressNotes/student/${selectedRequest.studentID}/lesson-notes`
       );
       setProgressNotes(res.data);
       setProgressNotesModalOpen(true);
@@ -145,7 +146,7 @@ function StudentRequests() {
   const handleReject = async () => {
     if (!selectedRequest) return;
     try {
-      const res = await axios.post("http://localhost:5000/api/studentRequests/reject", {
+      const res = await axios.post(`${API_URL}/api/studentRequests/reject`, {
         studentRequestID: selectedRequest.studentRequestID,
         adminPassword
       });
@@ -173,7 +174,7 @@ function StudentRequests() {
 
   const handlePublishNote = async (noteID) => {
     try {
-      await axios.post("http://localhost:5000/api/progressNotes/publish", {
+      await axios.post(`${API_URL}/api/progressNotes/publish`, {
         noteID: noteID
       });
       setProgressNotes(prev =>
@@ -370,7 +371,7 @@ function StudentRequests() {
                 onClick={async () => {
                   // Store in NewSubjectRequests table (implement backend endpoint)
                   try {
-                    await axios.post("http://localhost:5000/api/newSubjectRequests", {
+                    await axios.post("${API_URL}/api/newSubjectRequests", {
                       subjectName: selectedRequest.newSubjectName,
                       subjectDescription: selectedRequest.newSubjectDescription,
                       dateRequested: selectedRequest.createdAt,
@@ -500,7 +501,7 @@ function StudentRequests() {
             onSubmit={async e => {
               e.preventDefault();
               try {
-                await axios.post("http://localhost:5000/api/studentRequests/respond", {
+                await axios.post("${API_URL}/api/studentRequests/respond", {
                   toUserID: selectedRequest.studentID,
                   subject: responseSubject,
                   message: responseMessage,
@@ -640,7 +641,7 @@ function StudentRequests() {
                 onClick={async () => {
                   // Revoke: set student status to Blocked and mark request as Completed/Revoked
                   try {
-                    await axios.post("http://localhost:5000/api/studentRequests/revoke-appeal", {
+                    await axios.post("${API_URL}/api/studentRequests/revoke-appeal", {
                       studentRequestID: selectedRequest.studentRequestID,
                       studentID: selectedRequest.studentID
                     });

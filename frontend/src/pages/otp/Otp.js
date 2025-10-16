@@ -15,13 +15,14 @@ function Otp() {
     const [canResend, setCanResend] = useState(false);
     const userId = localStorage.getItem("userID");
     const intervalRef = useRef();
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     // Send OTP and start timer
     const sendOtpAndStartTimer = async () => {
         try {
-            const userRes = await axios.get(`http://localhost:5000/api/users/${userId}`);
+            const userRes = await axios.get(`${API_URL}/api/users/${userId}`);
             setEmail(userRes.data.email);
-            await axios.post("http://localhost:5000/api/users/send-otp", { email: userRes.data.email });
+            await axios.post(`${API_URL}/api/users/send-otp`, { email: userRes.data.email });
             setStatus("OTP sent to your email!");
             setCanResend(false);
             setTimer(90);
@@ -64,7 +65,7 @@ function Otp() {
 
         if (Object.keys(newErrors).length === 0) {
             try {
-                await axios.post("http://localhost:5000/api/users/verify-otp", { email, otp });
+                await axios.post(`${API_URL}/api/users/verify-otp`, { email, otp });
                 navigate("/dashboard");
             } catch (err) {
                 setOtpError(err.response?.data?.error || "Invalid OTP");
@@ -74,9 +75,9 @@ function Otp() {
 
     const handleResendOtp = async () => {
         try {
-            const userRes = await axios.get(`http://localhost:5000/api/users/${userId}`);
+            const userRes = await axios.get(`${API_URL}/api/users/${userId}`);
             setEmail(userRes.data.email); // Always update email before sending OTP
-            await axios.post("http://localhost:5000/api/users/send-otp", { email: userRes.data.email });
+            await axios.post(`${API_URL}/api/users/send-otp`, { email: userRes.data.email });
             setStatus("New OTP sent to your email!");
             setCanResend(false);
             setTimer(90);

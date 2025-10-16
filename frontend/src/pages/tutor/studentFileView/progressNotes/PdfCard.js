@@ -3,10 +3,11 @@ import pdfIcon from "../../../reusableAssets/pdf.png";
 import "./progressNotes.css";
 
 function PdfCard({ title, date, size, filePath }) {
-    // Build the correct file URL for local or cloud files
+    const API_URL =  process.env.REACT_APP_API_URL;  
+    
     const fileUrl = filePath.startsWith("http")
         ? filePath
-        : `http://localhost:5000${filePath.startsWith('/') ? filePath : '/' + filePath}`;
+        : `${API_URL}${filePath.startsWith('/') ? filePath : '/' + filePath}`;
 
     // Convert size from KB to MB
     let displaySize = "";

@@ -3,6 +3,7 @@ import "./studentFiles.css";
 
 function StudentFileCard({ student }) {
     const fileInputRef = useRef();
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     const handleUploadClick = () => {
         fileInputRef.current.click();
@@ -17,7 +18,7 @@ function StudentFileCard({ student }) {
         formData.append("studentID", student.studentID);
 
         try {
-            const res = await fetch("http://localhost:5000/api/progressnotes/upload", {
+            const res = await fetch(`${API_URL}/api/progressnotes/upload`, {
                 method: "POST",
                 body: formData,
             });

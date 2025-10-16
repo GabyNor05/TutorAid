@@ -21,11 +21,12 @@ function ManageReports() {
   const [adminPassword, setAdminPassword] = useState("");
   const [escalateMessage, setEscalateMessage] = useState("");
   const [ignoreMessage, setIgnoreMessage] = useState("");
+  const API_URL =  process.env.REACT_APP_API_URL;  
   
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/lessonReports");
+        const res = await axios.get(`${API_URL}/api/lessonReports`);
         setReports(res.data);
       } catch (err) {
         console.error("Error fetching reports:", err);
@@ -37,7 +38,7 @@ function ManageReports() {
   const handleEscalate = async () => {
     if (!selectedReport) return;
     try {
-      const res = await axios.post("http://localhost:5000/api/lessonReports/escalate", {
+      const res = await axios.post(`${API_URL}/api/lessonReports/escalate`, {
         lessonReportID: selectedReport.lessonReportID,
         adminPassword
       });
@@ -66,7 +67,7 @@ function ManageReports() {
   const handleIgnore = async () => {
     if (!selectedReport) return;
     try {
-      const res = await axios.post("http://localhost:5000/api/lessonReports/ignore", {
+      const res = await axios.post(`${API_URL}/api/lessonReports/ignore`, {
         lessonReportID: selectedReport.lessonReportID,
         adminPassword
       });

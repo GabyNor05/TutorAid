@@ -17,10 +17,11 @@ function getDateLabel(dateString) {
 
 function MessageCard({ senderID, time, message, unread, online, subject }) {
   const [sender, setSender] = useState({ name: "Unknown", image: "https://via.placeholder.com/40" });
+  const API_URL =  process.env.REACT_APP_API_URL;  
 
   useEffect(() => {
     if (senderID) {
-      axios.get(`http://localhost:5000/api/users/${senderID}`)
+      axios.get(`${API_URL}/api/users/${senderID}`)
         .then(res => setSender({
           name: res.data.name,
           image: res.data.image || "https://via.placeholder.com/40"

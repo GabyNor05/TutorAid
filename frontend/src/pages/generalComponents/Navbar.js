@@ -13,10 +13,11 @@ function Navbar() {
     const navigate = useNavigate();
     const userId = localStorage.getItem("userID");
     const [inboxOpen, setInboxOpen] = useState(false); // Add this
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         if (userId) {
-            axios.get(`http://localhost:5000/api/users/${userId}`)
+            axios.get(`${API_URL}/api/users/${userId}`)
                 .then(res => setRole(res.data.role))
                 .catch(err => setRole(null));
         }
@@ -24,7 +25,7 @@ function Navbar() {
 
     useEffect(() => {
         if (userId && inboxOpen) {
-            axios.get(`http://localhost:5000/api/messages/inbox/${userId}`)
+            axios.get(`${API_URL}/api/messages/inbox/${userId}`)
                 .then(res => setMessages(res.data))
                 .catch(() => setMessages([]));
         }

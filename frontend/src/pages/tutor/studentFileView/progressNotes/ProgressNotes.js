@@ -4,11 +4,12 @@ import PdfCard from "./PdfCard";
 
 function ProgressNotes({ studentID }) {
     const [notes, setNotes] = useState([]);
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/progressnotes/student/${studentID}`);
+                const res = await fetch(`${API_URL}/api/progressnotes/student/${studentID}`);
                 const data = await res.json();
                 setNotes(data);
             } catch (err) {

@@ -11,13 +11,13 @@ function RequestForm() {
     const [query, setQuery] = useState("");
     const [studentID, setStudentID] = useState("");
     const navigate = useNavigate();
-
+    const API_URL =  process.env.REACT_APP_API_URL;  
     const userID = localStorage.getItem("userID");
 
     useEffect(() => {
         async function fetchStudentID() {
             try {
-                const res = await fetch(`http://localhost:5000/api/students/by-user/${userID}`);
+                const res = await fetch(`${API_URL}/api/students/by-user/${userID}`);
                 const data = await res.json();
                 setStudentID(data.studentID); // Make sure this is a valid number
             } catch (err) {
@@ -30,7 +30,7 @@ function RequestForm() {
     useEffect(() => {
         async function fetchSubjects() {
             try {
-                const res = await fetch("http://localhost:5000/api/subjects");
+                const res = await fetch(`${API_URL}/api/subjects`);
                 const data = await res.json();
                 setSubjects(data);
             } catch (err) {
@@ -59,7 +59,7 @@ function RequestForm() {
         };
 
         try {
-            const res = await fetch("http://localhost:5000/api/studentRequests", {
+            const res = await fetch(`${API_URL}/api/studentRequests`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestData)

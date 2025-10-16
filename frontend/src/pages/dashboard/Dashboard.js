@@ -18,11 +18,12 @@ function Dashboard() {
     const [ratingValue, setRatingValue] = useState("");
     const [ratingComment, setRatingComment] = useState("");
     const navigate = useNavigate();
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const userId = localStorage.getItem("userID");
         if (userId) {
-            axios.get(`http://localhost:5000/api/users/${userId}`)
+            axios.get(`${API_URL}/api/users/${userId}`)
                 .then(res => setRole(res.data.role))
                 .catch(err => setRole(null));
         }
@@ -31,7 +32,7 @@ function Dashboard() {
     useEffect(() => {
         const userId = localStorage.getItem("userID");
         if (userId && role) {
-            axios.get(`http://localhost:5000/api/lessons/accepted?userID=${userId}&role=${role}`)
+            axios.get(`${API_URL}/api/lessons/accepted?userID=${userId}&role=${role}`)
                 .then(res => setAcceptedLessons(Array.isArray(res.data) ? res.data : []))
                 .catch(() => setAcceptedLessons([]));
         }
@@ -44,10 +45,10 @@ function Dashboard() {
     const handleRateSubmit = async (e) => {
         e.preventDefault();
         const userId = localStorage.getItem("userID");
-        const response = await axios.get(`http://localhost:5000/api/students/by-user/${userId}`);
+        const response = await axios.get(`${API_URL}/api/students/by-user/${userId}`);
         const studentID = response.data.studentID;
         try {
-            await axios.post("http://localhost:5000/api/ratings", {
+            await axios.post(`${API_URL}/api/ratings`, {
                 tutorID: selectedTutor,
                 studentID: studentID,
                 rating: ratingValue,

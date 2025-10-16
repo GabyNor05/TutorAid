@@ -14,6 +14,7 @@ function Signup() {
     const [errors, setErrors] = useState({});
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState("");
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
 
     const validate = () => {
@@ -46,7 +47,7 @@ function Signup() {
 
         if (Object.keys(validationErrors).length === 0) {
             try {
-                const response = await axios.post('http://localhost:5000/api/users', {
+                const response = await axios.post(`${API_URL}/api/users`, {
                     name: username,
                     email,
                     password,

@@ -17,11 +17,12 @@ function FeedbackForm() {
     const tutorID = localStorage.getItem("userID");
     const termsOfService = ""; // Placeholder for PDF link
     const navigate = useNavigate();
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
                 async function fetchStudents() {
                     try {
-                        const res = await fetch("http://localhost:5000/api/students");
+                        const res = await fetch(`${API_URL}/api/students`);
                         const data = await res.json();
                         setStudents(data);
                     } catch (err) {
@@ -30,7 +31,7 @@ function FeedbackForm() {
                 }
                 async function fetchSubjects() {
                     try {
-                        const res = await fetch("http://localhost:5000/api/subjects");
+                        const res = await fetch(`${API_URL}/api/subjects`);
                         const data = await res.json();
                         setSubjects(data);
                     } catch (err) {
@@ -44,7 +45,7 @@ function FeedbackForm() {
     useEffect(() => {
         async function fetchStudents() {
             try {
-                const res = await fetch("http://localhost:5000/api/students");
+                const res = await fetch(`${API_URL}/api/students`);
                 const data = await res.json();
                 setStudents(data);
             } catch (err) {
@@ -58,7 +59,7 @@ function FeedbackForm() {
         async function fetchTutor() {
             if (!tutorID) return;
             try {
-                const res = await fetch(`http://localhost:5000/api/users/${tutorID}`);
+                const res = await fetch(`${API_URL}/api/users/${tutorID}`);
                 const data = await res.json();
                 setTutorName(data.name);
             } catch (err) {

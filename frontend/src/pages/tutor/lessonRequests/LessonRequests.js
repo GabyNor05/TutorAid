@@ -4,10 +4,11 @@ import LessonCards from "../../generalComponents/lessonCards";
 function LessonRequests() {
     const [lessons, setLessons] = useState([]);
     const tutorID = localStorage.getItem("userID");
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         async function fetchLessons() {
-            const res = await fetch(`http://localhost:5000/api/lessons?tutorID=${tutorID}`);
+            const res = await fetch(`${API_URL}/api/lessons?tutorID=${tutorID}`);
             const data = await res.json();
             setLessons(Array.isArray(data) ? data : []);
         }
@@ -21,7 +22,7 @@ function LessonRequests() {
 
     // Update lesson status locally and in backend
     const updateLessonStatus = async (lessonID, status) => {
-        await fetch("http://localhost:5000/api/lessons/update-status", {
+        await fetch(`${API_URL}/api/lessons/update-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ lessonID, status })

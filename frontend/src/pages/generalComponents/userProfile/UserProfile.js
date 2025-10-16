@@ -7,16 +7,17 @@ import PdfCard from "../../tutor/studentFileView/progressNotes/PdfCard";
 function UserProfile() {
     const [user, setUser] = useState(null);
     const [notes, setNotes] = useState([]);
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const userId = localStorage.getItem("userID");
-        axios.get(`http://localhost:5000/api/users/${userId}`)
+        axios.get(`${API_URL}/api/users/${userId}`)
             .then(res => {
                
                 setUser(res.data);
                 if (res.data.role === "Student" && res.data.studentID) {
                     
-                    axios.get(`http://localhost:5000/api/progressNotes/student/${res.data.studentID}/published`)
+                    axios.get(`${API_URL}/api/progressNotes/student/${res.data.studentID}/published`)
                         .then(res => {
                             
                             setNotes(res.data);
@@ -30,7 +31,7 @@ function UserProfile() {
     const handleSave = async (updatedData) => {
         const userId = localStorage.getItem("userID");
         try {
-            const res = await axios.put(`http://localhost:5000/api/users/${userId}`, updatedData);
+            const res = await axios.put(`${API_URL}/api/users/${userId}`, updatedData);
             setUser(res.data); // Update local state with new data
         } catch (err) {
             console.error("Failed to update user:", err);

@@ -7,11 +7,12 @@ import ProgressNotes from "./progressNotes/ProgressNotes";
 function StudentFileView() {
     const { userID } = useParams();
     const [student, setStudent] = useState(null);
+    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/api/students/by-user/${userID}`);
+                const response = await fetch(`${API_URL}/api/students/by-user/${userID}`);
                 const data = await response.json();
                 setStudent(data);
             } catch (error) {

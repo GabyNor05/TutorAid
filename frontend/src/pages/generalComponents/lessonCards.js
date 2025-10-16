@@ -14,6 +14,7 @@ function formatTime(timeString) {
 }
 
 function LessonCards({ lesson, role, tutorImage, tutorName, showStatus = true, onAccept, onDecline, onContactTutor, onRateTutor }) {
+    const API_URL =  process.env.REACT_APP_API_URL;  
     if (!lesson) return null;
 
     // Use tutor info if role is Student, else use student info
@@ -25,7 +26,7 @@ function LessonCards({ lesson, role, tutorImage, tutorName, showStatus = true, o
         : lesson.studentName;
 
     const handleAccept = async () => {
-        await fetch("http://localhost:5000/api/lessons/update-status", {
+        await fetch(`${API_URL}/api/lessons/update-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ lessonID: lesson.lessonID, status: "accepted" })
@@ -34,7 +35,7 @@ function LessonCards({ lesson, role, tutorImage, tutorName, showStatus = true, o
     };
 
     const handleDecline = async () => {
-        await fetch("http://localhost:5000/api/lessons/update-status", {
+        await fetch(`${API_URL}/api/lessons/update-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ lessonID: lesson.lessonID, studentEmail: lesson.studentEmail, status: "declined" })
