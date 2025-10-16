@@ -11,7 +11,7 @@ exports.getAllTutors = async (req, res) => {
                 u.image,
                 ROUND(IFNULL(AVG(r.rating), 0), 1) AS rating,
                 COUNT(r.ratingID) AS num_ratings
-            FROM Tutors t
+            FROM tutors t
             JOIN Users u ON t.userID = u.userID
             LEFT JOIN Rating r ON t.tutorID = r.tutorID
             GROUP BY t.tutorID
@@ -30,7 +30,7 @@ exports.getTutorById = async (req, res) => {
         const tutorID = req.params.id;
         const [rows] = await pool.query(
             "SELECT t.*, u.name, u.image, u.bio, u.subjects, u.qualifications, u.availability " +
-            "FROM Tutors t JOIN Users u ON t.userID = u.userID WHERE t.tutorID = ?",
+            "FROM tutors t JOIN Users u ON t.userID = u.userID WHERE t.tutorID = ?",
             [tutorID]
         );
         if (rows.length === 0) return res.status(404).json({ error: "Tutor not found" });
@@ -46,7 +46,7 @@ exports.createTutor = async (req, res) => {
     try {
         const { userID, fee_per_hour, experience, bio, subjects, qualifications, availability } = req.body;
         await pool.query(
-            "INSERT INTO Tutors (userID, fee_per_hour, experience, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO tutors (userID, fee_per_hour, experience, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [userID, fee_per_hour, experience, bio, subjects, qualifications, availability]
         );
         res.status(201).json({ message: "Tutor created!" });
@@ -62,7 +62,7 @@ exports.updateTutor = async (req, res) => {
         const tutorID = req.params.id;
         const { fee_per_hour, experience, bio, subjects, qualifications, availability } = req.body;
         await pool.query(
-            "UPDATE Tutors SET fee_per_hour = ?, experience = ?, bio = ?, subjects = ?, qualifications = ?, availability = ? WHERE tutorID = ?",
+            "UPDATE tutors SET fee_per_hour = ?, experience = ?, bio = ?, subjects = ?, qualifications = ?, availability = ? WHERE tutorID = ?",
             [fee_per_hour, experience, bio, subjects, qualifications, availability, tutorID]
         );
         res.json({ message: "Tutor updated!" });
