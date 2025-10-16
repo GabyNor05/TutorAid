@@ -2,7 +2,6 @@ const userModel = require('../models/userModel');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
-const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
 const net = require('net');
 
