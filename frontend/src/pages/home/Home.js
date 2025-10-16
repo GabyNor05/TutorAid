@@ -1,7 +1,3 @@
-/* I need a home page layout with a header, main content area, and footer. 
-In the header, I want a logo on the left and navigation links on the right. The main content area should have a welcome message,tags for all available subjects, carousel (with for tutors; image, names and subjects). The footer should contain copyright information and links to privacy policy and terms of service. 
-
-This page should be responsive and work well on both desktop and mobile devices.*/
 import React, { useEffect, useState } from 'react';
 import { api, endpoints } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
