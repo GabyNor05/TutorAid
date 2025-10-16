@@ -31,9 +31,10 @@ app.use(cors({
   methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization','X-Requested-With','Accept'],
   optionsSuccessStatus: 204,
-  // credentials: true, // only if your frontend sends cookies
+  // credentials: true, // enable only if client sends cookies
 }));
 
+// Use regex to avoid path-to-regexp '*' error
 app.options(/.*/, cors());
 
 app.use(express.json());
@@ -83,6 +84,24 @@ app.get('/api/db-health', async (req, res) => {
     console.error('DB health error:', e);
     res.status(500).json({ ok: false, error: e.message });
   }
+});
+
+// Debug: list registered routes
+app.get('/api/_routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach(m => {
+    if (m.route && m.route.path) {
+      routes.push({ method: Object.keys(m.route.methods)[0].toUpperCase(), path: m.route.path });
+    } else if (m.name === 'router' && m.handle.stack) {
+      m.handle.stack.forEach(s => {
+        if (s.route) {
+          const method = Object.keys(s.route.methods)[0]?.toUpperCase();
+          routes.push({ method, path: (m.regexp?.toString() || '') + s.route.path });
+        }
+      });
+    }
+  });
+  res.json(routes);
 });
 
 app.get('/uploads/progressnotes/:filename', (req, res) => {
