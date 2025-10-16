@@ -23,15 +23,18 @@ app.use((req, _res, next) => {
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // curl/Postman
+    if (!origin) return cb(null, true);
     return allowedOrigins.includes(origin)
       ? cb(null, true)
       : cb(new Error('CORS: origin not allowed'));
   },
-  // credentials: true, // enable only if you send cookies
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With','Accept'],
+  optionsSuccessStatus: 204,
+  // credentials: true, // only if your frontend sends cookies
 }));
 
-app.options('*', cors());
+app.options(/.*/, cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
