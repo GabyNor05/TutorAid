@@ -170,6 +170,7 @@ const createTutorAvailability = async ({ tutorID, day_group, start_time, end_tim
 const pool = require('../config/db');
 
 exports.getUserByEmail = async (email) => {
+    const pool = require('../config/db');
   const [rows] = await pool.query(
     'SELECT userID, name, email, password, role FROM users WHERE email = ? LIMIT 1',
     [email]
