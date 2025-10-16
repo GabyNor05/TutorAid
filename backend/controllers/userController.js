@@ -2,15 +2,15 @@ const userModel = require('../models/userModel');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
 const net = require('net');
-const dns = require('dns').promises;
 
-// Replace the transporter with a factory that reads env
+// Replace makeTransporter to read env and use sensible defaults
 function makeTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 587);      // 587 STARTTLS
-  const secure = (process.env.SMTP_SECURE || 'false') === 'true'; // false for 587, true for 465
+  const port = Number(process.env.SMTP_PORT || 465);      // try 465 first
+  const secure = (process.env.SMTP_SECURE || 'true') === 'true'; // true for 465, false for 587
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
@@ -60,6 +60,29 @@ async function sendEmail({ to, subject, text }) {
     return { via: 'resend' };
   }
   throw new Error('No email provider configured');
+}
+
+async function sendWithResend(to, subject, text) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY not set');
+  }
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM || 'TutorAid <onboarding@resend.dev>',
+      to,
+      subject,
+      text,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Resend ${res.status}: ${body}`);
+  }
 }
 
 const otpStore = {}; // { email: otp }
@@ -325,52 +348,38 @@ exports.sendOtp = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    await sendEmail({
+    // DEV shortcut if needed
+    if (process.env.ALLOW_DEBUG_OTP === 'true') {
+      console.log('[OTP][DEV]', email, otp);
+      return res.json({ message: 'OTP sent (dev mode)', otp });
+    }
+
+    const t = makeTransporter();
+    await t.verify(); // ensure SMTP is reachable/auth works
+    await t.sendMail({
+      from: `"TutorAid" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Your OTP Code',
       text: `Your OTP is: ${otp}`,
     });
+
     res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error('Error sending OTP:', err.message);
+    console.error('Error sending OTP:', { code: err.code, message: err.message });
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 };
 
+// Optional: simple Resend health check
 exports.emailHealth = async (req, res) => {
   try {
     const t = makeTransporter();
     await t.verify();
     res.json({ ok: true, via: 'smtp' });
   } catch (e) {
-    res.status(500).json({ ok: false, code: e.code, message: e.message });
-  }
-};
-
-exports.smtpTcpCheck = async (req, res) => {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 587);
-  const socket = new net.Socket();
-  let done = false;
-  const end = (status, info) => {
-    if (done) return; done = true;
-    try { socket.destroy(); } catch {}
-    res.status(status).json(info);
-  };
-  socket.setTimeout(8000);
-  socket.on('connect', () => end(200, { ok: true, host, port }));
-  socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
-  socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
-  socket.connect(port, host);
-};
-
-exports.emailDns = async (req, res) => {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  try {
-    const addrs = await dns.lookup(host, { all: true });
-    res.json({ host, addrs });
-  } catch (e) {
-    res.status(500).json({ host, error: e.message });
+    res.status(500).json({
+      ok: false, code: e.code, message: e.message, response: e.response, responseCode: e.responseCode
+    });
   }
 };
 
@@ -497,22 +506,20 @@ exports.addStaff = async (req, res) => {
     }
 };
 
+// TCP check (forces IPv4) and supports ?port= override for quick tests
 exports.smtpTcpCheck = async (req, res) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 587);
+  const port = Number(req.query.port || process.env.SMTP_PORT || 465);
   const socket = new net.Socket();
   let done = false;
-
   const end = (status, info) => {
-    if (done) return;
-    done = true;
+    if (done) return; done = true;
     try { socket.destroy(); } catch {}
     res.status(status).json(info);
   };
-
   socket.setTimeout(8000);
   socket.on('connect', () => end(200, { ok: true, host, port }));
   socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
   socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
-  socket.connect(port, host);
+  socket.connect({ host, port, family: 4 });
 };
