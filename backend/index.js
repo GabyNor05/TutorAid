@@ -86,6 +86,18 @@ app.get('/api/db-health', async (req, res) => {
   }
 });
 
+app.get('/api/db-inspect', async (req, res) => {
+  try {
+    const pool = require('./config/db');
+    const [[{ db }]] = await pool.query('SELECT DATABASE() AS db');
+    const [tables] = await pool.query('SHOW TABLES');
+    res.json({ db, tables });
+  } catch (e) {
+    console.error('DB inspect error:', e);
+    res.status(500).json({ error: e.message, code: e.code, sqlMessage: e.sqlMessage });
+  }
+});
+
 // Debug: list registered routes
 app.get('/api/_routes', (req, res) => {
   const routes = [];
