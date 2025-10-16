@@ -76,7 +76,7 @@ exports.deleteTutor = async (req, res) => {
     const pool = require('../config/db');
     try {
         const tutorID = req.params.id;
-        await pool.query("DELETE FROM Tutors WHERE tutorID = ?", [tutorID]);
+        await pool.query("DELETE FROM tutors WHERE tutorID = ?", [tutorID]);
         res.json({ message: "Tutor deleted!" });
     } catch (err) {
         res.status(500).json({ error: "Failed to delete tutor" });
