@@ -1,22 +1,20 @@
-
-
 const getAllUsers = async () => {
     const pool = require('../config/db');
-    const [rows] = await pool.query('SELECT * FROM Users');
+    const [rows] = await pool.query('SELECT * FROM users');
     return rows;
 };
 
 const getUserById = async (userID) => {
     const pool = require('../config/db');
     // Get basic user info
-    const [users] = await pool.query('SELECT * FROM Users WHERE userID = ?', [userID]);
+    const [users] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
     const user = users[0];
     if (!user) return null;
 
     // If tutor, get extra fields
     if (user.role === "Tutor") {
         const [tutors] = await pool.query(
-            'SELECT bio, subjects, qualifications, availability FROM Tutors WHERE userID = ?', [userID]
+            'SELECT bio, subjects, qualifications, availability FROM tutors WHERE userID = ?', [userID]
         );
         if (tutors[0]) {
             return { ...user, ...tutors[0] };
@@ -26,7 +24,7 @@ const getUserById = async (userID) => {
     // If student, you can add similar logic for student fields
     if (user.role === "Student") {
         const [students] = await pool.query(
-            'SELECT grade, school, address, city, province, status FROM Students WHERE userID = ?', [userID]
+            'SELECT grade, school, address, city, province, status FROM students WHERE userID = ?', [userID]
         );
         if (students[0]) {
             return { ...user, ...students[0] };
@@ -40,7 +38,7 @@ const createUser = async (user) => {
     const pool = require('../config/db');
     console.log("Creating user:", user);
     const [result] = await pool.query(
-        'INSERT INTO Users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
         [user.image, user.name, user.email, user.password, user.role]
     );
     const userID = result.insertId;
@@ -49,17 +47,17 @@ const createUser = async (user) => {
     // Insert into role-specific table
     if (user.role === 'Tutor') {
         await pool.query(
-            'INSERT INTO Tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
             [userID, user.bio || '', user.subjects || '', user.qualifications || '', user.availability || '']
         );
     } else if (user.role === 'Student') {
         await pool.query(
-            'INSERT INTO Students (userID, grade, school, address, status) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO students (userID, grade, school, address, status) VALUES (?, ?, ?, ?, ?)',
             [userID, user.grade || '', user.school || '', user.address || '', user.status || 'Active']
         );
     } else if (user.role === 'Admin') {
         await pool.query(
-            'INSERT INTO Admins (userID) VALUES (?)',
+            'INSERT INTO admins (userID) VALUES (?)',
             [userID]
         );
     }
@@ -97,20 +95,20 @@ const updateUser = async (userID, user) => {
 
     values.push(userID);
 
-    const query = `UPDATE Users SET ${fields.join(', ')} WHERE userID = ?`;
+    const query = `UPDATE users SET ${fields.join(', ')} WHERE userID = ?`;
     await pool.query(query, values);
 };
 
 const deleteUser = async (userID) => {
     const pool = require('../config/db');
-    await pool.query('DELETE FROM Users WHERE userID = ?', [userID]);
+    await pool.query('DELETE FROM users WHERE userID = ?', [userID]);
     return { message: 'User deleted' };
 };
 
 const createTutor = async ({ userID, bio, subjects, qualifications, availability }) => {
     const pool = require('../config/db');
     await pool.query(
-        'INSERT INTO Tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
         [userID, bio, subjects, qualifications, availability]
     );
 };
@@ -118,7 +116,7 @@ const createTutor = async ({ userID, bio, subjects, qualifications, availability
 const updateTutor = async (userID, tutor) => {
     const pool = require('../config/db');
     await pool.query(
-        'UPDATE Tutors SET bio = ?, subjects = ?, qualifications = ?, availability = ? WHERE userID = ?',
+        'UPDATE tutors SET bio = ?, subjects = ?, qualifications = ?, availability = ? WHERE userID = ?',
         [tutor.bio, tutor.subjects, tutor.qualifications, tutor.availability, userID]
     );
 };
@@ -126,10 +124,10 @@ const updateTutor = async (userID, tutor) => {
 const createStudent = async (student) => {
     const pool = require('../config/db');
     // Check if student row already exists
-    const [rows] = await pool.query('SELECT * FROM Students WHERE userID = ?', [student.userID]);
+    const [rows] = await pool.query('SELECT * FROM students WHERE userID = ?', [student.userID]);
     if (rows.length === 0) {
         await pool.query(
-            'INSERT INTO Students (userID, grade, school, address, city, province, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO students (userID, grade, school, address, city, province, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [
                 student.userID,
                 student.grade || null,
@@ -147,7 +145,7 @@ const createStudent = async (student) => {
 const updateStudent = async (userID, student) => {
     const pool = require('../config/db');
     const [result] = await pool.query(
-        'UPDATE Students SET grade = ?, school = ?, address = ?, city = ?, province = ?, status = ? WHERE userID = ?',
+        'UPDATE students SET grade = ?, school = ?, address = ?, city = ?, province = ?, status = ? WHERE userID = ?',
         [
             student.grade || null,
             student.school || null,
@@ -164,15 +162,19 @@ const updateStudent = async (userID, student) => {
 const createTutorAvailability = async ({ tutorID, day_group, start_time, end_time }) => {
     const pool = require('../config/db');
     await pool.query(
-        'INSERT INTO TutorAvailability (tutorID, day_group, start_time, end_time) VALUES (?, ?, ?, ?)',
+        'INSERT INTO tutoravailability (tutorID, day_group, start_time, end_time) VALUES (?, ?, ?, ?)',
         [tutorID, day_group, start_time, end_time]
     );
 };
 
-const getUserByEmail = async (email) => {
-    const pool = require('../config/db');
-    const [rows] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
-    return rows[0];
+const pool = require('../config/db');
+
+exports.getUserByEmail = async (email) => {
+  const [rows] = await pool.query(
+    'SELECT userID, name, email, password, role FROM users WHERE email = ? LIMIT 1',
+    [email]
+  );
+  return rows[0] || null;
 };
 
 module.exports = {
