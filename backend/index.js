@@ -74,6 +74,17 @@ app.use('/api/messages', messagesRoutes);
 
 app.get('/api/health', (req, res) => res.send('ok'));
 
+app.get('/api/db-health', async (req, res) => {
+  try {
+    const pool = require('./config/db');
+    const [rows] = await pool.query('SELECT 1 AS ok');
+    res.json({ ok: true, rows });
+  } catch (e) {
+    console.error('DB health error:', e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.get('/uploads/progressnotes/:filename', (req, res) => {
   const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
   res.setHeader('Content-Type', 'application/pdf');

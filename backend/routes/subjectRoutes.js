@@ -5,10 +5,11 @@ const pool = require('../config/db');
 router.get('/', async (req, res) => {
     const pool = require('../config/db');
     try {
-        const [rows] = await pool.query('SELECT * FROM Subjects');
+        const [rows] = await pool.query('SELECT * FROM Subjects ORDER BY name ASC');
         res.json(rows);
     } catch (err) {
-        res.status(500).json({ error: "Failed to fetch subjects" });
+        console.error('Error fetching subjects:', err);
+        res.status(500).json({ error: 'Failed to fetch subjects' });
     }
 });
 
