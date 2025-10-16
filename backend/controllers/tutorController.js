@@ -12,7 +12,7 @@ exports.getAllTutors = async (req, res) => {
                 ROUND(IFNULL(AVG(r.rating), 0), 1) AS rating,
                 COUNT(r.ratingID) AS num_ratings
             FROM tutors t
-            JOIN Users u ON t.userID = u.userID
+            JOIN users u ON t.userID = u.userID
             LEFT JOIN Rating r ON t.tutorID = r.tutorID
             GROUP BY t.tutorID
         `);
@@ -30,7 +30,7 @@ exports.getTutorById = async (req, res) => {
         const tutorID = req.params.id;
         const [rows] = await pool.query(
             "SELECT t.*, u.name, u.image, u.bio, u.subjects, u.qualifications, u.availability " +
-            "FROM tutors t JOIN Users u ON t.userID = u.userID WHERE t.tutorID = ?",
+            "FROM tutors t JOIN users u ON t.userID = u.userID WHERE t.tutorID = ?",
             [tutorID]
         );
         if (rows.length === 0) return res.status(404).json({ error: "Tutor not found" });
