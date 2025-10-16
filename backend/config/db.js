@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const required = ['DB_HOST','DB_USER','DB_PASSWORD','DB_NAME'];
+const required = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
 const missing = required.filter(k => !process.env[k]);
 if (missing.length) {
   console.error('Missing DB env vars:', missing);
@@ -16,7 +16,7 @@ console.log('[DB] connecting', {
 });
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
+  host: process.env.DB_HOST,                 
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,

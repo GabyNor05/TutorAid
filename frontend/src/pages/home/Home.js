@@ -54,8 +54,10 @@ function Home() {
       t.subjects.forEach(s => s && tutorSubjectsSet.add(s.trim()));
     }
   });
-
   const filteredSubjects = subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
+
+  if (loading) return <div style={{ padding: 24 }}>Loading…</div>;
+  if (err) return <div style={{ padding: 24, color: 'crimson' }}>Error: {err}</div>;
 
   return (
     <div className="">
