@@ -43,7 +43,6 @@ function Login() {
         if (Object.keys(newErrors).length === 0) {
             try {
                 const res = await api.post(endpoints.login(), { email, password });
-                console.log("Login response:", res);
 
 
                 if (res.student && res.student.status === "Blocked") {

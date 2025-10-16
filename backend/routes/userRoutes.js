@@ -16,6 +16,7 @@ router.delete('/:id', userController.deleteUser);
 router.post('/login', userController.loginUser);
 router.post('/send-otp', userController.sendOtp);
 router.post('/verify-otp', userController.verifyOtp);
+router.get('/email-health', userController.emailHealth);
 router.get('/tutors/by-subject/:subject', userController.getTutorsBySubject);
 router.get('/tutor/:userID/availability', userController.getTutorAvailability);
 router.get('/students/by-user/:userID', userController.getStudentIDByUserID);

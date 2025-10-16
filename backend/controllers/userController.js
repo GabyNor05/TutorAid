@@ -4,14 +4,17 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 
-
 const transporter = nodemailer.createTransport({
-    
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 465), // 465 (SSL) or 587 (STARTTLS)
+  secure: (process.env.SMTP_SECURE || 'true') === 'true', // true for 465, false for 587
+  auth: {
+    user: process.env.EMAIL_USER, // full Gmail address
+    pass: process.env.EMAIL_PASS  // App Password (16 chars), not your login password
+  },
+  connectionTimeout: 10000, // 10s
+  greetingTimeout: 10000,
+  socketTimeout: 20000
 });
 
 cloudinary.config({
@@ -279,27 +282,48 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.sendOtp = async (req, res) => {
-    const pool = require('../config/db');
-    const { email } = req.body;
-    try {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        otpStore[email] = {
-            otp,
-            createdAt: Date.now()
-        };
-        // Send OTP via email
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "Your OTP Code",
-            text: `Your OTP is: ${otp}`
-        });
-
-        res.json({ message: "OTP sent" });
-    } catch (err) {
-        console.error("Error sending OTP:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
+  const { email } = req.body;
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ error: "Email service not configured" });
     }
+    // Ensure SMTP is reachable/auth works
+    const ok = await verifyMailer();
+    if (!ok) return res.status(500).json({ error: "Email service unavailable" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[email] = { otp, createdAt: Date.now() };
+
+    await transporter.sendMail({
+      from: `"TutorAid" <${process.env.EMAIL_USER}>`, // must match authenticated sender for Gmail
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP is: ${otp}`
+    });
+
+    res.json({ message: "OTP sent" });
+  } catch (err) {
+    console.error("Error sending OTP:", {
+      code: err.code, message: err.message, response: err.response, responseCode: err.responseCode
+    });
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+};
+
+// NEW: email health endpoint
+exports.emailHealth = async (req, res) => {
+  try {
+    await transporter.verify();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({
+      ok: false,
+      code: e.code,
+      message: e.message,
+      response: e.response,
+      responseCode: e.responseCode
+    });
+  }
 };
 
 exports.verifyOtp = async (req, res) => {
