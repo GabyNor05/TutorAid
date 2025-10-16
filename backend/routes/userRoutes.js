@@ -13,6 +13,7 @@ router.post('/send-otp', userController.sendOtp);
 router.post('/verify-otp', userController.verifyOtp);
 router.get('/email-health', userController.emailHealth);
 router.get('/email-tcp-check', userController.smtpTcpCheck);
+router.get('/email-dns', userController.emailDns);
 
 // Other specific routes
 router.get('/tutors/by-subject/:subject', userController.getTutorsBySubject);
