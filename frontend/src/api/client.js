@@ -8,7 +8,6 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
     method,
     headers: { 'Content-Type': 'application/json', ...headers },
     body: body ? JSON.stringify(body) : undefined,
-    credentials: 'include', // safe if you ever add cookies; harmless otherwise
   });
 
   // Try to parse JSON regardless of status

@@ -30,7 +30,7 @@ function ManageUsers() {
 
   const handleDelete = async (userId) => {
     try {
-      await axios.delete(`/api/users/${userId}`);
+      await axios.delete(`${API_URL}/api/users/${userId}`);
       setUsers(users.filter((user) => user.userID !== userId));
     } catch (error) {
       console.error('Error deleting user:', error);
