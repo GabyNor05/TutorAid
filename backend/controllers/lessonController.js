@@ -5,7 +5,7 @@ exports.createLesson = async (req, res) => {
     const { tutorID, studentID, date, startTime, duration, subject } = req.body;
     try {
         await pool.query(
-            `INSERT INTO Lessons (tutorID, studentID, subject, date, startTime, duration)
+            `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration)
              VALUES (?, ?, ?, ?, ?, ?)`,
             [tutorID, studentID, subject, date, startTime, duration]
         );
@@ -23,13 +23,13 @@ exports.getLessonsForTutor = async (req, res) => {
     try {
         const [rows] = await pool.query(
             `SELECT l.lessonID, l.status, u.name AS studentName, u.image AS studentImage, l.date, l.startTime, l.endTime, l.subject, s.address
-             FROM Lessons l
-             LEFT JOIN Students s ON l.studentID = s.studentID
-             LEFT JOIN Users u ON s.userID = u.userID
+             FROM lessons l
+             LEFT JOIN students s ON l.studentID = s.studentID
+             LEFT JOIN users u ON s.userID = u.userID
              WHERE l.tutorID = ?`,
             [tutorID]
         );
-        console.log("Lessons fetched:", rows);
+        console.log("lessons fetched:", rows);
         res.json(rows);
     } catch (err) {
         console.error("Error fetching lessons:", err);
@@ -42,7 +42,7 @@ exports.updateLessonStatus = async (req, res) => {
     const { lessonID, status } = req.body;
     try {
         await pool.query(
-            `UPDATE Lessons SET status = ? WHERE lessonID = ?`,
+            `UPDATE lessons SET status = ? WHERE lessonID = ?`,
             [status, lessonID]
         );
         res.json({ message: "Lesson status updated!" });
@@ -55,7 +55,7 @@ exports.deleteLesson = async (req, res) => {
     const pool = require('../config/db');
     const { lessonID, studentEmail } = req.body;
     try {
-        await pool.query(`DELETE FROM Lessons WHERE lessonID = ?`, [lessonID]);
+        await pool.query(`DELETE FROM lessons WHERE lessonID = ?`, [lessonID]);
         // Send cancellation email
         let transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -85,7 +85,7 @@ exports.getAcceptedLessons = async (req, res) => {
 
     if (role === "Student") {
         const [studentRows] = await pool.query(
-            "SELECT studentID FROM Students WHERE userID = ?",
+            "SELECT studentID FROM students WHERE userID = ?",
             [userID]
         );
         if (studentRows.length === 0) {
@@ -95,22 +95,22 @@ exports.getAcceptedLessons = async (req, res) => {
 
         query = `
             SELECT l.*, u.name AS tutorName, u.image AS tutorImage
-            FROM Lessons l
+            FROM lessons l
             JOIN Tutors t ON l.tutorID = t.tutorID
-            JOIN Students s ON l.studentID = s.studentID
-            JOIN Users u ON t.userID = u.userID
+            JOIN students s ON l.studentID = s.studentID
+            JOIN users u ON t.userID = u.userID
             WHERE l.studentID = ?
             AND l.status = 'accepted'
             ORDER BY l.date ASC
         `;
         params = [studentID];
     } else if (role === "Tutor") {
-        // Get lessons for this tutor, join Users for student info
+        // Get lessons for this tutor, join users for student info
         query = `
             SELECT l.*, u.name AS studentName, u.image AS studentImage
-            FROM Lessons l
-            JOIN Students s ON l.studentID = s.studentID
-            JOIN Users u ON s.userID = u.userID
+            FROM lessons l
+            JOIN students s ON l.studentID = s.studentID
+            JOIN users u ON s.userID = u.userID
             WHERE l.tutorID = ?
             AND l.status = 'accepted'
             ORDER BY l.date ASC

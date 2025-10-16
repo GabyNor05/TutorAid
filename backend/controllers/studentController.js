@@ -4,8 +4,8 @@ exports.getAllStudents = async (req, res) => {
     try {
         const [rows] = await pool.query(`
             SELECT s.*, u.name, u.image
-            FROM Students s
-            LEFT JOIN Users u ON s.userID = u.userID
+            FROM students s
+            LEFT JOIN users u ON s.userID = u.userID
         `);
         res.json(rows);
     } catch (err) {
@@ -19,8 +19,8 @@ exports.getStudentByUserID = async (req, res) => {
     try {
         const [rows] = await pool.query(
             `SELECT s.*, u.name, u.image
-             FROM Students s
-             LEFT JOIN Users u ON s.userID = u.userID
+             FROM students s
+             LEFT JOIN users u ON s.userID = u.userID
              WHERE s.userID = ?`,
             [userID]
         );
@@ -50,7 +50,7 @@ exports.createStudentRequest = async (req, res) => {
     const { userID, status } = req.body;
     try {
         await pool.query(
-            `INSERT INTO Students (userID, status)
+            `INSERT INTO students (userID, status)
              VALUES (?, ?)`,
             [userID, status]
         );
@@ -66,7 +66,7 @@ exports.getStudentIDByUserID = async (req, res) => {
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
-            `SELECT studentID FROM Students WHERE userID = ?`,
+            `SELECT studentID FROM students WHERE userID = ?`,
             [userID]
         );
         if (rows.length > 0) {

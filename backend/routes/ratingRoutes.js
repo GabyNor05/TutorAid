@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db');
 
 router.post('/', async (req, res) => {
     const pool = require('../config/db');
     const { tutorID, studentID, rating, comment } = req.body;
     try {
         await pool.query(
-            "INSERT INTO Rating (tutorID, studentID, rating, comment) VALUES (?, ?, ?, ?)",
+            "INSERT INTO rating (tutorID, studentID, rating, comment) VALUES (?, ?, ?, ?)",
             [tutorID, studentID, rating, comment]
         );
         res.status(201).json({ message: "Rating submitted!" });

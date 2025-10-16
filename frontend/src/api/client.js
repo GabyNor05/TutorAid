@@ -34,6 +34,12 @@ export const endpoints = {
   subjects: () => '/api/subjects',
   login: () => '/api/users/login',
   users: () => '/api/users',
+  students: () => '/api/students',
+  lessons: () => '/api/lessons',
+  lessonReports: () => '/api/lessonReports',
+  progressNotes: () => '/api/progressNotes',
+  upload: () => '/api/progressNotes/upload',
+  feedback: () => '/api/feedback',
 };
 
 export { API_URL };

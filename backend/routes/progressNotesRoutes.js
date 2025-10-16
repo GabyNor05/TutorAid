@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const progressNotesController = require('../controllers/progressNotesController');
-const pool = require('../config/db');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -21,7 +20,7 @@ router.get('/student/:studentID/lesson-notes', async (req, res) => {
     const { studentID } = req.params;
     try {
         const [rows] = await pool.query(
-            "SELECT * FROM ProgressNotes WHERE studentID = ? AND file_name LIKE 'lesson-feedback-%'",
+            "SELECT * FROM progressnotes WHERE studentID = ? AND file_name LIKE 'lesson-feedback-%'",
             [studentID]
         );
         res.json(rows);
@@ -34,7 +33,7 @@ router.get('/student/:studentID/published', async (req, res) => {
     const { studentID } = req.params;
     try {
         const [rows] = await pool.query(
-            "SELECT * FROM ProgressNotes WHERE studentID = ? AND published = 1 ORDER BY uploaded_at DESC",
+            "SELECT * FROM progressnotes WHERE studentID = ? AND published = 1 ORDER BY uploaded_at DESC",
             [studentID]
         );
         res.json(rows);
@@ -48,7 +47,7 @@ router.post('/publish', async (req, res) => {
   
   try {
     await pool.query(
-      "UPDATE ProgressNotes SET published = 1 WHERE noteID = ?",
+      "UPDATE progressnotes SET published = 1 WHERE noteID = ?",
       [noteID]
     );
     res.json({ success: true });

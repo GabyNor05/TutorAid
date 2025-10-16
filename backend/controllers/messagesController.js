@@ -4,7 +4,7 @@ exports.getInbox = async (req, res) => {
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
-            "SELECT * FROM Messages WHERE receiverID = ? ORDER BY sentAt DESC",
+            "SELECT * FROM messages WHERE receiverID = ? ORDER BY sentAt DESC",
             [userID]
         );
         res.json(rows);
@@ -19,7 +19,7 @@ exports.getSent = async (req, res) => {
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
-            "SELECT * FROM Messages WHERE senderID = ? ORDER BY sentAt DESC",
+            "SELECT * FROM messages WHERE senderID = ? ORDER BY sentAt DESC",
             [userID]
         );
         res.json(rows);
@@ -34,7 +34,7 @@ exports.sendMessage = async (req, res) => {
     const { senderID, receiverID, subject, body } = req.body;
     try {
         await pool.query(
-            "INSERT INTO Messages (senderID, receiverID, subject, body) VALUES (?, ?, ?, ?)",
+            "INSERT INTO messages (senderID, receiverID, subject, body) VALUES (?, ?, ?, ?)",
             [senderID, receiverID, subject, body]
         );
         res.status(201).json({ message: "Message sent!" });
@@ -49,7 +49,7 @@ exports.markAsRead = async (req, res) => {
     const { messageID } = req.params;
     try {
         await pool.query(
-            "UPDATE Messages SET isRead = TRUE WHERE messageID = ?",
+            "UPDATE messages SET isRead = TRUE WHERE messageID = ?",
             [messageID]
         );
         res.json({ message: "Message marked as read" });
@@ -64,7 +64,7 @@ exports.deleteMessage = async (req, res) => {
     const { messageID } = req.params;
     try {
         await pool.query(
-            "DELETE FROM Messages WHERE messageID = ?",
+            "DELETE FROM messages WHERE messageID = ?",
             [messageID]
         );
         res.json({ message: "Message deleted" });

@@ -25,7 +25,7 @@ exports.createStudentRequest = async (req, res) => {
 
     try {
         await pool.query(
-            `INSERT INTO StudentRequests 
+            `INSERT INTO studentrequests 
             (studentID, requestType, lessonDate, subjectID, newSubjectName, newSubjectDescription, query) 
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [studentID, requestType, lessonDate, subjectID, newSubjectName, newSubjectDescription, query]
@@ -40,7 +40,7 @@ exports.createStudentRequest = async (req, res) => {
 exports.getAllStudentRequests = async (req, res) => {
     const pool = require('../config/db');
     try {
-        const [rows] = await pool.query('SELECT * FROM StudentRequests ORDER BY createdAt DESC');
+        const [rows] = await pool.query('SELECT * FROM studentrequests ORDER BY createdAt DESC');
         
         res.json(rows);
     } catch (err) {

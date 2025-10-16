@@ -5,7 +5,7 @@ exports.createLessonReport = async (req, res) => {
     const { studentID, subject, reportDate, comments } = req.body;
     try {
         await pool.query(
-            "INSERT INTO LessonReports (studentID, subject, reportDate, comments) VALUES (?, ?, ?, ?)",
+            "INSERT INTO lessonreports (studentID, subject, reportDate, comments) VALUES (?, ?, ?, ?)",
             [studentID, subject, reportDate, comments]
         );
         res.status(201).json({ message: "Report created" });

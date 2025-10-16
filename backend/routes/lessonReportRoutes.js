@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const lessonReportController = require('../controllers/lessonReportController');
-const pool = require('../config/db'); 
 
 router.post('/', lessonReportController.createLessonReport);
 router.get('/', async (req, res) => {
@@ -10,8 +9,8 @@ router.get('/', async (req, res) => {
     SELECT 
       lr.*, 
       u.name AS studentName
-    FROM LessonReports lr
-    JOIN Users u ON lr.studentID = u.userID
+    FROM lessonreports lr
+    JOIN users u ON lr.studentID = u.userID
     ORDER BY lr.reportDate DESC
   `);
   res.json(rows);
@@ -26,7 +25,7 @@ router.post('/escalate', async (req, res) => {
   try {
     // Get studentID from the report
     const [reportRows] = await pool.query(
-      "SELECT studentID FROM LessonReports WHERE lessonReportID = ?",
+      "SELECT studentID FROM lessonreports WHERE lessonReportID = ?",
       [lessonReportID]
     );
     if (!reportRows.length) {
@@ -54,7 +53,7 @@ router.post('/escalate', async (req, res) => {
 
     // Update report status
     await pool.query(
-      "UPDATE LessonReports SET status = 'Escalated' WHERE lessonReportID = ?",
+      "UPDATE lessonreports SET status = 'Escalated' WHERE lessonReportID = ?",
       [lessonReportID]
     );
 
@@ -72,7 +71,7 @@ router.post('/ignore', async (req, res) => {
   }
   try {
     await pool.query(
-      "UPDATE LessonReports SET status = 'Ignored' WHERE lessonReportID = ?",
+      "UPDATE lessonreports SET status = 'Ignored' WHERE lessonReportID = ?",
       [lessonReportID]
     );
     res.json({ success: true });

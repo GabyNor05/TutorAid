@@ -40,7 +40,7 @@ exports.getAllUsers = async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT u.*, s.status
-      FROM Users u
+      FROM users u
       LEFT JOIN Students s ON u.userID = s.userID
     `);
     res.json(rows);
@@ -82,7 +82,7 @@ exports.createUser = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-        // Build user object for Users table
+        // Build user object for users table
         const user = {
             image: imageUrl, // <-- USE CLOUDINARY LINK HERE
             name: req.body.name,
@@ -164,7 +164,7 @@ exports.updateUser = async (req, res) => {
             fs.unlinkSync(req.file.path);
         }
 
-        // Build update object for Users table
+        // Build update object for users table
         const updateData = { ...req.body };
         if (imageUrl) updateData.image = imageUrl;
 
@@ -246,7 +246,7 @@ exports.loginUser = async (req, res) => {
         }
         // Update lastLogin for all users
         await pool.query(
-          "UPDATE Users SET lastLogin = NOW() WHERE userID = ?",
+          "UPDATE users SET lastLogin = NOW() WHERE userID = ?",
           [user.userID]
         );
 
@@ -333,7 +333,7 @@ exports.getTutorsBySubject = async (req, res) => {
     try {
         
         const [rows] = await pool.query(
-            "SELECT Users.userID, Users.name FROM Users JOIN Tutors ON Users.userID = Tutors.userID WHERE Tutors.subjects LIKE ?",
+            "SELECT users.userID, users.name FROM users JOIN tutors ON users.userID = tutors.userID WHERE tutors.subjects LIKE ?",
             [`%${subject}%`]
         );
         res.json(rows);
@@ -348,7 +348,7 @@ exports.getTutorAvailability = async (req, res) => {
     const userID = req.params.userID;
     try {
         const [rows] = await pool.query(
-            "SELECT availability FROM Tutors WHERE userID = ?",
+            "SELECT availability FROM tutors WHERE userID = ?",
             [userID]
         );
         res.json(rows);
@@ -381,7 +381,7 @@ exports.getAllStudents = async (req, res) => {
   try {
     await pool.query(`
       UPDATE Students s
-      JOIN Users u ON s.userID = u.userID
+      JOIN users u ON s.userID = u.userID
       SET s.status = 'Inactive'
       WHERE u.lastLogin IS NULL OR u.lastLogin < (NOW() - INTERVAL 3 DAY)
     `);
@@ -396,7 +396,7 @@ exports.updateLastLogin = async (userID) => {
     const pool = require('../config/db');
     try {
         await pool.query(
-            "UPDATE Users SET lastLogin = NOW() WHERE userID = ?",
+            "UPDATE users SET lastLogin = NOW() WHERE userID = ?",
             [user.userID]
         );
     } catch (err) {
@@ -416,7 +416,7 @@ exports.addStaff = async (req, res) => {
         }
         // Save imageUrl to DB (not req.file.path)
         await pool.query(
-            "INSERT INTO Users (name, email, password, role, image, bio, subjects, qualifications, availability, fee_per_hour, experience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO users (name, email, password, role, image, bio, subjects, qualifications, availability, fee_per_hour, experience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [req.body.name, req.body.email, req.body.password, req.body.role, imageUrl, req.body.bio, req.body.subjects, req.body.qualifications, req.body.availability, req.body.fee_per_hour, req.body.experience]
         );
         res.status(201).json({ message: "Staff member added!" });

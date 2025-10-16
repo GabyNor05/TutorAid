@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const studentRequestsController = require('../controllers/studentRequestsController');
 const nodemailer = require('nodemailer');
-const pool = require('../config/db');
 
 router.post('/', studentRequestsController.createStudentRequest);
 router.get('/', studentRequestsController.getAllStudentRequests);
@@ -15,7 +14,7 @@ router.post('/postpone', async (req, res) => {
     }
     try {
         await pool.query(
-            "UPDATE StudentRequests SET status = 'Postponed' WHERE studentRequestID = ?",
+            "UPDATE studentrequests SET status = 'Postponed' WHERE studentRequestID = ?",
             [studentRequestID]
         );
         res.json({ success: true });
@@ -32,7 +31,7 @@ router.post('/reject', async (req, res) => {
     }
     try {
         await pool.query(
-            "UPDATE StudentRequests SET status = 'Rejected' WHERE studentRequestID = ?",
+            "UPDATE studentrequests SET status = 'Rejected' WHERE studentRequestID = ?",
             [studentRequestID]
         );
         res.json({ success: true });
@@ -46,7 +45,7 @@ router.post('/respond', async (req, res) => {
     const { toUserID, subject, message, studentRequestID } = req.body;
     try {
         // Get user's email
-        const [rows] = await pool.query("SELECT email FROM Users WHERE userID = ?", [toUserID]);
+        const [rows] = await pool.query("SELECT email FROM users WHERE userID = ?", [toUserID]);
         if (!rows.length) {
             return res.status(404).json({ success: false, message: "User not found." });
         }
@@ -70,7 +69,7 @@ router.post('/respond', async (req, res) => {
 
         // Update status to Completed
         await pool.query(
-            "UPDATE StudentRequests SET status = 'Completed' WHERE studentRequestID = ?",
+            "UPDATE studentrequests SET status = 'Completed' WHERE studentRequestID = ?",
             [studentRequestID]
         );
 
@@ -86,7 +85,7 @@ router.post('/revoke-appeal', async (req, res) => {
   const { studentRequestID, studentID } = req.body;
   try {
     await pool.query("UPDATE students SET status = 'Active' WHERE studentID = ?", [studentID]);
-    await pool.query("UPDATE StudentRequests SET status = 'Completed' WHERE studentRequestID = ?", [studentRequestID]);
+    await pool.query("UPDATE studentrequests SET status = 'Completed' WHERE studentRequestID = ?", [studentRequestID]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: "Error revoking block." });

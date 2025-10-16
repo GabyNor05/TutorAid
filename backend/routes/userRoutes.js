@@ -62,7 +62,7 @@ router.post('/remove-user', async (req, res) => {
         if (adminPassword !== process.env.ADMIN_PASSWORD) {
             return res.json({ success: false, message: "Incorrect admin password." });
         }
-        const [result] = await pool.query("DELETE FROM Users WHERE userID = ?", [userID]);
+        const [result] = await pool.query("DELETE FROM users WHERE userID = ?", [userID]);
         if (result.affectedRows === 0) {
             return res.json({ success: false, message: "User not found." });
         }
@@ -79,10 +79,10 @@ router.post('/user-avatars', async (req, res) => {
     if (!studentIDs || !studentIDs.length) return res.json({});
     try {
         const [rows] = await pool.query(
-            `SELECT Students.studentID, Users.image, Users.name
-             FROM Students 
-             JOIN Users ON Students.userID = Users.userID 
-             WHERE Students.studentID IN (?)`,
+            `SELECT students.studentID, users.image, users.name
+             FROM students
+             JOIN users ON students.userID = users.userID
+             WHERE students.studentID IN (?)`,
             [studentIDs]
         );
         const images = {};
