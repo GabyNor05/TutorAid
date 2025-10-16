@@ -4,40 +4,63 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const net = require('net');
+const dns = require('dns').promises;
 
 // Replace the transporter with a factory that reads env
 function makeTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 587);      // 587 for STARTTLS
-  const secure = (process.env.SMTP_SECURE || 'false') === 'true'; // false for 587
+  const port = Number(process.env.SMTP_PORT || 587);      // 587 STARTTLS
+  const secure = (process.env.SMTP_SECURE || 'false') === 'true'; // false for 587, true for 465
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
   return nodemailer.createTransport({
-    host,
-    port,
-    secure,                        // false for 587, true for 465
-    auth: { user, pass },          // Gmail App Password required
+    host, port, secure,
+    auth: user && pass ? { user, pass } : undefined,
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 20000,
-    tls: { rejectUnauthorized: false }, // tolerate intermediary TLS quirks
+    tls: { rejectUnauthorized: false },
   });
 }
 
-// Optional verify helper
-async function verifyMailer() {
-  const t = makeTransporter();
-  await t.verify();
-  return true;
+// Primary: send via SMTP; Fallback: Resend HTTP API
+async function sendEmail({ to, subject, text }) {
+  // Try SMTP if configured
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    try {
+      const t = makeTransporter();
+      await t.verify();
+      await t.sendMail({
+        from: `"TutorAid" <${process.env.EMAIL_USER}>`,
+        to, subject, text,
+      });
+      return { via: 'smtp' };
+    } catch (e) {
+      console.error('SMTP send failed:', e.code || e.name, e.message);
+    }
+  }
+  // Fallback to Resend API if key present
+  if (process.env.RESEND_API_KEY) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || 'TutorAid <onboarding@resend.dev>',
+        to, subject, text,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Resend ${res.status}: ${body}`);
+    }
+    return { via: 'resend' };
+  }
+  throw new Error('No email provider configured');
 }
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 
 const otpStore = {}; // { email: otp }
 
@@ -299,44 +322,55 @@ exports.loginUser = async (req, res) => {
 exports.sendOtp = async (req, res) => {
   const { email } = req.body;
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      return res.status(500).json({ error: "Email service not configured" });
-    }
-    await verifyMailer(); // throws on failure
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    const transporter = makeTransporter();
-    await transporter.sendMail({
-      from: `"TutorAid" <${process.env.EMAIL_USER}>`,
+    await sendEmail({
       to: email,
-      subject: "Your OTP Code",
+      subject: 'Your OTP Code',
       text: `Your OTP is: ${otp}`,
     });
-
-    res.json({ message: "OTP sent" });
+    res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error("Error sending OTP:", {
-      code: err.code, message: err.message, response: err.response, responseCode: err.responseCode
-    });
-    res.status(500).json({ error: "Failed to send OTP" });
+    console.error('Error sending OTP:', err.message);
+    res.status(500).json({ error: 'Failed to send OTP' });
   }
 };
 
-// NEW: email health endpoint
 exports.emailHealth = async (req, res) => {
   try {
-    await verifyMailer();
-    res.json({ ok: true });
+    const t = makeTransporter();
+    await t.verify();
+    res.json({ ok: true, via: 'smtp' });
   } catch (e) {
-    res.status(500).json({
-      ok: false,
-      code: e.code,
-      message: e.message,
-      response: e.response,
-      responseCode: e.responseCode
-    });
+    res.status(500).json({ ok: false, code: e.code, message: e.message });
+  }
+};
+
+exports.smtpTcpCheck = async (req, res) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || 587);
+  const socket = new net.Socket();
+  let done = false;
+  const end = (status, info) => {
+    if (done) return; done = true;
+    try { socket.destroy(); } catch {}
+    res.status(status).json(info);
+  };
+  socket.setTimeout(8000);
+  socket.on('connect', () => end(200, { ok: true, host, port }));
+  socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
+  socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
+  socket.connect(port, host);
+};
+
+exports.emailDns = async (req, res) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  try {
+    const addrs = await dns.lookup(host, { all: true });
+    res.json({ host, addrs });
+  } catch (e) {
+    res.status(500).json({ host, error: e.message });
   }
 };
 
