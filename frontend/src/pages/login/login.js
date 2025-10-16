@@ -3,6 +3,7 @@ import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 import {X} from "@phosphor-icons/react";
+import { api, endpoints } from "../../api/client";
 
 function Login() {
     const navigate = useNavigate();
@@ -41,30 +42,18 @@ function Login() {
 
         if (Object.keys(newErrors).length === 0) {
             try {
-                const response = await fetch(`${API_URL}/api/users/login`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email, password })
-                });
-
-
-                const res = await response.json();
+                const res = await api.post(endpoints.login(), { email, password });
                 console.log("Login response:", res);
 
 
-                if (response.ok) {
-                  // If student, check block status
-                  if (res.student && res.student.status === "Blocked") {
+                if (res.student && res.student.status === "Blocked") {
                     setBlockedModalOpen(true);
                     setStudentID(res.student.studentID); // <-- Add this line
-                  } else if (res.userID) {
+                } else if (res.userID) {
                     localStorage.setItem("userID", res.userID);
                     navigate("/otp");
-                  } else {
-                    setErrors({ general: "Login failed" });
-                  }
                 } else {
-                  setErrors({ general: res.error || "Login failed" });
+                    setErrors({ general: "Login failed" });
                 }
             } catch (err) {
                 setErrors({ general: err.response?.data?.error || "Login failed" });
@@ -157,7 +146,7 @@ function Login() {
       className="bg-white rounded-lg shadow-lg p-6 w-96 flex flex-col gap-4"
       onSubmit={async e => {
         e.preventDefault();
-        await api.post('/api/studentRequests', {
+        await api.post(endpoints.studentRequests(), {
           studentID,
           requestType: "Appeal_Block",
           query: appealQuery,
