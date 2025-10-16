@@ -3,14 +3,34 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
+const net = require('net');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT || 465),
-  secure: (process.env.SMTP_SECURE || 'true') === 'true',
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-  connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 20000
-});
+// Replace the transporter with a factory that reads env
+function makeTransporter() {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || 587);      // 587 for STARTTLS
+  const secure = (process.env.SMTP_SECURE || 'false') === 'true'; // false for 587
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,                        // false for 587, true for 465
+    auth: { user, pass },          // Gmail App Password required
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+    tls: { rejectUnauthorized: false }, // tolerate intermediary TLS quirks
+  });
+}
+
+// Optional verify helper
+async function verifyMailer() {
+  const t = makeTransporter();
+  await t.verify();
+  return true;
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -282,18 +302,17 @@ exports.sendOtp = async (req, res) => {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       return res.status(500).json({ error: "Email service not configured" });
     }
-    // Ensure SMTP is reachable/auth works
-    const ok = await verifyMailer();
-    if (!ok) return res.status(500).json({ error: "Email service unavailable" });
+    await verifyMailer(); // throws on failure
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, createdAt: Date.now() };
 
+    const transporter = makeTransporter();
     await transporter.sendMail({
-      from: `"TutorAid" <${process.env.EMAIL_USER}>`, // must match authenticated sender for Gmail
+      from: `"TutorAid" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your OTP Code",
-      text: `Your OTP is: ${otp}`
+      text: `Your OTP is: ${otp}`,
     });
 
     res.json({ message: "OTP sent" });
@@ -308,12 +327,9 @@ exports.sendOtp = async (req, res) => {
 // NEW: email health endpoint
 exports.emailHealth = async (req, res) => {
   try {
-    await transporter.verify();
+    await verifyMailer();
     res.json({ ok: true });
   } catch (e) {
-    console.error('SMTP verify failed:', {
-      code: e.code, message: e.message, response: e.response, responseCode: e.responseCode
-    });
     res.status(500).json({
       ok: false,
       code: e.code,
@@ -445,4 +461,24 @@ exports.addStaff = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Error adding staff" });
     }
+};
+
+exports.smtpTcpCheck = async (req, res) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || 587);
+  const socket = new net.Socket();
+  let done = false;
+
+  const end = (status, info) => {
+    if (done) return;
+    done = true;
+    try { socket.destroy(); } catch {}
+    res.status(status).json(info);
+  };
+
+  socket.setTimeout(8000);
+  socket.on('connect', () => end(200, { ok: true, host, port }));
+  socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
+  socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
+  socket.connect(port, host);
 };
