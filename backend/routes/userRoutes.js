@@ -1,22 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
-// Auth & OTP (must be before '/:id')
-router.post('/login', userController.loginUser);
-router.post('/send-otp', userController.sendOtp);
-router.post('/verify-otp', userController.verifyOtp);
-router.get('/email-health', userController.emailHealth);
-router.get('/email-tcp-check', userController.smtpTcpCheck);
-router.get('/email-dns', userController.emailDns);
+const userController = require('../controllers/userController');
 
-// Other specific routes
-router.get('/tutors/by-subject/:subject', userController.getTutorsBySubject);
-router.get('/tutor/:userID/availability', userController.getTutorAvailability);
-router.get('/students/by-user/:userID', userController.getStudentIDByUserID);
-router.post('/add-staff', userController.addStaff);
+// helper to safely attach routes
+function add(method, path, handler) {
+  if (typeof handler !== 'function') {
+    console.error(`[routes] ${method.toUpperCase()} ${path} not attached: handler is ${typeof handler}`);
+    return;
+  }
+  router[method](path, handler);
+}
+
+// Auth & OTP (static first; pass references, NOT calls)
+add('post', '/login', userController.loginUser);
+add('post', '/send-otp', userController.sendOtp);
+add('post', '/verify-otp', userController.verifyOtp);
+add('get', '/email-health', userController.emailHealth);
+add('get', '/email-tcp-check', userController.smtpTcpCheck);
+add('get', '/email-dns', userController.emailDns);
+
+// Feature endpoints
+add('get', '/tutors/by-subject/:subject', userController.getTutorsBySubject);
+add('get', '/tutor/:userID/availability', userController.getTutorAvailability);
+add('get', '/students/by-user/:userID', userController.getStudentIDByUserID);
+add('post', '/add-staff', upload.single('image'), userController.addStaff);
 
 // Change user status with correct admin password
 router.post('/change-status', async (req, res) => {
@@ -92,12 +102,12 @@ router.post('/user-avatars', async (req, res) => {
     }
 });
 
-// Normal CRUD routes
-router.post('/', upload.single('image'), userController.createUser);
-router.get('/', userController.getAllUsers); // or userController.getUsers
-router.get('/:id', userController.getUser);
-router.put('/:id', upload.single('image'), userController.updateUser);
-router.delete('/:id', userController.deleteUser);
+// Users CRUD (/:id last)
+add('post', '/', upload.single('image'), userController.createUser);
+add('get', '/', userController.getAllUsers); // ensure this name matches your controller
+add('get', '/:id', userController.getUser);
+add('put', '/:id', upload.single('image'), userController.updateUser);
+add('delete', '/:id', userController.deleteUser);
 
 module.exports = router;
 
