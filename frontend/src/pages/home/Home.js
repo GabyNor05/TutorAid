@@ -6,6 +6,7 @@ import logo from '../reusableAssets/logo.png';
 import TutorCards from './TutorCards';
 import HeroSection from './HeroSection';  
 import FAQSection from './FAQSection';  
+import Footer from './Footer';
 
 
 function Home() {
@@ -96,12 +97,8 @@ function Home() {
             <FAQSection />
         </main>
         </div>
-        <footer className="footer">
-            <p>&copy; 2023 TutorAid. All rights reserved.</p>
-            <ul>
-                <li><a href="#privacy">Privacy Policy</a></li>
-                <li><a href="#terms">Terms of Service</a></li>
-            </ul>
+        <footer className="mt-auto">
+            <Footer />
         </footer>
 
         {modalOpen && selectedTutor && (
