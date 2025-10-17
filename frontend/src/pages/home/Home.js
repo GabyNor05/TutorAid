@@ -4,10 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import './home.css';
 import logo from '../reusableAssets/logo.png';
 import TutorCards from './TutorCards';
-import HeroSection from './HeroSection';  
-import FAQSection from './FAQSection';  
+import HeroSection from './HeroSection';
+import FAQSection from './FAQSection';
 import Footer from './Footer';
-
 
 function Home() {
   const navigate = useNavigate();
@@ -18,7 +17,6 @@ function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
 
-  // API base is centralized in api/client.js
   useEffect(() => {
     const load = async () => {
       try {
@@ -53,86 +51,109 @@ function Home() {
   });
   const filteredSubjects = subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
 
-  if (loading) return <div style={{ padding: 24 }}>Loading…</div>;
-  if (err) return <div style={{ padding: 24, color: 'crimson' }}>Error: {err}</div>;
+  if (loading) return <div className="p-6">Loading…</div>;
+  if (err) return <div className="p-6 text-red-600">Error: {err}</div>;
 
   return (
-    <div className="">
-        
-        <div className="home-background min-h-screen flex flex-col">
-            <header className="home-header">
-                <HeroSection />   
-            </header>
-            <main className="main-content">
-                <div className="w-full px-4">
-                    <h2 className="mt-8 mb-11">Available Subjects</h2>
-            
-            <div className="subject-tags flex flex-wrap gap-2 mb-4 items-center justify-center ">
-                {filteredSubjects.map(subject => (
-                    <span key={subject.subjectID} className="tag bg-cyan-800 text-white px-3 py-1 rounded-lg font-medium">
-                        {subject.name}
-                    </span>
-                ))}
-            </div>
-                </div>
-            
-            <div className="carousel flex gap-4 overflow-x-auto py-4 ">
-                <div className="w-full px-4">
-                    <h2 className="mt-8 mb-11">Available tutors</h2>
-                    <div className="flex space-x-4 m-5 gap-2 items-center justify-center">
-                    {Array.isArray(tutors) && tutors.map(tutor => (
-                        <TutorCards
-                            key={tutor.tutorID}
-                            tutor={tutor}
-                            onClick={() => {
-                                setSelectedTutor(tutor);
-                                setModalOpen(true);
-                            }}
-                        />
-                    ))}
-                    </div>
-                </div>
-            </div>
-            <h2 className="mt-8 mb-11">Frequently Asked Questions</h2>
-            <FAQSection />
-        </main>
-        </div>
-        <footer className="mt-auto">
-            <Footer />
-        </footer>
+    <div className="min-h-screen flex flex-col">
+      <header className="home-header">
+        <HeroSection />
+      </header>
 
-        {modalOpen && selectedTutor && (
-<div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-lg flex w-[900px] h-[500px] overflow-hidden relative">
-        {/* Close button */}
-        <button
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-5xl"
-            onClick={() => setModalOpen(false)}
-        >
-            &times;
-        </button>
-        {/* Image section */}
-        <div className="flex-shrink-0 w-1/3 h-full flex items-center justify-center bg-gray-100">
-            <img
+      <main className="flex-1">
+        {/* Subjects */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-8 mb-5 text-center">Available Subjects</h2>
+          <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-center">
+            {filteredSubjects.map(subject => (
+              <span
+                key={subject.subjectID}
+                className="tag bg-cyan-800 text-white px-3 py-1 rounded-lg font-medium text-sm sm:text-base"
+              >
+                {subject.name}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* Tutors */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-12 mb-5 text-center">Available Tutors</h2>
+
+          {/* Grid on ≥sm, horizontal scroll on xs */}
+          <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {tutorsArr.map(tutor => (
+              <TutorCards
+                key={tutor.tutorID}
+                tutor={tutor}
+                onClick={() => { setSelectedTutor(tutor); setModalOpen(true); }}
+              />
+            ))}
+          </div>
+
+          <div className="sm:hidden flex gap-3 overflow-x-auto py-2 snap-x snap-mandatory">
+            {tutorsArr.map(tutor => (
+              <div key={tutor.tutorID} className="snap-center">
+                <TutorCards
+                  tutor={tutor}
+                  onClick={() => { setSelectedTutor(tutor); setModalOpen(true); }}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-12 mb-5 text-center">
+            Frequently Asked Questions
+          </h2>
+          <FAQSection />
+        </section>
+      </main>
+
+      <footer className="mt-12">
+        <Footer />
+      </footer>
+
+      {/* Tutor modal */}
+      {modalOpen && selectedTutor && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-[95vw] max-w-4xl max-h-[90vh] overflow-auto flex flex-col md:flex-row relative">
+            {/* Close */}
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-3xl"
+              onClick={() => setModalOpen(false)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+
+            {/* Image */}
+            <div className="w-full md:w-1/3 md:h-auto h-48 flex items-center justify-center bg-gray-100">
+              <img
                 src={selectedTutor.image}
                 alt={selectedTutor.name}
-                className="h-full w-full rounded-s object-cover"
-            />
-        </div>
-        {/* Details section */}
-        <div className="flex flex-col justify-center p-8 w-2/3">
-            <h2 className="text-2xl font-bold mb-5">{selectedTutor.name}</h2>
-            <p className="text-gray-700 mb-2"><span className="font-semibold">Subjects:</span> {selectedTutor.subjects}</p>
-            <p className="text-gray-700 mb-2"><span className="font-semibold">Fee per hour:</span> R{selectedTutor.fee_per_hour}</p>
-            <p className="text-gray-700 mb-2"><span className="font-semibold">Experience:</span> {selectedTutor.experience}</p>
-            {selectedTutor.bio && (
+                onError={(e) => { e.currentTarget.src = logo; }}
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            {/* Details */}
+            <div className="flex-1 p-6 md:p-8">
+              <h2 className="text-xl md:text-2xl font-bold mb-4">{selectedTutor.name}</h2>
+              <dl className="space-y-2 text-sm md:text-base">
+                <div><span className="font-semibold">Subjects:</span> {selectedTutor.subjects}</div>
+                <div><span className="font-semibold">Fee per hour:</span> R{selectedTutor.fee_per_hour}</div>
+                <div><span className="font-semibold">Experience:</span> {selectedTutor.experience}</div>
+              </dl>
+              {selectedTutor.bio && (
                 <p className="text-gray-600 mt-4">{selectedTutor.bio}</p>
-            )}
-            {/* Add more details as needed */}
+              )}
+            </div>
+          </div>
         </div>
-    </div>
-</div>
-)}
+      )}
     </div>
   );
 }

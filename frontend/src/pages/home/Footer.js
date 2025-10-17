@@ -1,6 +1,6 @@
-import { FacebookLogo, InstagramLogo, LinkedinLogo, ArrowCircleUp } from "phosphor-react";
+import { FacebookLogo, InstagramLogo, LinkedinLogo, ArrowCircleUp } from "@phosphor-icons/react";
 
-export default function Footer() {
+function Footer() {
   const onSubscribe = (e) => {
     e.preventDefault();
     // TODO: hook up newsletter
@@ -90,3 +90,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default Footer;
