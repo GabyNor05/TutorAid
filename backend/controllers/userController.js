@@ -341,44 +341,42 @@ exports.loginUser = async (req, res) => {
     }
 };
 
+// Keep your sendWithResend helper (uses global fetch on Node 18+)
+
+// Replace sendOtp and emailHealth with these:
+
 exports.sendOtp = async (req, res) => {
   const { email } = req.body;
   try {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    // DEV shortcut if needed
     if (process.env.ALLOW_DEBUG_OTP === 'true') {
       console.log('[OTP][DEV]', email, otp);
       return res.json({ message: 'OTP sent (dev mode)', otp });
     }
 
-    const t = makeTransporter();
-    await t.verify(); // ensure SMTP is reachable/auth works
-    await t.sendMail({
-      from: `"TutorAid" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Your OTP Code',
-      text: `Your OTP is: ${otp}`,
-    });
-
+    await sendWithResend(email, 'Your OTP Code', `Your OTP is: ${otp}`);
     res.json({ message: 'OTP sent' });
   } catch (err) {
-    console.error('Error sending OTP:', { code: err.code, message: err.message });
+    console.error('Error sending OTP:', err.message);
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 };
 
-// Optional: simple Resend health check
-exports.emailHealth = async (req, res) => {
+exports.emailHealth = async (_req, res) => {
   try {
-    const t = makeTransporter();
-    await t.verify();
-    res.json({ ok: true, via: 'smtp' });
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(500).json({ ok: false, message: 'RESEND_API_KEY not set' });
+    }
+    const to = process.env.EMAIL_TEST_TO || process.env.EMAIL_USER;
+    if (!to) {
+      return res.status(400).json({ ok: false, message: 'Set EMAIL_TEST_TO to run this check' });
+    }
+    await sendWithResend(to, 'TutorAid Email Health', 'Health check via Resend.');
+    res.json({ ok: true, via: 'resend' });
   } catch (e) {
-    res.status(500).json({
-      ok: false, code: e.code, message: e.message, response: e.response, responseCode: e.responseCode
-    });
+    res.status(500).json({ ok: false, message: e.message });
   }
 };
 
