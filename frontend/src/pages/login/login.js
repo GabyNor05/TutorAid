@@ -4,6 +4,7 @@ import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 import { X } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
+import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 
 function Login() {
   const navigate = useNavigate();
@@ -53,17 +54,17 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-cyan-100 flex items-center justify-center px-4 py-8">
+    <div style={{ backgroundImage: `url(${WhiteWallpaper})` }} className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
-        <div className="hidden md:block bg-cyan-700/5">
+        <div className="hidden md:block bg-[#2B5561]/5">
           <img src={loginImage} alt="Login" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
         <div className="p-6 sm:p-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mb-6 text-center md:text-left">Login</h2>
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-left">Login</h2>
+          <form onSubmit={(e) => e.preventDefault()} className="login-formspace-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
@@ -72,7 +73,7 @@ function Login() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
@@ -85,7 +86,7 @@ function Login() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.password && <span className="text-red-600 text-xs">{errors.password}</span>}
             </div>
@@ -93,7 +94,7 @@ function Login() {
             {errors.general && <div className="text-red-600 text-xs">{errors.general}</div>}
 
             <button
-              className="w-full h-11 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold transition"
+              className="login-btn w-full h-12 rounded-[4px] text-white font-semibold transition hover:bg-[#2B5561]/70"
               type="button"
               onClick={handleLoginClick}
             >
@@ -103,7 +104,7 @@ function Login() {
 
           <div className="mt-4 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>
-            <a href="/signup" className="text-cyan-700 hover:underline">
+            <a href="/signup" className="text-blue-600 hover:underline">
               Sign up
             </a>
           </div>
@@ -119,7 +120,7 @@ function Login() {
             <div className="flex gap-2 mt-2 justify-center">
               <button
                 type="button"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-[#2B5561] text-white px-4 py-2 rounded hover:bg-[#2B5561]/70"
                 onClick={() => {
                   setBlockedModalOpen(false);
                   setAppealModalOpen(true);
@@ -169,7 +170,7 @@ function Login() {
               required
             />
             <div className="flex gap-2 mt-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+              <button type="submit" className="bg-[#2B5561] text-white px-4 py-2 rounded hover:bg-[#2B5561]/70">
                 Submit Appeal
               </button>
               <button

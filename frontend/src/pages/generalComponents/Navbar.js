@@ -130,13 +130,13 @@ function Navbar() {
           ) : (
             <>
               <button
-                className="login-button text-white px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0"
+                className="login-button text-white border px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0"
                 onClick={() => handleNav("/login")}
               >
                 Login
               </button>
               <button
-                className="signup-button text-white border border-yellow-400 px-4 py-2 rounded-md font-semibold hover:bg-yellow-500 hover:border-yellow-500"
+                className="signup-button text-white border border-yellow-400 px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0"
                 onClick={() => handleNav("/signup")}
               >
                 Sign Up

@@ -3,7 +3,7 @@ import "./css/signup.css";
 import signupImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Alert } from "react-bootstrap";
+import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 
 function Signup() {
   const navigate = useNavigate();
@@ -61,28 +61,18 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-cyan-100 flex items-center justify-center px-4 py-8">
+    <div style={{ backgroundImage: `url(${WhiteWallpaper})` }} className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
-        <div className="hidden md:block bg-cyan-700/5">
+        <div className="hidden md:block bg-[#2B5561]/5">
           <img src={signupImage} alt="signup" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
         <div className="p-6 sm:p-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mb-4 text-center md:text-left">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-left">
             Create your account
           </h2>
-
-          <Alert
-            show={showPopup}
-            variant="danger"
-            onClose={() => setShowPopup(false)}
-            dismissible
-            className="mb-4"
-          >
-            {popupMessage}
-          </Alert>
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             <div>
@@ -94,7 +84,7 @@ function Signup() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.username && <span className="text-red-600 text-xs">{errors.username}</span>}
             </div>
@@ -108,7 +98,7 @@ function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
@@ -122,7 +112,7 @@ function Signup() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.password && <span className="text-red-600 text-xs">{errors.password}</span>}
             </div>
@@ -130,7 +120,7 @@ function Signup() {
             {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
 
             <button
-              className="w-full h-11 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold transition"
+              className="signup-btn w-full h-12 rounded-[4px] bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition"
               type="button"
               onClick={handleSignUpClick}
             >
@@ -140,22 +130,11 @@ function Signup() {
 
           <div className="mt-4 text-center text-sm">
             <span className="text-gray-600">Already have an account? </span>
-            <a href="/login" className="text-cyan-700 hover:underline">
+            <a href="/login" className="text-blue-600 hover:underline">
               Login
             </a>
           </div>
 
-          {/* Optional Google Signup button kept, with responsive styles */}
-          <div className="mt-4">
-            <button className="w-full h-11 border border-gray-300 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-50">
-              <img
-                src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg"
-                alt="Google Logo"
-                className="w-5 h-5"
-              />
-              <p className="text-sm font-medium text-gray-700">Sign up with Google</p>
-            </button>
-          </div>
         </div>
       </div>
     </div>

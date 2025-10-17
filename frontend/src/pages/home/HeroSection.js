@@ -54,7 +54,7 @@ const HeroSection = () => {
         </div>
 
         {/* Image (hide on small screens) */}
-        <div className="relative h-56 sm:h-72 md:h-full w-full md:w-1/2 ml-auto hidden md:block">
+        <div className="relative h-full sm:h-72 md:h-full w-full md:w-1/2 ml-auto hidden md:block mask-luminance mask-l-from-white mask-l-from-50% mask-l-to-black">
           <img
             src={TutoringImage}
             alt="Tutoring"
