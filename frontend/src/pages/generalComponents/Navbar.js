@@ -69,7 +69,7 @@ function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-50 bg-cyan-700 text-white shadow">
+    <header className="sticky top-0 z-50 bg-[#2B5561] text-white shadow">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Left: Logo */}
         <div className="flex items-center">
@@ -130,7 +130,7 @@ function Navbar() {
           ) : (
             <>
               <button
-                className="login-button px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 font-semibold"
+                className="login-button text-white px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0"
                 onClick={() => handleNav("/login")}
               >
                 Login

@@ -9,15 +9,9 @@
 
 .login-button {
     background: linear-gradient(270deg, #E9AD53 0%, #866026 100%);
-    color: var(--Paper-White);
+
     font-weight: 600;
-    padding: 12px 24px;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
-    width: 160px;
     transition: background 0.8s ease;
 }
 

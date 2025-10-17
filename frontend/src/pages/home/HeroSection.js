@@ -16,7 +16,7 @@ const HeroSection = () => {
         {/* Text */}
         <div className="m-auto h-full flex items-center px-6 sm:px-10 lg:px-16 justify-center">
           <div className="text-center md:text-left max-w-xl">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">Welcome to TutorAid</h1>
+            <h1 className="text-3xl md:text-5xl font-bold mb-4">Welcome to Tutor Aid</h1>
             {userID ? (
               <>
                 <p className="text-base md:text-xl leading-relaxed mb-6">
@@ -40,7 +40,7 @@ const HeroSection = () => {
                   We connect students with passionate tutors who inspire confidence, curiosity, and academic growth.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                  <button className="login-button" onClick={() => navigate('/login')}>Login</button>
+                  <button className="login-button text-white px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0" onClick={() => navigate('/login')}>Login</button>
                   <button
                     className="signup-button text-white border border-yellow-400 px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0"
                     onClick={() => navigate('/signup')}
