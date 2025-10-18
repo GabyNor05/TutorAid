@@ -1,3 +1,4 @@
-# https://www.robotstxt.org/robotstxt.html
+<!-- filepath: d:\TutorAid\frontend\public\robots.txt -->
 User-agent: *
-Disallow:
+Allow: /
+Sitemap: https://gabydv.xyz/sitemap.xml
