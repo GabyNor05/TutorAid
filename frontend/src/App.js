@@ -1,6 +1,5 @@
 import './App.css';
 import React, { useState, useEffect } from "react";
-
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
 import Signup from './pages/signup/Signup';
@@ -23,7 +22,7 @@ import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
 import { EnvelopeSimple } from "@phosphor-icons/react"; 
-import { useEffect } from 'react';
+
 
 function usePageTracking() {
   const location = useLocation();
