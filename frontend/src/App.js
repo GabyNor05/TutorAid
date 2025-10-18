@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
 import Signup from './pages/signup/Signup';
 import Login from './pages/login/login';
@@ -83,9 +83,9 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
+    <>
       <AppContent />
-    </Router>
+    </>
   );
 }
 

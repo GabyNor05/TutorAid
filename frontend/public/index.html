@@ -25,8 +25,11 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){ dataLayer.push(arguments); }
       gtag('js', new Date());
-      // SPA: we’ll send page_view manually on route changes
-      gtag('config', 'G-CS1K5Z1GG0', { send_page_view: false, debug_mode: true });
+      gtag('config', 'G-CS1K5Z1GG0', {
+        send_page_view: false,
+        cookie_domain: 'auto',
+        debug_mode: true
+      });
     </script>
 
 <!-- Performance hints -->
