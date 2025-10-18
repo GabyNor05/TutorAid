@@ -157,7 +157,7 @@ function Navbar() {
             </button>
           )}
           <button
-            className="rounded-md p-2 bg-cyan-600 hover:bg-cyan-500"
+            className="rounded-md p-2"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
@@ -176,7 +176,7 @@ function Navbar() {
           />
           <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white text-gray-800 shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-4 h-16 border-b">
-              <span className="font-bold text-cyan-700">Menu</span>
+              <span className="font-bold text-[#2B5561]">Menu</span>
               <button
                 onClick={() => setMobileOpen(false)}
                 className="p-2 rounded hover:bg-gray-100"

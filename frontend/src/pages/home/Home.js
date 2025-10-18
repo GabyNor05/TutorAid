@@ -15,6 +15,13 @@ function Home() {
     description: 'University Project: Book vetted tutors for Maths, Science, English and more. Manage lessons and track progress with Tutor Aid.',
     keywords: 'tutoring, South Africa, maths tutor Johannesburg, online tutoring, private tutor, Cape Town, high school tutoring, exam prep',
     canonical: 'https://gabydv.xyz/',
+    jsonLd: {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Tutor Aid",
+    "url": "https://gabydv.xyz/",
+    "logo": "https://gabydv.xyz/favicon_io/android-chrome-512x512.png"
+  }
   });
 
   const navigate = useNavigate();
