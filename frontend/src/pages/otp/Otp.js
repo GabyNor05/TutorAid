@@ -3,6 +3,8 @@ import "./css/otp.css";
 import otpImage from "./assets/calendarImage.png";
 import { useNavigate } from "react-router-dom";
 import { api, endpoints } from "../../api/client";
+import { useSEO } from '../../lib/seo';
+import logo from '../reusableAssets/logo.png';
 
 function Otp() {
   const navigate = useNavigate();
@@ -84,6 +86,12 @@ function Otp() {
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
+
+  useSEO({
+    title: 'OTP Verification — Tutor Aid',
+    description: 'University Project: Enter the one-time PIN sent to your email to verify your account.',
+    canonical: 'https://gabydv.xyz/otp',
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-cyan-100 flex items-center justify-center px-4 py-8">

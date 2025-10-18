@@ -7,8 +7,16 @@ import TutorCards from './TutorCards';
 import HeroSection from './HeroSection';
 import FAQSection from './FAQSection';
 import Footer from './Footer';
+import { useSEO } from '../../lib/seo';
 
 function Home() {
+  useSEO({
+    title: 'Tutor Aid — Find trusted tutors in South Africa',
+    description: 'University Project: Book vetted tutors for Maths, Science, English and more. Manage lessons and track progress with Tutor Aid.',
+    keywords: 'tutoring, South Africa, maths tutor Johannesburg, online tutoring, private tutor, Cape Town, high school tutoring, exam prep',
+    canonical: 'https://gabydv.xyz/home',
+  });
+
   const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
   const [subjects, setSubjects] = useState([]);

@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { X } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
 import WhiteWallpaper from '../reusableAssets/whitepaper.png';
+import { useSEO } from '../../lib/seo';
+import logo from '../reusableAssets/logo.png';
 
 function Login() {
   const navigate = useNavigate();
@@ -15,6 +17,12 @@ function Login() {
   const [appealModalOpen, setAppealModalOpen] = useState(false);
   const [appealQuery, setAppealQuery] = useState("");
   const [studentID, setStudentID] = useState(null);
+
+  useSEO({
+    title: 'Login — Tutor Aid',
+    description: 'University Project: Log in to access your dashboard, tutors, and lessons.',
+    canonical: 'https://gabydv.xyz/login',
+  });
 
   const handleLoginClick = async () => {
     const newErrors = {};

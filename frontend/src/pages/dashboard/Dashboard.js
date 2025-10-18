@@ -7,6 +7,7 @@ import Task from "./assets/task.svg";
 import LessonCards from "../generalComponents/lessonCards";
 import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NoteIcon, } from "@phosphor-icons/react";
 import axios from "axios";
+import { useSEO } from '../../lib/seo';
 
 
 function Dashboard() {
@@ -19,6 +20,12 @@ function Dashboard() {
     const [ratingComment, setRatingComment] = useState("");
     const navigate = useNavigate();
     const API_URL =  process.env.REACT_APP_API_URL;  
+
+    useSEO({
+        title: 'Dashboard — Tutor Aid',
+        description: 'University Project: Access your personalized dashboard to manage lessons, tutors, and more on Tutor Aid.',
+        canonical: 'https://gabydv.xyz/dashboard',
+    });
 
     useEffect(() => {
         const userId = localStorage.getItem("userID");

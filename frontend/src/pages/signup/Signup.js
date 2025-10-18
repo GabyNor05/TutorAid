@@ -4,6 +4,8 @@ import signupImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import WhiteWallpaper from '../reusableAssets/whitepaper.png';
+import logo from '../reusableAssets/logo.png';
+import { useSEO } from '../../lib/seo';
 
 function Signup() {
   const navigate = useNavigate();
@@ -15,6 +17,12 @@ function Signup() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const API_URL = process.env.REACT_APP_API_URL;
+
+  useSEO({
+    title: 'Sign up — Tutor Aid',
+    description: 'University Project: Create your Tutor Aid account to find tutors and book lessons.',
+    canonical: 'https://gabydv.xyz/signup',
+  });
 
   const validate = () => {
     const newErrors = {};

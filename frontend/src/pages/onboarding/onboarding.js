@@ -3,6 +3,8 @@ import "./css/onboarding.css";
 import onboardingImage from "./assets/calendarImage.png";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useSEO } from '../../lib/seo';
+import logo from '../reusableAssets/logo.png';
 
 function Onboarding() {
   const navigate = useNavigate();
@@ -14,6 +16,12 @@ function Onboarding() {
   const [status, setStatus] = useState("");
   const [errors, setErrors] = useState({});
   const API_URL = process.env.REACT_APP_API_URL;
+
+  useSEO({
+    title: 'Onboarding — Tutor Aid',
+    description: 'University Project:Tell us about your school and grade to personalize your Tutor Aid experience.',
+    canonical: 'https://gabydv.xyz/onboarding',
+  });
 
   const handleOnboardingClick = async () => {
     const newErrors = {};
