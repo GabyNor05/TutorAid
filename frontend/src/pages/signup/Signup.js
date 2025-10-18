@@ -19,7 +19,7 @@ function Signup() {
   const API_URL = process.env.REACT_APP_API_URL;
 
   useSEO({
-    title: 'Sign up — Tutor Aid',
+    title: 'Tutor Aid — Sign Up',
     description: 'University Project: Create your Tutor Aid account to find tutors and book lessons.',
     canonical: 'https://gabydv.xyz/signup',
   });

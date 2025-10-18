@@ -27,20 +27,20 @@ import { EnvelopeSimple } from "@phosphor-icons/react"; // or any inbox/mail ico
 
 function AppContent() {
   const location = useLocation();
+
+  useEffect(() => {
+    if (!window.gtag) return;
+    window.gtag('event', 'page_view', {
+      page_path: location.pathname + location.search,
+      page_location: window.location.href,
+      page_title: document.title,
+      debug_mode: true,
+    });
+  }, [location]);
+
   const hideNavbar = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/onboarding";
   const userId = localStorage.getItem("userID");
   const [inboxOpen, setInboxOpen] = React.useState(false);
-
-  // Track page views on route change
-  React.useEffect(() => {
-    if (window.gtag) {
-      window.gtag('event', 'page_view', {
-        page_path: location.pathname + location.search,
-        page_location: window.location.href,
-        page_title: document.title,
-      });
-    }
-  }, [location]);
 
   return (
     <div className="App">

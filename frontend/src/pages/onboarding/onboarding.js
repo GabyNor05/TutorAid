@@ -18,7 +18,7 @@ function Onboarding() {
   const API_URL = process.env.REACT_APP_API_URL;
 
   useSEO({
-    title: 'Onboarding — Tutor Aid',
+    title: 'Tutor Aid — Onboarding',
     description: 'University Project:Tell us about your school and grade to personalize your Tutor Aid experience.',
     canonical: 'https://gabydv.xyz/onboarding',
   });

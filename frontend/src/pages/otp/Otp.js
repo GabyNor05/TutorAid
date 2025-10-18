@@ -88,7 +88,7 @@ function Otp() {
   };
 
   useSEO({
-    title: 'OTP Verification — Tutor Aid',
+    title: 'Tutor Aid — OTP Verification',
     description: 'University Project: Enter the one-time PIN sent to your email to verify your account.',
     canonical: 'https://gabydv.xyz/otp',
   });

@@ -22,7 +22,7 @@ function Dashboard() {
     const API_URL =  process.env.REACT_APP_API_URL;  
 
     useSEO({
-        title: 'Dashboard — Tutor Aid',
+        title: 'Tutor Aid — Dashboard',
         description: 'University Project: Access your personalized dashboard to manage lessons, tutors, and more on Tutor Aid.',
         canonical: 'https://gabydv.xyz/dashboard',
     });

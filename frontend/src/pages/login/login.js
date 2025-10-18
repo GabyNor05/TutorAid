@@ -19,7 +19,7 @@ function Login() {
   const [studentID, setStudentID] = useState(null);
 
   useSEO({
-    title: 'Login — Tutor Aid',
+    title: 'Tutor Aid — Login',
     description: 'University Project: Log in to access your dashboard, tutors, and lessons.',
     canonical: 'https://gabydv.xyz/login',
   });
