@@ -20,11 +20,12 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){ dataLayer.push(arguments); }
       gtag('js', new Date());
-      // SPA: disable automatic page_view, we’ll send on route changes
-      gtag('config', 'G-CS1K5Z1GG0', { send_page_view: false });
+      // SPA: we’ll send page_view manually on route changes
+      gtag('config', 'G-CS1K5Z1GG0', { send_page_view: false, debug_mode: true });
     </script>
     <link rel="canonical" href="https://gabydv.xyz/" />
     <meta name="keywords" content="Tutor Aid, tutoring, tutors, online tutoring, private tutor, South Africa, Johannesburg, Cape Town, Pretoria, maths tutor, science tutor, English tutor, high school tutoring, exam prep, homework help" />
+    
     <meta name="robots" content="index,follow" />
 
 <!-- Performance hints -->

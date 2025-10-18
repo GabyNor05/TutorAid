@@ -23,7 +23,8 @@ import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
 import { EnvelopeSimple } from "@phosphor-icons/react"; // or any inbox/mail icon
-
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
 function AppContent() {
   const location = useLocation();
@@ -34,7 +35,7 @@ function AppContent() {
       page_path: location.pathname + location.search,
       page_location: window.location.href,
       page_title: document.title,
-      debug_mode: true,
+      debug_mode: true
     });
   }, [location]);
 
