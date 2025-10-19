@@ -132,8 +132,7 @@ exports.getUser = async (req, res) => {
 };
 
 // CREATE new user without role-specific data
-const bcrypt = require('bcryptjs');
-const pool = require('../config/db');
+const pool = require('../config/db');        // ok to keep (or require inside functions)
 async function uploadImageIfAny(req){ return null; }
 
 exports.createUser = async (req, res) => {
