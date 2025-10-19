@@ -62,7 +62,7 @@ function Login() {
   };
 
   return (
-    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="page-background max-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 h-3/4">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5">
@@ -70,10 +70,10 @@ function Login() {
         </div>
 
         {/* Form */}
-        <div className="flex flex-col justify-center p-6 sm:p-8">
+        <div className="flex flex-col justify-center items-center p-6 sm:p-8 gap-2">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-left">Login</h2>
-          <form onSubmit={(e) => e.preventDefault()} className="login-formspace-y-4">
-            <div>
+          <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
+            <div className="flex flex-row item-start">
               <label className="mb-2">Email</label>
               <input
                 type="text"
@@ -81,12 +81,12 @@ function Login() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
 
-            <div>
+            <div className="flex flex-row item-start">
               <label className="mb-2">Password</label>
               <input
                 type="password"
@@ -94,7 +94,7 @@ function Login() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.password && <span className="text-red-600 text-xs">{errors.password}</span>}
             </div>

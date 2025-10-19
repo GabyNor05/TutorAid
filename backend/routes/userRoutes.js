@@ -14,7 +14,7 @@ function add(method, path, handler) {
   router[method](path, handler);
 }
 
-// Auth & OTP (static first; pass references, NOT calls)
+// Auth & OTP
 add('post', '/login', userController.loginUser);
 add('post', '/send-otp', userController.sendOtp);
 add('post', '/verify-otp', userController.verifyOtp);
@@ -102,11 +102,12 @@ router.post('/user-avatars', async (req, res) => {
     }
 });
 
-// Users CRUD (/:id last)
+// Users CRUD
 add('post', '/', upload.single('image'), userController.createUser);
-add('get', '/', userController.getAllUsers); // ensure this name matches your controller
+add('get', '/', userController.getAllUsers); 
 add('get', '/:id', userController.getUser);
 add('put', '/:id', upload.single('image'), userController.updateUser);
+add('put', '/:id/assign-role', userController.assignRole);
 add('delete', '/:id', userController.deleteUser);
 
 module.exports = router;

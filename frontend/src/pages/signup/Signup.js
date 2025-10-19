@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import "./css/signup.css";
 import signupImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 import logo from '../reusableAssets/logo.png';
 import { useSEO } from '../../lib/seo';
+import { api, endpoints } from '../../api/client';
 
 function Signup() {
   const navigate = useNavigate();
@@ -14,9 +14,9 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
-  const API_URL = process.env.REACT_APP_API_URL;
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [createdUserId, setCreatedUserId] = useState(null);
 
   useSEO({
     title: 'Tutor Aid — Sign Up',
@@ -46,30 +46,41 @@ function Signup() {
   const handleSignUpClick = async () => {
     const validationErrors = validate();
     setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
 
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        const response = await axios.post(`${API_URL}/api/users`, {
-          name: username,
-          email,
-          password,
-          role: "Student",
-        });
-        localStorage.setItem("userID", response.data.userID);
-        navigate("/onboarding");
-      } catch (error) {
-        if (error.response && error.response.status === 409) {
-          setPopupMessage(error.response.data.error);
-          setShowPopup(true);
-        } else {
-          setErrors({ api: "Signup failed. Please try again." });
-        }
-      }
+    try {
+      // Create user WITHOUT assigning role yet
+      const res = await api.post(endpoints.users(), {
+        name: username,
+        email,
+        password,
+        role: "" // leave empty; backend createUser will only add role-specific rows when role is set
+      });
+      const userID = res.userID || res?.user?.userID || res?.id; // handle shapes
+      if (!userID) throw new Error("Signup failed (no userID).");
+
+      localStorage.setItem("userID", userID);
+      setCreatedUserId(userID);
+      setShowRoleModal(true); // prompt for role
+    } catch (error) {
+      setErrors({ api: error.message || "Signup failed. Please try again." });
+    }
+  };
+
+  const assignRole = async (role) => {
+    if (!createdUserId) return;
+    try {
+      await api.put(endpoints.assignRole(createdUserId), { role });
+      // Navigate based on selection
+      if (role === 'Student') navigate('/onboarding');
+      else navigate('/dashboard');
+    } catch (e) {
+      setPopupMessage("Failed to assign role. Please try again.");
     }
   };
 
   return (
-    <div style={{ backgroundImage: `url(${WhiteWallpaper})` }} className="min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5">
@@ -78,7 +89,7 @@ function Signup() {
 
         {/* Form */}
         <div className="p-6 sm:p-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-left">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">
             Create your account
           </h2>
 
@@ -138,13 +149,35 @@ function Signup() {
 
           <div className="mt-4 text-center text-sm">
             <span className="text-gray-600">Already have an account? </span>
-            <a href="/login" className="text-blue-600 hover:underline">
-              Login
-            </a>
+            <a href="/login" className="text-blue-600 hover:underline">Login</a>
           </div>
 
         </div>
       </div>
+
+      {/* Role selection modal */}
+      {showRoleModal && (
+        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-[#2B5561] mb-2">Choose your role</h3>
+            <p className="text-sm text-gray-600 mb-6">Tell us how you want to use Tutor Aid.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                className="h-11 rounded-md bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold"
+                onClick={() => assignRole('Student')}
+              >
+                I’m a Student
+              </button>
+              <button
+                className="h-11 rounded-md bg-white border border-[#2B5561] text-[#2B5561] hover:bg-[#2B5561]/10 font-semibold"
+                onClick={() => assignRole('Tutor')}
+              >
+                I’m a Tutor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -113,22 +113,27 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
   to { opacity: 1; transform: translateY(0);}
 }
 
+/* Fill the viewport (mobile-friendly) and grow with content */
+.page-background,
+.blue-page-background {
+  width: 100%;
+  /* Fallback first, then modern unit overrides */
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  padding-top: 24px;
+}
+
 .page-background {
-    width: 100%;
-    min-height: 100vh;
-    background: linear-gradient(0deg, rgba(239, 246, 255, 0.70) 0%, rgba(239, 246, 255, 0.70) 100%), url('./pages/reusableAssets/whitepaper.png') lightgray 50% / cover; 
-    background-size: cover;
-    background-position: top;
-    padding-top: 24px;
+  background:
+    linear-gradient(0deg, rgba(239, 246, 255, 0.70) 0%, rgba(239, 246, 255, 0.70) 100%),
+    url('./pages/reusableAssets/whitepaper.png') lightgray 50% / cover;
 }
 
 .blue-page-background {
-    width: 100%;
-    min-height: 100vh;
-    background: url('./pages/reusableAssets/blueWallpaper.png') lightgray 50% / cover no-repeat; 
-    background-size: cover;
-    background-position: top;
-    padding-top: 24px;
+  background: url('./pages/reusableAssets/blueWallpaper.png') lightgray 50% / cover no-repeat;
 }
 
 .page-title {
@@ -164,4 +169,21 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     margin-top: 20px;
     margin-bottom: 20px;
     font-weight: 600;
+}
+
+button[type="submit"] {
+
+    background-color: var(--Wall-Teal);
+    color: var(--Paper-White);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.2s;   
+}
+
+button[type="submit"]:hover {
+    background: var(--Wall-Teal-Light);
 }

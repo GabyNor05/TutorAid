@@ -520,3 +520,48 @@ exports.smtpTcpCheck = async (req, res) => {
   socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
   socket.connect({ host, port, family: 4 });
 };
+
+// Assign a role AFTER signup and create role-specific row if missing
+exports.assignRole = async (req, res) => {
+  const pool = require('../config/db');
+  const { id } = req.params;
+  const { role } = req.body;
+
+  try {
+    if (!role || !['Student', 'Tutor'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Use "Student" or "Tutor".' });
+    }
+
+    // Ensure user exists
+    const [u] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
+    if (!u.length) return res.status(404).json({ error: 'User not found' });
+
+    // Update users.role
+    await pool.query('UPDATE users SET role = ? WHERE userID = ?', [role, id]);
+
+    if (role === 'Student') {
+      // Create student row if not exists
+      const [s] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [id]);
+      if (!s.length) {
+        await pool.query(
+          'INSERT INTO students (userID, grade, school, address, status) VALUES (?, ?, ?, ?, ?)',
+          [id, '', '', '', 'Active']
+        );
+      }
+    } else if (role === 'Tutor') {
+      // Create tutor row if not exists
+      const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
+      if (!t.length) {
+        await pool.query(
+          'INSERT INTO tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
+          [id, '', '', '', '']
+        );
+      }
+    }
+
+    res.json({ ok: true, userID: Number(id), role });
+  } catch (err) {
+    console.error('assignRole error:', err);
+    res.status(500).json({ error: 'Failed to assign role' });
+  }
+};

@@ -34,12 +34,10 @@ export const endpoints = {
   subjects: () => '/api/subjects',
   login: () => '/api/users/login',
   users: () => '/api/users',
-
-  // Add these:
   userById: (id) => `/api/users/${id}`,
   sendOtp: () => '/api/users/send-otp',
   verifyOtp: () => '/api/users/verify-otp',
-
+  assignRole: (id) => `/api/users/${id}/assign-role`, // <-- add this
   students: () => '/api/students',
   lessons: () => '/api/lessons',
   lessonReports: () => '/api/lessonReports',
