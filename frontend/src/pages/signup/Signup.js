@@ -17,6 +17,7 @@ function Signup() {
   const [popupMessage, setPopupMessage] = useState("");
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [createdUserId, setCreatedUserId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useSEO({
     title: 'Tutor Aid — Sign Up',
@@ -46,9 +47,10 @@ function Signup() {
   const handleSignUpClick = async () => {
     const validationErrors = validate();
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0 || submitting) return;
 
     try {
+      setSubmitting(true);
       // Create user WITHOUT assigning role yet
       const res = await api.post(endpoints.users(), {
         name: username,
@@ -64,6 +66,8 @@ function Signup() {
       setShowRoleModal(true); // prompt for role
     } catch (error) {
       setErrors({ api: error.message || "Signup failed. Please try again." });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -80,15 +84,15 @@ function Signup() {
   };
 
   return (
-    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center max-h-3/4">
+    <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-5xl max-h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5">
           <img src={signupImage} alt="signup" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="p-6 sm:p-8">
+        <div className="p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">
             Create your account
           </h2>
@@ -142,8 +146,9 @@ function Signup() {
               className="signup-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition"
               type="button"
               onClick={handleSignUpClick}
+              disabled={submitting}
             >
-              Sign Up
+              {submitting ? 'Signing up…' : 'Sign Up'}
             </button>
           </form>
 

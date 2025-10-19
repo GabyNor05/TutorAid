@@ -97,7 +97,6 @@ exports.getUsers = async (req, res) => {
     }
 }; 
 
-// In userController.js
 exports.getAllUsers = async (req, res) => {
     const pool = require('../config/db');
   try {
@@ -132,87 +131,37 @@ exports.getUser = async (req, res) => {
     }
 };
 
-// CREATE new user with role-specific data
+// CREATE new user without role-specific data
+const bcrypt = require('bcryptjs');
+const pool = require('../config/db');
+async function uploadImageIfAny(req){ return null; }
+
 exports.createUser = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        // Handle image upload
-        let imageUrl = null;
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path, { folder: "users" });
-            imageUrl = result.secure_url;
-            fs.unlinkSync(req.file.path); // Remove temp file
-        }
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-        // Build user object for users table
-        const user = {
-            image: imageUrl,
-            name: req.body.name,
-            email: req.body.email,
-            password: hashedPassword,
-            role: req.body.role,
-            bio: req.body.bio,
-            subjects: req.body.subjects,
-            qualifications: req.body.qualifications,
-            availability: req.body.availability,
-            funFact: req.body.funFact || null,
-        };
-        const createdUser = await userModel.createUser(user);
-
-        // Insert into role-specific table
-        if (user.role === "Tutor") {
-            // subjects: array from frontend, join to string
-            const subjectsString = Array.isArray(req.body.subjects)
-                ? req.body.subjects.filter(s => s).join(", ")
-                : req.body.subjects || "";
-
-            await userModel.createTutor({
-                userID: createdUser.userID,
-                bio: req.body.bio || "",
-                subjects: subjectsString,
-                qualifications: req.body.qualifications || "",
-                availability: req.body.availability || ""
-            });
-        } else if (user.role === "Student") {
-            await userModel.createStudent({
-                userID: createdUser.userID,
-                grade: req.body.grade || "",
-                school: req.body.school || "",
-                address: req.body.address || "",
-                status: req.body.status || "Active"
-            });
-        } else if (user.role === "Admin") {
-            // For Admin, just create the user (already done above)
-        }
-
-        // Save structured availability
-            const tutorID = createdUser.userID;
-            const availStr = req.body.availability || "";
-            const availBlocks = availStr.split(";").map(s => s.trim()).filter(Boolean);
-            for (const block of availBlocks) {
-                const [dayGroup, times] = block.split(":").map(s => s.trim());
-                if (dayGroup && times) {
-                    const [start, end] = times.split("-").map(s => s.trim());
-                    if (start && end) {
-                        await userModel.createTutorAvailability({
-                            tutorID,
-                            day_group: dayGroup,
-                            start_time: start,
-                            end_time: end
-                        });
-                    }
-                }
-            }
-
-        res.json(createdUser);
-    } catch (err) {
-        // MySQL duplicate entry error code is 'ER_DUP_ENTRY'
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ error: "An account with this email already exists." });
-        }
-        res.status(500).json({ error: "Signup failed. Please try again." });
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'name, email and password are required' });
     }
+
+    // unique email
+    const [existing] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
+    if (existing.length) return res.status(409).json({ error: 'Email already registered' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const imageUrl = await uploadImageIfAny(req); // null if no file
+
+    // role empty by design; funFact optional
+    const [result] = await pool.query(
+      `INSERT INTO users (name, email, password, role, image, funFact)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [name, email, hashed, '', imageUrl, req.body.funFact || null]
+    );
+
+    return res.status(201).json({ userID: result.insertId });
+  } catch (err) {
+    console.error('createUser error:', err);
+    return res.status(500).json({ error: 'Failed to create user' });
+  }
 };
 
 // UPDATE existing user

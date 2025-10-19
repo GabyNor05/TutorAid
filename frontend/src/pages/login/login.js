@@ -70,8 +70,8 @@ function Login() {
         </div>
 
         {/* Form */}
-        <div className="flex flex-col justify-center items-center p-6 sm:p-8 gap-2">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-left">Login</h2>
+        <div className="p-6 sm:p-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">Login</h2>
           <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
             <div className="">
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
