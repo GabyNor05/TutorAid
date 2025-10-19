@@ -1,27 +1,41 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+
+const app = express();
+
+// CORS (allow your domains + Vercel previews)
 const allowOrigin = (origin) => {
-  if (!origin) return true;
-  try { const h = new URL(origin).hostname;
-    return origin === 'https://gabydv.xyz' ||
-           origin === 'https://www.gabydv.xyz' ||
-           h === 'localhost' || h.endsWith('.vercel.app');
-  } catch { return false; }
+  if (!origin) return true; // non-browser
+  try {
+    const h = new URL(origin).hostname;
+    return (
+      origin === 'https://gabydv.xyz' ||
+      origin === 'https://www.gabydv.xyz' ||
+      h === 'localhost' ||
+      h.endsWith('.vercel.app')
+    );
+  } catch {
+    return false;
+  }
 };
+
 app.use(cors({
   origin: (origin, cb) => (allowOrigin(origin) ? cb(null, true) : cb(new Error('Not allowed by CORS'))),
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
+  credentials: false,
 }));
-app.options(/.*/, cors()); // not '*', works on Express 5
 
-require('dotenv').config();
-const path = require('path');
-const app = express();
+// Express 5: avoid '*' here
+app.options(/.*/, cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Routes
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
@@ -39,7 +53,7 @@ app.use('/api/lessonReports', lessonReportRoutes);
 
 const progressNotesRoutes = require('./routes/progressNotesRoutes');
 app.use('/api/progressNotes', progressNotesRoutes);
-app.use('/api/progressnotes', progressNotesRoutes); // alias for lowercase
+app.use('/api/progressnotes', progressNotesRoutes); // lowercase alias
 
 const subjectRoutes = require('./routes/subjectRoutes');
 app.use('/api/subjects', subjectRoutes);
@@ -56,6 +70,7 @@ app.use('/api/ratings', ratingRoutes);
 const messagesRoutes = require('./routes/messagesRoutes');
 app.use('/api/messages', messagesRoutes);
 
+// Health/debug
 app.get('/api/health', (req, res) => res.send('ok'));
 
 app.get('/api/db-health', async (req, res) => {
@@ -81,24 +96,7 @@ app.get('/api/db-inspect', async (req, res) => {
   }
 });
 
-// Debug: list registered routes
-app.get('/api/_routes', (req, res) => {
-  const routes = [];
-  app._router.stack.forEach(m => {
-    if (m.route && m.route.path) {
-      routes.push({ method: Object.keys(m.route.methods)[0].toUpperCase(), path: m.route.path });
-    } else if (m.name === 'router' && m.handle.stack) {
-      m.handle.stack.forEach(s => {
-        if (s.route) {
-          const method = Object.keys(s.route.methods)[0]?.toUpperCase();
-          routes.push({ method, path: (m.regexp?.toString() || '') + s.route.path });
-        }
-      });
-    }
-  });
-  res.json(routes);
-});
-
+// Static PDFs
 app.get('/uploads/progressnotes/:filename', (req, res) => {
   const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
   res.setHeader('Content-Type', 'application/pdf');
