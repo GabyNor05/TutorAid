@@ -1,98 +1,71 @@
+/* Container centers content and caps width */
 .dashboard-navigation {
     display: flex;
     position: relative;
     justify-content: center;
-    gap: 20px;
-    width: 60%;
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
+    padding: 0 16px;
 }
 
-.navcard{
-    width: 400px;
+/* Responsive grid for nav cards */
+.navcard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    align-items: stretch;
+    gap: 24px;
+}
+
+/* Cards (gold) */
+.navcard {
+    width: 100%;
+    max-width: 400px;
     height: 200px;
     border-radius: 20px;
     background: linear-gradient(270deg, #E9AD53 0%, #866026 100%);
     box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     border-style: none;
     overflow: hidden;
-    padding: 8px
+    padding: 8px;
+    position: relative;
 }
 
-.navcard-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    justify-content:space-between;
-    align-items: center;
-    gap: 50px;
-}
-
-.navcard-content{
-   display: flex;
-   flex-direction: column; 
-}
-
-.navcard-icon{
-    margin: 0 auto;
-}
-
-.navcard-text {
-    background: radial-gradient(#8660263e, #3f2b0d00);
-    margin: auto 0;
-    padding: 10px;
-    width: 50%;
-    border-top-right-radius: 10px;
-    position: absolute;
-}
-
-.navcard-text h2{
-    font-family: 'Montserrat', sans-serif;
-    color: var(--Paper-White);
-    font-size: 20px;
-    text-decoration: none;
-    font-style: normal;
-    font-weight: 600;
-    text-align: left;
-}
-
-
-
-.navcard-red{
-    width: 400px;
+/* Cards (red) - background overridden by your Tailwind classes in JSX if present */
+.navcard-red {
+    width: 100%;
+    max-width: 400px;
     height: 200px;
     border-radius: 20px;
     box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
     border-style: none;
     overflow: hidden;
-    padding: 8px
+    padding: 8px;
+    position: relative;
 }
 
-.navcard-red-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    justify-content:space-between;
-    align-items: center;
-    gap: 50px;
+.navcard-content {
+    display: flex;
+    flex-direction: column; 
+    height: 100%;
 }
 
-.navcard-red-content{
-   display: flex;
-   flex-direction: column;
+.navcard-icon {
+    margin: 0 auto;
 }
 
-.navcard-red-icon{
-    margin: auto;
-}
-
+/* Single definition for text overlay */
 .navcard-text {
     background: radial-gradient(#8660263e, #3f2b0d00);
-    margin: auto 0;
+    margin-top: auto;
     padding: 10px;
+    width: fit-content;
     border-top-right-radius: 10px;
-    width:fit-content;
     position: absolute;
-    
+    left: 8px;
+    bottom: 8px;
 }
-
 .navcard-text h2{
     font-family: 'Montserrat', sans-serif;
     color: var(--Paper-White);
@@ -103,9 +76,33 @@
     text-align: left;
 }
 
+/* Upcoming lessons section keeps your blue wallpaper */
 .upcoming-lessons {
     margin-top: 50px;
     background-image: url('../../reusableAssets/blueWallpaper.png');
     background-size: cover;
     background-position: center;
+}
+
+/* Responsive inner container for upcoming lessons */
+.upcoming-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 15px 16px 30px;
+}
+.upcoming-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+    .navcard, .navcard-red { height: 180px; }
+}
+@media (max-width: 640px) {
+    .dashboard-navigation { gap: 16px; padding: 0 12px; }
+    .navcard, .navcard-red { height: 160px; max-width: 100%; }
+    .navcard-text h2 { font-size: 18px; }
 }

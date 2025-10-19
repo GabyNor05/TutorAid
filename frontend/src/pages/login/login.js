@@ -81,7 +81,7 @@ function Login() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-11 px-3 rounded-[4px] shadow-innerborder border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="w-full h-11 px-3 rounded-[4px] shadow-inner border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>

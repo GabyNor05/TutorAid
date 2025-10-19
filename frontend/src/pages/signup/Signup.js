@@ -85,14 +85,14 @@ function Signup() {
 
   return (
     <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center">
+      <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
-        <div className="hidden md:block bg-[#2B5561]/5">
+        <div className="hidden md:block bg-[#2B5561]/5 h-full">
           <img src={signupImage} alt="signup" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="p-6 sm:p-8 overflow-y-auto">
+        <div className="h-full p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">
             Create your account
           </h2>
