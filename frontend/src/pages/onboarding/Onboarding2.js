@@ -1,0 +1,186 @@
+import React, {useState, useEffect} from 'react';
+import './css/onboarding.css';
+import onboardingImage from './assets/calendarImage.png';
+import { useNavigate } from 'react-router-dom';
+import { api, endpoints } from '../../api/client';
+
+export default function Onboarding2() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState('');
+  const [funFact, setFunFact] = useState('');
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState('');
+  const [feePerHour, setFeePerHour] = useState('');
+  const [expValue, setExpValue] = useState('');
+  const [expUnit, setExpUnit] = useState('years');
+  const [tutorErrors, setTutorErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const id = localStorage.getItem('userID');
+    async () => {
+      try {
+        const u = await api.get(endpoints.userById(id));
+        setUser(u);
+        setRole(u?.role || '');
+        setFunFact(u?.funFact || '');
+        setPreview(u?.image || '');
+        if (u?.role === 'Tutor') {
+          const t = await api.get(endpoints.tutorByUser(id)).catch(() => null);
+          if (t) {
+            if (t.fee_per_hour != null) setFeePerHour(String(t.fee_per_hour));
+            if (t.experience) {
+              const m = String(t.experience).match(/^(\d+)\s+(years|months)$/i);
+              if (m) { setExpValue(m[1]); setExpUnit(m[2].toLowerCase()); }
+            }
+          }
+        }
+      } catch {}
+    })();
+  }, [navigate];
+
+  const validateTutorExtras = () => {
+    const e = {};
+    if (role === 'Tutor') {
+      if (!feePerHour) e.feePerHour = 'Rate is required';
+      if (!expValue) e.expValue = 'Experience value is required';
+    }
+    setTutorErrors(e);
+    return e;
+  };
+
+  const onFile = (e) => {
+    const f = e.target.files?.[0];
+    setFile(f || null);
+    if (f) setPreview(URL.createObjectURL(f));
+  };
+
+  const onSave = async () => {
+    if (!user?.userID) return;
+    const e = validateTutorExtras();
+    if (Object.keys(e).length) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      // 1) Update user image + funFact
+      const form = new FormData();
+      if (file) form.append('image', file);
+      form.append('funFact', funFact || '');
+      await api.put(endpoints.userById(user.userID), form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      // 2) Tutor extras
+      if (role === 'Tutor') {
+        const experience = expValue ? `${expValue} ${expUnit}` : '';
+        await api.put(endpoints.tutorByUser(user.userID), {
+          fee_per_hour: feePerHour ? Number(feePerHour) : 0, // NOT NULL in DB
+          experience,
+        });
+      }
+
+      navigate('/dashboard');
+    } catch (e) {
+      setError(e.message || 'Failed to save');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        {/* Image */}
+        <div className="hidden md:block bg-cyan-700/5">
+          <img src={onboardingImage} alt="onboarding step 2" className="h-full w-full object-cover" />
+        </div>
+
+        {/* Form */}
+        <div className="flex flex-col justify-center items-center p-6 sm:p-8 w-full">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">
+            Add a profile photo and fun fact
+          </h2>
+
+          <div className="space-y-4 w-full">
+            {/* Photo */}
+            <div className="flex flex-col sm:flex-row items-start gap-3">
+              <label className="min-w-28 pt-2">Photo</label>
+              <div className="flex items-center gap-4 w-full">
+                <div className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden border">
+                  {preview ? <img src={preview} alt="preview" className="w-full h-full object-cover" /> :
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No image</div>}
+                </div>
+                <input
+                  type="file" accept="image/*" onChange={onFile}
+                  className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#2B5561] file:text-white hover:file:bg-[#2B5561]/80"
+                />
+              </div>
+            </div>
+
+            {/* Fun fact */}
+            <div className="flex flex-col sm:flex-row items-start gap-3">
+              <label className="min-w-28 pt-2">Fun fact (Optional)</label>
+              <input
+                type="text" placeholder="Optional" value={funFact}
+                onChange={(e) => setFunFact(e.target.value)}
+                className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+              />
+            </div>
+
+            {/* Tutor-only extras */}
+            {role === 'Tutor' && (
+              <>
+                <div className="flex flex-col sm:flex-row items-start gap-3">
+                  <label className="min-w-28 pt-2">Rate (R/hour)</label>
+                  <div className="w-full">
+                    <input
+                      type="number" min="0" step="0.01" placeholder="e.g., 250"
+                      value={feePerHour} onChange={(e) => setFeePerHour(e.target.value)}
+                      className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                    />
+                    {tutorErrors.feePerHour && <span className="text-red-600 text-xs">{tutorErrors.feePerHour}</span>}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start gap-3">
+                  <label className="min-w-28 pt-2">Experience</label>
+                  <div className="grid grid-cols-3 gap-2 w-full">
+                    <div>
+                      <input
+                        type="number" min="0" placeholder="Value"
+                        value={expValue} onChange={(e) => setExpValue(e.target.value)}
+                        className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                      />
+                      {tutorErrors.expValue && <span className="text-red-600 text-xs">{tutorErrors.expValue}</span>}
+                    </div>
+                    <select
+                      value={expUnit} onChange={(e) => setExpUnit(e.target.value)}
+                      className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                    >
+                      <option value="years">years</option>
+                      <option value="months">months</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {error && <div className="text-red-600 text-xs">{error}</div>}
+
+            <button
+              className="w-full h-11 rounded-lg bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold transition disabled:opacity-60"
+              type="button"
+              onClick={onSave}
+              disabled={loading}
+            >
+              {loading ? 'Saving…' : 'Finish'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

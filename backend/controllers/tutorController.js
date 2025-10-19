@@ -89,3 +89,59 @@ exports.deleteTutor = async (req, res) => {
         res.status(500).json({ error: "Failed to delete tutor" });
     }
 };
+
+exports.getTutorByUserID = async (req, res) => {
+  const pool = require('../config/db');
+  const { userID } = req.params;
+  try {
+    const [rows] = await pool.query(
+      `SELECT t.*, u.name, u.image
+       FROM tutors t
+       LEFT JOIN users u ON t.userID = u.userID
+       WHERE t.userID = ?`,
+      [userID]
+    );
+    if (rows.length) return res.json(rows[0]);
+    return res.status(404).json({ error: 'Tutor not found' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch tutor' });
+  }
+};
+
+exports.saveTutorProfile = async (req, res) => {
+  const pool = require('../config/db');
+  const { userID } = req.params;
+  const {
+    bio = '',
+    subjects = '',
+    qualifications = '',
+    availability = '',
+    fee_per_hour = 0,
+    experience = '',
+  } = req.body;
+
+  try {
+    const [u] = await pool.query('SELECT userID FROM users WHERE userID = ?', [userID]);
+    if (!u.length) return res.status(404).json({ error: 'User not found' });
+
+    const [rows] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [userID]);
+    if (rows.length) {
+      await pool.query(
+        `UPDATE tutors
+         SET bio = ?, subjects = ?, qualifications = ?, availability = ?, fee_per_hour = ?, experience = ?
+         WHERE userID = ?`,
+        [bio, subjects, qualifications, availability, fee_per_hour, experience, userID]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, bio, subjects, qualifications, availability, fee_per_hour, experience]
+      );
+    }
+    res.json({ ok: true, userID: Number(userID) });
+  } catch (e) {
+    console.error('saveTutorProfile error:', e);
+    res.status(500).json({ error: 'Failed to save tutor profile' });
+  }
+};

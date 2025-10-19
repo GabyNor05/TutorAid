@@ -96,7 +96,7 @@ function Navbar() {
 
               {/* Profile menu trigger */}
               <button
-                className="rounded-md px-3 py-2 bg-cyan-600 hover:bg-cyan-500 font-semibold"
+                className="rounded-md px-3 py-2 hover:bg-yellow-500 font-semibold"
                 onClick={() => setShowMenu((p) => !p)}
                 aria-haspopup="menu"
                 aria-expanded={showMenu}

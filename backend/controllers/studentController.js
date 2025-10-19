@@ -1,4 +1,3 @@
-
 exports.getAllStudents = async (req, res) => {
     const pool = require('../config/db');
     try {
@@ -77,4 +76,37 @@ exports.getStudentIDByUserID = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch studentID" });
     }
+};
+
+exports.saveStudentProfile = async (req, res) => {
+  const pool = require('../config/db');
+  const { userID } = req.params;
+  const { grade = '', school = '', address = '', city = '', province = '', status = 'Active' } = req.body;
+
+  try {
+    // ensure user exists
+    const [u] = await pool.query('SELECT userID FROM users WHERE userID = ?', [userID]);
+    if (!u.length) return res.status(404).json({ error: 'User not found' });
+
+    // insert or update
+    const [rows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (rows.length) {
+      await pool.query(
+        `UPDATE students
+         SET grade = ?, school = ?, address = ?, city = ?, province = ?, status = ?
+         WHERE userID = ?`,
+        [grade, school, address, city, province, status, userID]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO students (userID, grade, school, address, city, province, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, grade, school, address, city, province, status]
+      );
+    }
+    res.json({ ok: true, userID: Number(userID) });
+  } catch (err) {
+    console.error('saveStudentProfile error:', err);
+    res.status(500).json({ error: 'Failed to save student profile' });
+  }
 };

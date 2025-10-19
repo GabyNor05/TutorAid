@@ -17,4 +17,10 @@ router.put('/:id', tutorController.updateTutor);
 // Delete tutor
 router.delete('/:id', tutorController.deleteTutor);
 
+// Get tutor by user ID
+router.get('/by-user/:userID', tutorController.getTutorByUserID);
+
+// Save tutor profile by user ID
+router.put('/by-user/:userID', tutorController.saveTutorProfile);
+
 module.exports = router;

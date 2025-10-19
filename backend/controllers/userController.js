@@ -147,7 +147,7 @@ exports.createUser = async (req, res) => {
 
         // Build user object for users table
         const user = {
-            image: imageUrl, // <-- USE CLOUDINARY LINK HERE
+            image: imageUrl,
             name: req.body.name,
             email: req.body.email,
             password: hashedPassword,
@@ -155,7 +155,8 @@ exports.createUser = async (req, res) => {
             bio: req.body.bio,
             subjects: req.body.subjects,
             qualifications: req.body.qualifications,
-            availability: req.body.availability
+            availability: req.body.availability,
+            funFact: req.body.funFact || null,
         };
         const createdUser = await userModel.createUser(user);
 

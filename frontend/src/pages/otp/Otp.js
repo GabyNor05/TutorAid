@@ -94,7 +94,7 @@ function Otp() {
   });
 
   return (
-    <div className="page-background min-h-screen bg-gradient-to-br from-cyan-50 to-cyan-100 flex items-center justify-center px-4 py-8">
+    <div className="page-background flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
         <div className="hidden md:block bg-cyan-700/5">
@@ -103,7 +103,7 @@ function Otp() {
 
         {/* Form */}
         <div className="p-6 sm:p-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mb-2 text-center md:text-left">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-2 text-center md:text-left">
             OTP Verification
           </h2>
           <p className="text-gray-600 text-sm sm:text-base mb-4">We will send the one time pin to this email address:</p>

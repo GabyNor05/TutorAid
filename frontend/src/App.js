@@ -6,6 +6,7 @@ import Signup from './pages/signup/Signup';
 import Login from './pages/login/login';
 import Navbar from './pages/generalComponents/Navbar';
 import Onboarding from './pages/onboarding/onboarding';
+import Onboarding2 from './pages/onboarding/Onboarding2';
 import Otp from './pages/otp/Otp';
 import UserProfile from './pages/generalComponents/userProfile/UserProfile';
 import LessonRequests from './pages/tutor/lessonRequests/LessonRequests';
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />   
         <Route path="/onboarding" element={<Onboarding />} /> 
+        <Route path="/onboarding2" element={<Onboarding2 />} />
         <Route path="/otp" element={<Otp />} /> 
         <Route path="/userprofile" element={<UserProfile />} />
         <Route path="/lessonrequests" element={<LessonRequests />} />
