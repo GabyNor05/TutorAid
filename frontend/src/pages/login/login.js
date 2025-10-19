@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
+import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 import { useNavigate } from "react-router-dom";
 import { X } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
-import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 import { useSEO } from '../../lib/seo';
 import logo from '../reusableAssets/logo.png';
 
