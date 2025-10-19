@@ -1,4 +1,5 @@
 import './App.css';
+import './index.css'; 
 import React from "react";
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
