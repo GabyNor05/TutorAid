@@ -1,37 +1,23 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
-const path = require('path');
-const app = express();
-
 const allowOrigin = (origin) => {
-  if (!origin) return true; // non-browser
-  try {
-    const url = new URL(origin);
-    const h = url.hostname;
-    return (
-      origin === 'https://gabydv.xyz' ||
-      origin === 'https://www.gabydv.xyz' ||
-      h === 'localhost' ||
-      h.endsWith('.vercel.app')
-    );
-  } catch {
-    return false;
-  }
+  if (!origin) return true;
+  try { const h = new URL(origin).hostname;
+    return origin === 'https://gabydv.xyz' ||
+           origin === 'https://www.gabydv.xyz' ||
+           h === 'localhost' || h.endsWith('.vercel.app');
+  } catch { return false; }
 };
-
 app.use(cors({
   origin: (origin, cb) => (allowOrigin(origin) ? cb(null, true) : cb(new Error('Not allowed by CORS'))),
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
-  credentials: false
 }));
+app.options(/.*/, cors()); // not '*', works on Express 5
 
-// REMOVE the line below (it crashes on Express 5):
-// app.options('*', cors());
-
-// Keep only a regex OPTIONS handler (safe for Express 5)
-app.options(/.*/, cors());
+require('dotenv').config();
+const path = require('path');
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
