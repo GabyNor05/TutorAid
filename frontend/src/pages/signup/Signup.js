@@ -81,7 +81,7 @@ function Signup() {
 
   return (
     <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center max-h-3/4">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5">
           <img src={signupImage} alt="signup" className="h-full w-full object-cover" />
@@ -95,7 +95,7 @@ function Signup() {
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
               <input
                 type="text"
                 id="username"
@@ -109,7 +109,7 @@ function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="text"
                 id="email"
@@ -123,7 +123,7 @@ function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 id="password"
@@ -139,7 +139,7 @@ function Signup() {
             {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
 
             <button
-              className="signup-btn w-full h-12 rounded-[4px] bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition"
+              className="signup-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition"
               type="button"
               onClick={handleSignUpClick}
             >

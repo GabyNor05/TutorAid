@@ -63,7 +63,7 @@ function Login() {
 
   return (
     <div className="page-background max-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 h-3/4">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 max-h-3/4">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5">
           <img src={loginImage} alt="Login" className="h-full w-full object-cover" />
@@ -73,8 +73,8 @@ function Login() {
         <div className="flex flex-col justify-center items-center p-6 sm:p-8 gap-2">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-left">Login</h2>
           <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
-            <div className="flex flex-row item-start">
-              <label className="mb-2">Email</label>
+            <div className="">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="text"
                 id="email"
@@ -86,8 +86,8 @@ function Login() {
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
 
-            <div className="flex flex-row item-start">
-              <label className="mb-2">Password</label>
+            <div className="">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 id="password"
@@ -102,7 +102,7 @@ function Login() {
             {errors.general && <div className="text-red-600 text-xs">{errors.general}</div>}
 
             <button
-              className="login-btn w-full h-12 rounded-[4px] text-white font-semibold transition hover:bg-[#2B5561]/70"
+              className="login-btn w-3/4 h-12 rounded-[4px] text-white font-semibold transition hover:bg-[#2B5561]/70"
               type="submit"
               onClick={handleLoginClick}
             >
