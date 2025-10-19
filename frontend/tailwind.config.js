@@ -1,13 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './public/index.html',
+    './src/**/*.{js,jsx,ts,tsx}'
   ],
-  theme: {
-    extend: {},
-  },
+  theme: { extend: {} },
   plugins: [],
+  // Keep arbitrary values like [mask-image:...] safe in production
+  safelist: [
+    { pattern: /\[.*\]/ }, // allows bracketed arbitrary utilities
+  ],
 }
 
 
