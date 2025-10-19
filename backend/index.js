@@ -24,12 +24,13 @@ app.use(cors({
   origin: (origin, cb) => (allowOrigin(origin) ? cb(null, true) : cb(new Error('Not allowed by CORS'))),
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
-  credentials: false // set true only if you actually use cookies/auth headers across origins
+  credentials: false
 }));
 
-app.options('*', cors()); // preflight
+// REMOVE the line below (it crashes on Express 5):
+// app.options('*', cors());
 
-// Use regex to avoid path-to-regexp '*' error
+// Keep only a regex OPTIONS handler (safe for Express 5)
 app.options(/.*/, cors());
 
 app.use(express.json());
