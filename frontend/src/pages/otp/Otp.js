@@ -187,7 +187,6 @@ function Otp() {
 
           {/* OTP inputs */}
           <div className="flex items-center justify-between gap-2 mb-4">
-            <p className="block text-sm font-medium text-gray-700 mb-2">Enter the OTP:</p>
             {digits.map((val, i) => (
               <input
                 key={i}

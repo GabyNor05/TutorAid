@@ -70,7 +70,7 @@ function Login() {
         </div>
 
         {/* Form */}
-        <div className="flex flex-col justify-center items-center p-6 sm:p-8">
+        <div className="p-6 sm:p-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">Login</h2>
           <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
             <div className="">
@@ -81,7 +81,7 @@ function Login() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="w-full h-11 px-3 rounded-[4px] shadow-innerborder border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>

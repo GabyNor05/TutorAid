@@ -120,7 +120,7 @@ function Onboarding() {
   };
 
   return (
-    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Image */}
         <div className="hidden md:block bg-cyan-700/5">
