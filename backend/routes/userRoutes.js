@@ -5,13 +5,14 @@ const upload = multer({ dest: 'uploads/' });
 
 const userController = require('../controllers/userController');
 
-// helper to safely attach routes
-function add(method, path, handler) {
-  if (typeof handler !== 'function') {
-    console.error(`[routes] ${method.toUpperCase()} ${path} not attached: handler is ${typeof handler}`);
+// helper to safely attach routes (supports middleware chain)
+function add(method, path, ...handlers) {
+  const fns = handlers.flat().filter(h => typeof h === 'function');
+  if (!fns.length) {
+    console.error(`[routes] ${method.toUpperCase()} ${path} not attached: no valid handlers`);
     return;
   }
-  router[method](path, handler);
+  router[method](path, ...fns);
 }
 
 // Auth & OTP
@@ -104,7 +105,7 @@ router.post('/user-avatars', async (req, res) => {
 
 // Users CRUD
 add('post', '/', upload.single('image'), userController.createUser);
-add('get', '/', userController.getAllUsers); 
+add('get', '/', userController.getAllUsers);
 add('get', '/:id', userController.getUser);
 add('put', '/:id', upload.single('image'), userController.updateUser);
 add('put', '/:id/assign-role', userController.assignRole);
