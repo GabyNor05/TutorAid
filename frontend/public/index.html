@@ -1,56 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    
     <title>Tutor Aid</title>
+
     <link rel="canonical" href="https://gabydv.xyz/" />
-    <meta name="description" content="Tutor Aid connects students across South Africa with vetted tutors for Maths, Science, English and more. Book lessons, track progress, and grow with confidence." />
-    <meta name="keywords" content="tutoring South Africa, maths tutor, science tutor, English tutor, high school tutoring, exam prep" />
+    <meta name="description" content="University Project: Tutor Aid connects students across South Africa with vetted tutors for Maths, Science, English and more. Book lessons, track progress, and grow with confidence." />
+    <meta name="keywords" content="Tutor Aid,tutoring South Africa, maths tutor, science tutor, English tutor, exam prep, high school tutoring" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
 
-<!-- Correct favicon/manifest locations -->
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon_io/favicon-32x32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon_io/favicon-16x16.png" />
-<link rel="manifest" href="/favicon_io/site.webmanifest" />
+    <!-- Favicons from public/ -->
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/favicon_io/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon_io/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon_io/favicon-16x16.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/favicon_io/site.webmanifest" />
 
-<!-- Keep your GA tag here -->
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CS1K5Z1GG0"></script>
     <script>
-      (function() {
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){ dataLayer.push(arguments); }
-        window.gtag = gtag;
-        gtag('js', new Date());
-        gtag('config', 'G-CS1K5Z1GG0', {
-          send_page_view: false,
-          cookie_domain: 'auto',
-          debug_mode: true
-        });
-      })();
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', 'G-CS1K5Z1GG0', { send_page_view: false, cookie_domain: 'auto', debug_mode: true });
     </script>
-
-<!-- Performance hints -->
-<link rel="preconnect" href="https://www.googletagmanager.com" />
-<link rel="dns-prefetch" href="https://www.googletagmanager.com" />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>
