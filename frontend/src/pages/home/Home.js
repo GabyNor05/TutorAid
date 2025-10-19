@@ -71,8 +71,6 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="bg-cyan-600 text-white p-3 text-center font-bold">Tailwind OK</div>
-
       <header className="home-header">
         <HeroSection />
       </header>
