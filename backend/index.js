@@ -4,35 +4,30 @@ require('dotenv').config();
 const path = require('path');
 const app = express();
 
-const extra = (process.env.FRONTEND_ORIGINS || '')
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
-
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  process.env.FRONTEND_URL,  // e.g. https://gabydv.xyz
-  ...extra,                  // e.g. your Vercel preview URL
-].filter(Boolean);
-
-app.use((req, _res, next) => {
-  console.log('CORS origin:', req.headers.origin, 'allowed:', allowedOrigins);
-  next();
-});
+const allowOrigin = (origin) => {
+  if (!origin) return true; // non-browser
+  try {
+    const url = new URL(origin);
+    const h = url.hostname;
+    return (
+      origin === 'https://gabydv.xyz' ||
+      origin === 'https://www.gabydv.xyz' ||
+      h === 'localhost' ||
+      h.endsWith('.vercel.app')
+    );
+  } catch {
+    return false;
+  }
+};
 
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    return allowedOrigins.includes(origin)
-      ? cb(null, true)
-      : cb(new Error('CORS: origin not allowed'));
-  },
-  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization','X-Requested-With','Accept'],
-  optionsSuccessStatus: 204,
-  // credentials: true, // enable only if client sends cookies
+  origin: (origin, cb) => (allowOrigin(origin) ? cb(null, true) : cb(new Error('Not allowed by CORS'))),
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: false // set true only if you actually use cookies/auth headers across origins
 }));
+
+app.options('*', cors()); // preflight
 
 // Use regex to avoid path-to-regexp '*' error
 app.options(/.*/, cors());
