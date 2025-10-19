@@ -62,16 +62,16 @@ function Login() {
   };
 
   return (
-    <div className="page-background max-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 max-h-3/4">
+    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-5xl max-h-[75dvh] md:h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5">
           <img src={loginImage} alt="Login" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="p-6 sm:p-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">Login</h2>
+        <div className="flex flex-col justify-center items-center p-6 sm:p-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">Login</h2>
           <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
             <div className="">
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>

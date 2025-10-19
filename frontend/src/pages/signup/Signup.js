@@ -77,7 +77,7 @@ function Signup() {
       await api.put(endpoints.assignRole(createdUserId), { role });
       // Navigate based on selection
       if (role === 'Student') navigate('/onboarding');
-      else navigate('/dashboard');
+      else navigate('/onboarding');
     } catch (e) {
       setPopupMessage("Failed to assign role. Please try again.");
     }
@@ -85,10 +85,11 @@ function Signup() {
 
   return (
     <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl md:max-h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <span onClick={() => navigate('/')} className="cursor-pointer font-medium">Home</span>
+      <div className="w-full max-w-5xl max-h-[75dvh] md:h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center">
         {/* Image */}
-        <div className="hidden md:block bg-[#2B5561]/5 h-full">
-          <img src={signupImage} alt="signup" className=" w-full object-fill" />
+        <div className="hidden md:block bg-[#2B5561]/5">
+          <img src={signupImage} alt="signup" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
