@@ -22,14 +22,21 @@
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CS1K5Z1GG0"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
-      gtag('js', new Date());
-      gtag('config', 'G-CS1K5Z1GG0', {
-        send_page_view: false,
-        cookie_domain: 'auto',
-        debug_mode: true
-      });
+      (function() {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        // Use exact host on Vercel previews to avoid cookie domain rejection
+        const host = window.location.hostname;
+        const cookieDomain = host.endsWith('.vercel.app') ? host : 'auto';
+        gtag('config', 'G-CS1K5Z1GG0', {
+          send_page_view: false,
+          cookie_domain: cookieDomain,
+          cookie_flags: 'SameSite=None;Secure',
+          debug_mode: true
+        });
+      })();
     </script>
 
 <!-- Performance hints -->

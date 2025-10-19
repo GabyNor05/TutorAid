@@ -1,6 +1,6 @@
 import './App.css';
-import React, { useState, useEffect } from "react";
-import {BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Dashboard from './pages/dashboard/Dashboard';
 import Signup from './pages/signup/Signup';
 import Login from './pages/login/login';
@@ -23,10 +23,9 @@ import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
 import { EnvelopeSimple } from "@phosphor-icons/react"; 
 
-
 function usePageTracking() {
   const location = useLocation();
-  useEffect(() => {
+  React.useEffect(() => {
     if (!window.gtag) return;
     window.gtag('event', 'page_view', {
       page_path: location.pathname + location.search,
@@ -37,7 +36,7 @@ function usePageTracking() {
   }, [location]);
 }
 
-function AppContent() {
+export default function App() {
   usePageTracking();
 
   const location = useLocation();
@@ -80,15 +79,3 @@ function AppContent() {
     </div>
   );
 }
-
-function App() {
-  return (
-    <>
-      <Router>
-        <AppContent />
-      </Router>
-    </>
-  );
-}
-
-export default App;
