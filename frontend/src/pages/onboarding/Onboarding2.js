@@ -20,13 +20,16 @@ export default function Onboarding2() {
 
   useEffect(() => {
     const id = localStorage.getItem('userID');
-    async () => {
+    if (!id) { navigate('/login'); return; }
+
+    (async () => {
       try {
         const u = await api.get(endpoints.userById(id));
         setUser(u);
         setRole(u?.role || '');
         setFunFact(u?.funFact || '');
         setPreview(u?.image || '');
+
         if (u?.role === 'Tutor') {
           const t = await api.get(endpoints.tutorByUser(id)).catch(() => null);
           if (t) {
@@ -37,9 +40,11 @@ export default function Onboarding2() {
             }
           }
         }
-      } catch {}
+      } catch {
+        // ignore
+      }
     })();
-  }, [navigate];
+  }, [navigate]);
 
   const validateTutorExtras = () => {
     const e = {};
