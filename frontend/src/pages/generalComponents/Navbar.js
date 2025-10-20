@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { List, EnvelopeSimple, X, House, User, SquaresFour, SignOut, UserPlus, File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NotePencil, UsersThree, ClockCountdown, QuestionMark, ListChecks, ChatText, Megaphone, Clipboard, List, Calendar} from "@phosphor-icons/react";
+import { List, EnvelopeSimple, X, House, User, SquaresFour, SignOut, UserPlus, File, ClipboardText, Calendar, NotePencil, UsersThree, ClockCountdown, QuestionMark, ListChecks, ChatText, Megaphone} from "@phosphor-icons/react";
 import Logo from "../reusableAssets/logo.png";
 import MessageCard from "./MessageCard";
 import { api, endpoints } from "../../api/client";
@@ -316,7 +316,7 @@ function Navbar() {
                     </div>
                   </div>
                   <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/dashboard")}> <Grid size={22} /> Dashboard</button>
+                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
                   {/* Role-specific */}
                   <div className="px-2 py-1 text-xs uppercase tracking-wide text-gray-500">Shortcuts</div>
                   {/* Reuse links */}
@@ -330,7 +330,7 @@ function Navbar() {
                     )}
                     {role === "Admin" && (
                       <>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/addstaff")}><UserCirclePlusIcon size={22} /> Add Staff</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/addstaff")}><UserPlus size={22} /> Add Staff</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/userexperiencefeedback")}><ClipboardText size={22} /> User Experience Feedback</button>
