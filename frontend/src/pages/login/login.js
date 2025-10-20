@@ -62,18 +62,18 @@ function Login() {
   };
 
   return (
-    <div className="page-background min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl max-h-[75dvh] md:h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center">
+    <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
-        <div className="hidden md:block bg-[#2B5561]/5">
+        <div className="hidden md:block bg-[#2B5561]/5 h-full min-h-0">
           <img src={loginImage} alt="Login" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="p-6 sm:p-8">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">Login</h2>
           <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
-            <div className="">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="text"
@@ -86,7 +86,7 @@ function Login() {
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
 
-            <div className="">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
@@ -94,7 +94,7 @@ function Login() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="w-full h-11 px-3 rounded-[4px] shadow-inner border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.password && <span className="text-red-600 text-xs">{errors.password}</span>}
             </div>
@@ -102,8 +102,8 @@ function Login() {
             {errors.general && <div className="text-red-600 text-xs">{errors.general}</div>}
 
             <button
-              className="login-btn w-3/4 h-12 rounded-[4px] text-white font-semibold transition hover:bg-[#2B5561]/70"
-              type="submit"
+              className="login-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
+              type="button"
               onClick={handleLoginClick}
             >
               Login
@@ -112,9 +112,7 @@ function Login() {
 
           <div className="mt-4 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>
-            <a href="/signup" className="text-blue-600 hover:underline">
-              Sign up
-            </a>
+            <a href="/signup" className="text-blue-600 hover:underline">Sign up</a>
           </div>
         </div>
       </div>
