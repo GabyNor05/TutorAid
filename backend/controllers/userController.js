@@ -1,10 +1,12 @@
 const fs = require('fs');
 const net = require('net');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');       // ADD
 const cloudinary = require('cloudinary').v2;
 const pool = require('../config/db');
 const userModel = require('../models/userModel');
+
+const resend = new Resend(process.env.RESEND_API_KEY || '');
 
 // Cloudinary config (env must be set on Render)
 cloudinary.config({
@@ -29,36 +31,21 @@ async function uploadImageIfAny(req) {
   }
 }
 
-// Simple SMTP transporter (Gmail or custom)
-function makeTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = (process.env.SMTP_SECURE || 'true') === 'true';
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-  return nodemailer.createTransport({
-    host, port, secure,
-    auth: user && pass ? { user, pass } : undefined,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-    tls: { rejectUnauthorized: false },
-  });
-}
 
 async function sendEmail({ to, subject, text }) {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-  if (!user || !pass) {
-    console.log('[email] no SMTP creds; skipping send', { to, subject });
-    return { ok: false, skipped: true };
+  if (!process.env.RESEND_API_KEY) {
+    console.log('[email] RESEND_API_KEY missing; skipping send', { to, subject });
+    return { ok: false, skipped: true, reason: 'no-api-key' };
   }
-  const transporter = makeTransporter();
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || user,
-    to, subject, text,
-  });
-  return { ok: true };
+  const from = process.env.RESEND_FROM || 'Tutor Aid <tutoraid.dv200@gmail.com>';
+  try {
+    const { error } = await resend.emails.send({ from, to, subject, text });
+    if (error) throw error;
+    return { ok: true };
+  } catch (err) {
+    console.error('[resend] send failed:', err.message || err.toString());
+    return { ok: false, reason: err.message };
+  }
 }
 
 // In‑memory OTP store
@@ -206,16 +193,16 @@ exports.sendOtp = async (req, res) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    await sendEmail({
+    const result = await sendEmail({
       to: email,
       subject: 'Your Tutor Aid verification code',
       text: `Your verification code is: ${otp}. It expires in 1 minute.`,
     });
 
-    res.json({ success: true });
+    return res.json({ success: true, delivered: !!result.ok });
   } catch (err) {
     console.error('sendOtp error:', err);
-    res.status(500).json({ error: 'Failed to send OTP' });
+    return res.json({ success: true, delivered: false });
   }
 };
 
@@ -230,17 +217,12 @@ exports.verifyOtp = async (req, res) => {
   res.json({ success: true });
 };
 
+// Email health (Resend)
 exports.emailHealth = async (_req, res) => {
-  try {
-    const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASS;
-    if (!user || !pass) return res.json({ ok: false, reason: 'No SMTP creds' });
-    const transporter = makeTransporter();
-    await transporter.verify();
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+  if (!process.env.RESEND_API_KEY) {
+    return res.json({ ok: false, reason: 'No RESEND_API_KEY' });
   }
+  return res.json({ ok: true, provider: 'resend' });
 };
 
 exports.smtpTcpCheck = async (req, res) => {

@@ -150,8 +150,8 @@ function Otp() {
       setOtpError("");
       setDigits(Array(DIGITS).fill(""));
       focusInput(0);
-    } catch {
-      setOtpError("Failed to resend OTP.");
+    } catch (err) {
+      setOtpError(err.message || "Failed to resend OTP.");
     }
   };
 
