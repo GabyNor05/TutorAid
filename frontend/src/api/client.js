@@ -37,7 +37,7 @@ export const endpoints = {
   login: () => '/api/users/login',
   sendOtp: () => '/api/users/send-otp',
   verifyOtp: () => '/api/users/verify-otp',
-  assignRole: (id) => `/api/users/${id}/assign-role`, // <-- add this
+  assignRole: (id) => `/api/users/${id}/assign-role`,
   students: () => '/api/students',
   studentByUser: (id) => `/api/students/by-user/${id}`,
   tutors: () => '/api/tutors',
@@ -47,6 +47,8 @@ export const endpoints = {
   progressNotes: () => '/api/progressNotes',
   upload: () => '/api/progressNotes/upload',
   feedback: () => '/api/feedback',
+  messagesInbox: (id) => `/api/messages/inbox/${id}`,
+  ratings: () => '/api/ratings',
 };
 
 export { API_URL };

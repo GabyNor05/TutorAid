@@ -1,10 +1,17 @@
+/* Ensure it’s hidden on mobile and only flex on md+ */
+.dashboard-navigation { display: none; }
+@media (min-width: 768px) {
+  .dashboard-navigation { display: flex; }
+}
+
+/* Keep your existing styling (gap, max-width, etc.) without setting display here */
 .dashboard-navigation {
-    display: flex;
-    position: relative;
-    justify-content: center;
-    gap: 20px;
-    width: 60%;
-    margin: 0 auto;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 .navcard{

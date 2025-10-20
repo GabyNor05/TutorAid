@@ -195,8 +195,8 @@ exports.sendOtp = async (req, res) => {
 
     const result = await sendEmail({
       to: email,
-      subject: 'Your Tutor Aid verification code',
-      text: `Your verification code is: ${otp}. It expires in 1 minute.`,
+      subject: 'Tutor Aid - Verification OTP',
+      text: `Please use the One Time Pin(OTP) below to verify your account. \n\n${otp} \n\nThis OTP is valid for 1 minute. `,
     });
 
     return res.json({ success: true, delivered: !!result.ok });

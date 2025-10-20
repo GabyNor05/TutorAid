@@ -5,8 +5,8 @@ import Clock from "./assets/clock.svg";
 import People from "./assets/people.svg";
 import Task from "./assets/task.svg";
 import LessonCards from "../generalComponents/lessonCards";
-import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NoteIcon, } from "@phosphor-icons/react";
-import axios from "axios";
+import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NotePencil, UsersThree, ClockCountdown, QuestionMark, ListChecks, ChatText, Megaphone, Clipboard, Calandar, List } from "@phosphor-icons/react";
+import { api, endpoints } from "../../api/client";
 import { useSEO } from '../../lib/seo';
 
 
@@ -18,8 +18,9 @@ function Dashboard() {
     const [selectedTutor, setSelectedTutor] = useState(null);
     const [ratingValue, setRatingValue] = useState("");
     const [ratingComment, setRatingComment] = useState("");
+    const [contactMessage, setContactMessage] = useState(""); // ADD
     const navigate = useNavigate();
-    const API_URL =  process.env.REACT_APP_API_URL;  
+    // const API_URL =  process.env.REACT_APP_API_URL;  
 
     useSEO({
         title: 'Tutor Aid — Dashboard',
@@ -30,17 +31,17 @@ function Dashboard() {
     useEffect(() => {
         const userId = localStorage.getItem("userID");
         if (userId) {
-            axios.get(`${API_URL}/api/users/${userId}`)
-                .then(res => setRole(res.data.role))
-                .catch(err => setRole(null));
+            api.get(endpoints.userById(userId))
+                .then(res => setRole(res.role))
+                .catch(() => setRole(null));
         }
     }, []);
 
     useEffect(() => {
         const userId = localStorage.getItem("userID");
         if (userId && role) {
-            axios.get(`${API_URL}/api/lessons/accepted?userID=${userId}&role=${role}`)
-                .then(res => setAcceptedLessons(Array.isArray(res.data) ? res.data : []))
+            api.get(`${endpoints.lessons()}/accepted?userID=${userId}&role=${role}`)
+                .then(res => setAcceptedLessons(Array.isArray(res) ? res : []))
                 .catch(() => setAcceptedLessons([]));
         }
     }, [role]);
@@ -52,21 +53,40 @@ function Dashboard() {
     const handleRateSubmit = async (e) => {
         e.preventDefault();
         const userId = localStorage.getItem("userID");
-        const response = await axios.get(`${API_URL}/api/students/by-user/${userId}`);
-        const studentID = response.data.studentID;
+        const response = await api.get(endpoints.studentByUser(userId));
+        const studentID = response.studentID;
         try {
-            await axios.post(`${API_URL}/api/ratings`, {
+            await api.post(endpoints.ratings(), {
                 tutorID: selectedTutor,
-                studentID: studentID,
+                studentID,
                 rating: ratingValue,
                 comment: ratingComment
             });
             setRateModalOpen(false);
             setRatingValue("");
             setRatingComment("");
-            // Optionally show a success message
         } catch (err) {
-            // Optionally show an error message
+            // handle error UI if needed
+        }
+    };
+
+    const handleSendPrivateMessage = async (e) => { // ADD
+        e.preventDefault();
+        if (!selectedTutor || !contactMessage.trim()) return;
+        try {
+            const userId = localStorage.getItem("userID");
+            const res = await api.get(endpoints.studentByUser(userId));
+            const studentID = res.studentID;
+            await api.post(endpoints.messages(), {
+                subject: "Private Message",
+                message: contactMessage,
+                senderID: studentID,
+                receiverID: selectedTutor,
+            });
+            setContactModalOpen(false);
+            setContactMessage("");
+        } catch (err) {
+            console.error("Send message failed:", err);
         }
     };
 
@@ -81,9 +101,9 @@ function Dashboard() {
     {/* Mobile: text-only pills */}
     <div className="md:hidden w-full px-4">
       <div className="mobile-nav-list">
-        <button className="navpill" onClick={() => handleNavigation("/lessonrequests")}>Lesson Requests</button>
-        <button className="navpill" onClick={() => handleNavigation("/studentfiles")}>Student Profiles</button>
-        <button className="navpill" onClick={() => handleNavigation("/lessonfeedback")}>Lesson Feedback</button>
+        <button className="navpill" onClick={() => handleNavigation("/lessonrequests")}> <ClockCountdown size={24} className="navcard-icon opacity-30"/> Lesson Requests</button>
+        <button className="navpill" onClick={() => handleNavigation("/studentfiles")}> <UsersThree size={24} className="navcard-icon opacity-30"/> Student Profiles</button>
+        <button className="navpill" onClick={() => handleNavigation("/lessonfeedback")}> <ChatText size={24} className="navcard-icon opacity-30"/> Lesson Feedback</button>
       </div>
     </div>
 
@@ -95,7 +115,7 @@ function Dashboard() {
                             <div className="navcard-row">
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonrequests")}>
                                     <div className="navcard-content">
-                                        <img src={Clock} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <ClockCountdown size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3 ">
                                             <h2>Lesson Requests</h2>
                                         </div>
@@ -103,7 +123,7 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentfiles")}>
                                     <div className="navcard-content">
-                                        <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <UsersThree size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
                                             <h2>Student Profiles</h2>
                                         </div>
@@ -111,7 +131,7 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/lessonfeedback")}>
                                     <div className="navcard-content">
-                                        <img src={Task} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <ChatText size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3 ">
                                             <h2>Lesson Feedback</h2>
                                         </div>
@@ -127,11 +147,11 @@ function Dashboard() {
   <>
     <div className="md:hidden w-full px-4">
       <div className="mobile-nav-list">
-        <button className="navpill" onClick={() => handleNavigation("/addstaff")}>Add Staff</button>
-        <button className="navpill" onClick={() => handleNavigation("/manageusers")}>Manage Users</button>
-        <button className="navpill" onClick={() => handleNavigation("/studentrequests")}>Student Requests</button>
-        <button className="navpill" onClick={() => handleNavigation("/userexperiencefeedback")}>User Experience Feedback</button>
-        <button className="navpill navpill-red" onClick={() => handleNavigation("/managereports")}>Manage Reports</button>
+        <button className="navpill" onClick={() => handleNavigation("/addstaff")}><UserCirclePlusIcon size={24} /> Add Staff</button>
+        <button className="navpill" onClick={() => handleNavigation("/manageusers")}><UserList size={24} className="navcard-icon opacity-30"/> Manage Users</button>
+        <button className="navpill" onClick={() => handleNavigation("/studentrequests")}><ListChecks size={24} className="navcard-icon opacity-30"/> Manage Requests</button>
+        <button className="navpill" onClick={() => handleNavigation("/userexperiencefeedback")}><ClipboardText size={24} className="navcard-icon opacity-30"/> User Experience Feedback</button>
+        <button className="navpill navpill-red" onClick={() => handleNavigation("/managereports")}><Megaphone size={24} className="navcard-icon opacity-30"/> Manage Reports</button>
       </div>
     </div>
 
@@ -148,7 +168,7 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/manageusers")}>
                                     <div className="navcard-content">
-                                        <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <UserList size={120} className="navcard-icon mb-[10px]"/>
                                         <div className="navcard-text -bottom-3">
                                             <h2>Manage Users</h2>
                                         </div>
@@ -156,9 +176,9 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/studentrequests")}>
                                     <div className="navcard-content">
-                                        <File size={120} className="navcard-icon opacity-30"/>
+                                        <ListChecks size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
-                                            <h2>Student Requests</h2>
+                                            <h2>Manage Requests</h2>
                                         </div>
                                     </div>
                                 </button>
@@ -172,7 +192,7 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard-red transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 bg-gradient-to-r from-red-950 via-red-800  to-red-600 relative" onClick={() => handleNavigation("/managereports")}>
                                     <div className="navcard-content">
-                                        <WarningIcon size={120} className="navcard-icon opacity-30"/>
+                                        <Megaphone size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
                                             <h2>Manage Reports</h2>
                                         </div>
@@ -186,8 +206,8 @@ function Dashboard() {
   <>
     <div className="md:hidden w-full px-4">
       <div className="mobile-nav-list">
-        <button className="navpill" onClick={() => handleNavigation("/booking")}>Book Lessons</button>
-        <button className="navpill" onClick={() => handleNavigation("/requestform")}>Request Form</button>
+        <button className="navpill" onClick={() => handleNavigation("/booking")}><Calendar size={24} className="navcard-icon opacity-30"/>Book Lessons</button>
+        <button className="navpill" onClick={() => handleNavigation("/requestform")}><QuestionMark size={24} className="navcard-icon opacity-30"/>Request Form</button>
       </div>
     </div>
 
@@ -205,7 +225,7 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/requestform")}>
                                     <div className="navcard-content">
-                                        <img src={People} className = "navcard-icon" alt="Clock Icon" style={{ width: "120px", height: "120px", marginBottom: "10px" }} />
+                                        <QuestionMark size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
                                             <h2>Request Form</h2>
                                         </div>
@@ -216,12 +236,12 @@ function Dashboard() {
   </>
 )}
             {(role === "Tutor" || role === "Student") && (
-    <div className="upcoming-lessons" style={{paddingTop: "15px"}}>
-        <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px", width: "1000px", margin: "0 auto"}}>
-            <h1 className="section-title" style={{display: "flex", justifyContent: "left", margin: "20px"}}>Upcoming Lessons</h1>
-            <div style={{display: "flex", flexDirection: "column", alignItems: "left", justifyContent: "left", gap: "20px", paddingBottom: "30px"}}>
+    <div className="upcoming-lessons pt-[15px]">
+        <div className="flex flex-col items-start justify-start gap-[20px] pb-[30px] w-[1000px] mx-auto">
+            <h1 className="section-title flex justify-start m-[20px]">Upcoming Lessons</h1>
+            <div className="flex flex-col items-start justify-start gap-[20px] pb-[30px]">
                 {acceptedLessons.length === 0 ? (
-                    <p style={{marginLeft: "20px", color: "#fff"}}>No upcoming lessons scheduled.</p>
+                    <p className="ml-[20px] text-white">No upcoming lessons scheduled.</p>
                 ) : (
                     acceptedLessons.map(lesson => (
                         <LessonCards
@@ -250,13 +270,18 @@ function Dashboard() {
   <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
     <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
       <h3 className="text-lg font-semibold mb-4">Contact Tutor</h3>
-      <form>
-        <input type="text" placeholder="Subject" className="w-full border rounded p-2 mb-2" />
-        <textarea placeholder="Message" className="w-full border rounded p-2 mb-2" rows={4} />
+      <form onSubmit={handleSendPrivateMessage}>
+        <textarea
+          placeholder="Message"
+          className="w-full border rounded p-2 mb-2"
+          rows={4}
+          value={contactMessage}
+          onChange={(e) => setContactMessage(e.target.value)}
+          required
+        />
         <div className="flex justify-end gap-2">
-          <button type="submit" className="px-4 py-2 rounded bg-cyan-600 text-white">Send</button>
+          <button type="submit" className="px-4 py-2 rounded bg-[#2B5561] text-white">Send</button>
           <button type="button" className="px-4 py-2 rounded bg-gray-300" onClick={() => setContactModalOpen(false)}>Cancel</button>
-          
         </div>
       </form>
     </div>
@@ -288,7 +313,7 @@ function Dashboard() {
         required
     />
     <div className="flex justify-end gap-2">
-        <button type="submit" className="px-4 py-2 rounded bg-yellow-500 text-white">Submit</button>
+        <button type="submit" className="px-4 py-2 rounded bg-[#2B5561] text-white">Submit</button>
         <button type="button" className="px-4 py-2 rounded bg-gray-300" onClick={() => setRateModalOpen(false)}>Cancel</button>
     </div>
 </form>
