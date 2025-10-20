@@ -143,7 +143,7 @@ function Signup() {
             {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
 
             <button
-              className="signup-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition"
+              className="signup-btn mr-auto w-3/4 h-12 rounded-[4px] bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition"
               type="button"
               onClick={handleSignUpClick}
               disabled={submitting}

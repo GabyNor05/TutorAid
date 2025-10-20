@@ -151,7 +151,7 @@ function Otp() {
       setDigits(Array(DIGITS).fill(""));
       focusInput(0);
     } catch {
-      setStatus("Failed to resend OTP.");
+      setOtpError("Failed to resend OTP.");
     }
   };
 
@@ -168,15 +168,15 @@ function Otp() {
   });
 
   return (
-    <div className="page-background flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 justify-center items-center">
+    <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
-        <div className="hidden md:block bg-cyan-700/5">
+        <div className="hidden md:block bg-[#2B5561]/5 h-full min-h-0">
           <img src={otpImage} alt="otp" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="p-6 sm:p-8">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-2 text-center md:text-center">
             OTP Verification
           </h2>
@@ -216,18 +216,18 @@ function Otp() {
           </button>
 
           <div className="mt-3 text-sm">
-            {status && <div className="text-gray-700 mb-1">{status}</div>}
+            {status && <div className="text-green-600 mb-1">{status}</div>}
             {otpError && <div className="text-red-600">{otpError}</div>}
 
             {timer > 0 ? (
               <div className="mt-3">
                 <span>
-                  Resend code in: <strong>{formatTimer(timer)}</strong>
+                  Resend code in: <strong className="font-medium">{formatTimer(timer)}</strong>
                 </span>
               </div>
             ) : (
               <div className="mt-3">
-                <button className="text-[#2B5561] hover:underline" onClick={handleResendOtp}>
+                <button className="text-[#2B5561] font-mediumhover:underline" onClick={handleResendOtp}>
                   Resend code
                 </button>
               </div>

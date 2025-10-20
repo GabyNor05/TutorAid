@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
-import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 import { useNavigate } from "react-router-dom";
 import { X } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
 import { useSEO } from '../../lib/seo';
-import logo from '../reusableAssets/logo.png';
 
 function Login() {
   const navigate = useNavigate();
@@ -72,7 +70,7 @@ function Login() {
         {/* Form */}
         <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">Login</h2>
-          <form onSubmit={(e) => e.preventDefault()} className="login-form space-y-4">
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
@@ -81,7 +79,7 @@ function Login() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-11 px-3 rounded-[4px] shadow-inner border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
@@ -94,7 +92,7 @@ function Login() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-11 px-3 rounded-[4px] shadow-inner border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
               {errors.password && <span className="text-red-600 text-xs">{errors.password}</span>}
             </div>
@@ -102,7 +100,7 @@ function Login() {
             {errors.general && <div className="text-red-600 text-xs">{errors.general}</div>}
 
             <button
-              className="login-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
+              className="login-btn mr-auto w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
               type="button"
               onClick={handleLoginClick}
             >
