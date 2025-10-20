@@ -1,18 +1,41 @@
-const userModel = require('../models/userModel');
-const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const net = require('net');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const net = require('net');
+const cloudinary = require('cloudinary').v2;
+const pool = require('../config/db');
+const userModel = require('../models/userModel');
 
-// Replace makeTransporter to read env and use sensible defaults
+// Cloudinary config (env must be set on Render)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+  api_key: process.env.CLOUDINARY_API_KEY || '',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+});
+
+// Upload a disk file (multer dest) to Cloudinary and return secure URL
+async function uploadImageIfAny(req) {
+  const file = req.file;
+  if (!file) return null;
+  try {
+    const res = await cloudinary.uploader.upload(file.path, {
+      folder: 'tutoraid/users',
+      resource_type: 'image',
+    });
+    return res.secure_url || res.url || null;
+  } finally {
+    // cleanup temp file
+    try { fs.unlinkSync(file.path); } catch {}
+  }
+}
+
+// Simple SMTP transporter (Gmail or custom)
 function makeTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 465);      // try 465 first
-  const secure = (process.env.SMTP_SECURE || 'true') === 'true'; // true for 465, false for 587
+  const port = Number(process.env.SMTP_PORT || 465);
+  const secure = (process.env.SMTP_SECURE || 'true') === 'true';
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
-
   return nodemailer.createTransport({
     host, port, secure,
     auth: user && pass ? { user, pass } : undefined,
@@ -23,455 +46,211 @@ function makeTransporter() {
   });
 }
 
-// Primary: send via SMTP; Fallback: Resend HTTP API
 async function sendEmail({ to, subject, text }) {
-  // Try SMTP if configured
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    try {
-      const t = makeTransporter();
-      await t.verify();
-      await t.sendMail({
-        from: `"TutorAid" <${process.env.EMAIL_USER}>`,
-        to, subject, text,
-      });
-      return { via: 'smtp' };
-    } catch (e) {
-      console.error('SMTP send failed:', e.code || e.name, e.message);
-    }
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  if (!user || !pass) {
+    console.log('[email] no SMTP creds; skipping send', { to, subject });
+    return { ok: false, skipped: true };
   }
-  // Fallback to Resend API if key present
-  if (process.env.RESEND_API_KEY) {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM || 'TutorAid <onboarding@resend.dev>',
-        to, subject, text,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Resend ${res.status}: ${body}`);
-    }
-    return { via: 'resend' };
-  }
-  throw new Error('No email provider configured');
-}
-
-async function sendWithResend(to, subject, text) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY not set');
-  }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM || 'TutorAid <onboarding@resend.dev>',
-      to,
-      subject,
-      text,
-    }),
+  const transporter = makeTransporter();
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || user,
+    to, subject, text,
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Resend ${res.status}: ${body}`);
-  }
+  return { ok: true };
 }
 
-const otpStore = {}; // { email: otp }
+// In‑memory OTP store
+const otpStore = {}; // { [email]: { otp, createdAt } }
 
-// GET all users
-exports.getUsers = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        const users = await userModel.getAllUsers();
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-}; 
+// ---------------- Users CRUD ----------------
 
-exports.getAllUsers = async (req, res) => {
-    const pool = require('../config/db');
+exports.getAllUsers = async (_req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT u.*, s.status
-      FROM users u
-      LEFT JOIN Students s ON u.userID = s.userID
-    `);
+    const rows = await userModel.getAllUsers();
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch users" });
+    console.error('getAllUsers error:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 };
 
-// // GET single user by ID
+// Alias used by some code
+exports.getUsers = exports.getAllUsers;
+
 exports.getUser = async (req, res) => {
-    const pool = require('../config/db');
+  try {
+    const user = await userModel.getUserById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    // add studentID for convenience if student row exists
     try {
-        const user = await userModel.getUserById(req.params.id);
-        if (!user) return res.status(404).json({ error: "User not found" });
-        
-        // Fetch studentID if user is a student
-        if (user.role === "Student") {
-          const [studentRows] = await pool.query("SELECT studentID FROM students WHERE userID = ?", [user.userID]);
-          if (studentRows.length) {
-            user.studentID = studentRows[0].studentID;
-          }
-        }
-        res.json(user);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+      const [s] = await pool.query('SELECT studentID, status FROM students WHERE userID = ?', [req.params.id]);
+      if (s[0]) user.studentID = s[0].studentID, user.status = s[0].status || user.status;
+    } catch {}
+    res.json(user);
+  } catch (err) {
+    console.error('getUser error:', err);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
 };
-
-// CREATE new user without role-specific data
-const pool = require('../config/db');        // ok to keep (or require inside functions)
-async function uploadImageIfAny(req){ return null; }
-
-// One-time Cloudinary config
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Helper: upload memory buffer to Cloudinary
-function uploadBufferToCloudinary(file, folder = 'tutoraid/users') {
-  return new Promise((resolve, reject) => {
-    if (!file) return resolve(null);
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
-      (err, result) => {
-        if (err) return reject(err);
-        resolve(result?.secure_url || result?.url || null);
-      }
-    );
-    stream.end(file.buffer);
-  });
-}
 
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role = '' } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'name, email and password are required' });
+      return res.status(400).json({ error: 'name, email, password required' });
     }
 
-    // unique email
-    const [existing] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
+    const [existing] = await pool.query('SELECT userID FROM users WHERE email = ? LIMIT 1', [email]);
     if (existing.length) return res.status(409).json({ error: 'Email already registered' });
 
     const hashed = await bcrypt.hash(password, 10);
-    const imageUrl = await uploadBufferToCloudinary(req.file);
+    const imageUrl = await uploadImageIfAny(req);
 
-    // role empty by design; funFact optional
     const [result] = await pool.query(
-      `INSERT INTO users (name, email, password, role, image, funFact)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, email, hashed, '', imageUrl, req.body.funFact || null]
+      'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      [imageUrl, name, email, hashed, role]
     );
 
     return res.status(201).json({ userID: result.insertId });
   } catch (err) {
     console.error('createUser error:', err);
-    return res.status(500).json({ error: 'Failed to create user' });
+    res.status(500).json({ error: 'Failed to create user' });
   }
 };
 
-// UPDATE existing user
 exports.updateUser = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        const imageUrl = await uploadBufferToCloudinary(req.file);
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const imageUrl = await uploadImageIfAny(req);
+    const body = { ...req.body };
 
-        // Merge body + uploaded image
-        const updateData = { ...req.body };
-        if (imageUrl) updateData.image = imageUrl;
+    const fields = [];
+    const values = [];
 
-        // Build dynamic UPDATE to avoid clobbering other fields
-        const fields = [];
-        const values = [];
-        Object.entries(updateData).forEach(([k, v]) => {
-          fields.push(`${k} = ?`);
-          values.push(v);
-        });
-        if (!fields.length) {
-          const [user] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
-          return res.json(user?.[0] || {});
-        }
-        values.push(id);
-        await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE userID = ?`, values);
-
-        const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
-        res.json(rows?.[0] || {});
-    } catch (err) {
-        console.error('updateUser error:', err);
-        res.status(500).json({ error: 'Failed to update user' });
+    if (body.name !== undefined) { fields.push('name = ?'); values.push(body.name); }
+    if (body.email !== undefined) { fields.push('email = ?'); values.push(body.email); }
+    if (body.password !== undefined) {
+      const hashed = await bcrypt.hash(body.password, 10);
+      fields.push('password = ?'); values.push(hashed);
     }
+    if (body.role !== undefined) { fields.push('role = ?'); values.push(body.role); }
+    if (imageUrl) { fields.push('image = ?'); values.push(imageUrl); }
+    if (body.funFact !== undefined) { fields.push('funFact = ?'); values.push(body.funFact); } // if column exists
+
+    if (!fields.length) {
+      const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
+      return res.json(rows[0] || {});
+    }
+
+    values.push(id);
+    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE userID = ?`, values);
+
+    const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
+    res.json(rows[0] || {});
+  } catch (err) {
+    console.error('updateUser error:', err);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
 };
 
-// DELETE user
 exports.deleteUser = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        await userModel.deleteUser(req.params.id);
-        res.json({ message: 'User deleted' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    await userModel.deleteUser(req.params.id);
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    console.error('deleteUser error:', err);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
 };
 
-// test
-exports.createTestUser = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        const randomImage = "https://picsum.photos/id/28/200/300";
-        const hashedPassword = await bcrypt.hash("testpassword", 10);
-
-        const testUser = {
-            name: "Sophie Leighton",
-            email: "sophleighton" + Date.now() + "@example.com", // Make email unique for testing
-            password: hashedPassword,
-            role: "Tutor",
-            image: randomImage,
-            bio: "Very enthusiastic tutor with a passion for teaching.",
-            subjects: "Mathematics, Physics",
-            qualifications:  "M.Sc. in Physics",
-            availability:  "Weekdays 10 AM - 2 PM"
-        };
-
-        const createdUser = await userModel.createUser(testUser);
-        res.json(createdUser);
-    } catch (err) {
-        console.error("Error creating test user:", err);
-        res.status(500).json({ error: err.message });
-    }
-};
+// ---------------- Auth ----------------
 
 exports.loginUser = async (req, res) => {
-    const pool = require('../config/db');
-    const { email, password } = req.body;
-    try {
-        const user = await userModel.getUserByEmail(email);
-        if (!user) {
-            return res.status(401).json({ error: "Invalid email or password" });
-        }
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) {
-            return res.status(401).json({ error: "Invalid email or password" });
-        }
-        // Update lastLogin for all users
-        await pool.query(
-          "UPDATE users SET lastLogin = NOW() WHERE userID = ?",
-          [user.userID]
-        );
+  const { email, password } = req.body || {};
+  if (!email || !password) return res.status(400).json({ error: 'email and password required' });
+  try {
+    const user = await userModel.getUserByEmail(email);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-        // Get student record if user is a student
-        let student = null;
-        if (user.role === "Student") {
-            const [studentRows] = await pool.query("SELECT * FROM students WHERE userID = ?", [user.userID]);
-            if (studentRows.length) {
-                student = studentRows[0];
-                if (student.status === "Blocked") {
-                    // Do NOT allow login, return blocked status AND studentID
-                    return res.json({ userID: user.userID, student: { studentID: student.studentID, status: "Blocked" } });
-                }
-                if (student.status === "Inactive") {
-                    // Reactivate student
-                    await pool.query("UPDATE students SET status = 'Active' WHERE studentID = ?", [student.studentID]);
-                    student.status = "Active";
-                }
-            }
-        }
+    const ok = await bcrypt.compare(password, user.password || '');
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
-        if (student) {
-            return res.json({ userID: user.userID, student });
-        }
-        // For admin/tutor
-        res.json({ userID: user.userID, name: user.name, email: user.email, role: user.role });
-    } catch (err) {
-        res.status(500).json({ error: "Server error" });
+    // If student, include status and studentID
+    let status = null, studentID = null;
+    if (user.role === 'Student') {
+      const [s] = await pool.query('SELECT studentID, status FROM students WHERE userID = ?', [user.userID]);
+      if (s[0]) { studentID = s[0].studentID; status = s[0].status || null; }
     }
+
+    res.json({
+      userID: user.userID,
+      role: user.role,
+      status,
+      studentID,
+    });
+  } catch (err) {
+    console.error('loginUser error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
 };
 
-// Keep your sendWithResend helper (uses global fetch on Node 18+)
-
-// Replace sendOtp and emailHealth with these:
+// ---------------- OTP ----------------
 
 exports.sendOtp = async (req, res) => {
-  const { email } = req.body;
   try {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ error: 'email required' });
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    if (process.env.ALLOW_DEBUG_OTP === 'true') {
-      console.log('[OTP][DEV]', email, otp);
-      return res.json({ message: 'OTP sent (dev mode)', otp });
-    }
+    await sendEmail({
+      to: email,
+      subject: 'Your Tutor Aid verification code',
+      text: `Your verification code is: ${otp}. It expires in 1 minute.`,
+    });
 
-    await sendWithResend(email, 'Your OTP Code', `Your OTP is: ${otp}`);
-    res.json({ message: 'OTP sent' });
+    res.json({ success: true });
   } catch (err) {
-    console.error('Error sending OTP:', err.message);
+    console.error('sendOtp error:', err);
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 };
 
+exports.verifyOtp = async (req, res) => {
+  const { email, otp } = req.body || {};
+  if (!email || !otp) return res.status(400).json({ error: 'email and otp required' });
+  const rec = otpStore[email];
+  if (!rec) return res.status(400).json({ error: 'No OTP requested for this email' });
+  if (Date.now() - rec.createdAt > 60_000) return res.status(400).json({ error: 'OTP expired' });
+  if (rec.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+  delete otpStore[email];
+  res.json({ success: true });
+};
+
 exports.emailHealth = async (_req, res) => {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      return res.status(500).json({ ok: false, message: 'RESEND_API_KEY not set' });
-    }
-    const to = process.env.EMAIL_TEST_TO || process.env.EMAIL_USER;
-    if (!to) {
-      return res.status(400).json({ ok: false, message: 'Set EMAIL_TEST_TO to run this check' });
-    }
-    await sendWithResend(to, 'TutorAid Email Health', 'Health check via Resend.');
-    res.json({ ok: true, via: 'resend' });
+    const user = process.env.EMAIL_USER;
+    const pass = process.env.EMAIL_PASS;
+    if (!user || !pass) return res.json({ ok: false, reason: 'No SMTP creds' });
+    const transporter = makeTransporter();
+    await transporter.verify();
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, message: e.message });
+    res.status(500).json({ ok: false, error: e.message });
   }
 };
 
-exports.verifyOtp = async (req, res) => {
-    const pool = require('../config/db');
-  const { email, otp } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ error: "Missing email or OTP" });
-  }
-  const record = otpStore[email];
-  if (!record) {
-    return res.status(400).json({ error: "Invalid OTP" });
-  }
-  
-    // Check if OTP is expired (5 minutes = 300000 ms) for demo purposes, set to 1 minute (60000 ms)
-    if (Date.now() - record.createdAt > 60000) {
-        delete otpStore[email];
-        return res.status(400).json({ error: "OTP expired" });
-    }
-
-    if (record.otp === otp) {
-        delete otpStore[email]; // Clear OTP after success
-        return res.json({ success: true });
-    }
-    return res.status(400).json({ error: "Invalid OTP" });
-};
-
-
-exports.getTutorsBySubject = async (req, res) => {
-    const pool = require('../config/db');
-    const subject = req.params.subject;
-    try {
-        
-        const [rows] = await pool.query(
-            "SELECT users.userID, users.name FROM users JOIN tutors ON users.userID = tutors.userID WHERE tutors.subjects LIKE ?",
-            [`%${subject}%`]
-        );
-        res.json(rows);
-    } catch (err) {
-        console.error("Error fetching tutors:", err); 
-        res.status(500).json({ error: "Failed to fetch tutors" });
-    }
-};
-
-exports.getTutorAvailability = async (req, res) => {
-    const pool = require('../config/db');
-    const userID = req.params.userID;
-    try {
-        const [rows] = await pool.query(
-            "SELECT availability FROM tutors WHERE userID = ?",
-            [userID]
-        );
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch availability" });
-    }
-};
-
-
-exports.getStudentIDByUserID = async (req, res) => {
-    const pool = require('../config/db');
-    const { userID } = req.params;
-    try {
-        const [rows] = await pool.query(
-            'SELECT studentID FROM Students WHERE userID = ?',
-            [userID]
-        );
-        if (rows.length > 0) {
-            res.json(rows[0]);
-        } else {
-            res.status(404).json({ error: "Student not found" });
-        }
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch studentID" });
-    }
-};
-
-exports.getAllStudents = async (req, res) => {
-    const pool = require('../config/db');
-  try {
-    await pool.query(`
-      UPDATE Students s
-      JOIN users u ON s.userID = u.userID
-      SET s.status = 'Inactive'
-      WHERE u.lastLogin IS NULL OR u.lastLogin < (NOW() - INTERVAL 3 DAY)
-    `);
-    const [rows] = await pool.query('SELECT * FROM Students');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch students" });
-  }
-};
-
-exports.updateLastLogin = async (userID) => {
-    const pool = require('../config/db');
-    try {
-        await pool.query(
-            "UPDATE users SET lastLogin = NOW() WHERE userID = ?",
-            [user.userID]
-        );
-    } catch (err) {
-        console.error("Error updating last login:", err);
-    }
-};
-
-exports.addStaff = async (req, res) => {
-    const pool = require('../config/db');
-    try {
-        let imageUrl = null;
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path, {
-                folder: "staff_profiles"
-            });
-            imageUrl = result.secure_url;
-        }
-        // Save imageUrl to DB (not req.file.path)
-        await pool.query(
-            "INSERT INTO users (name, email, password, role, image, bio, subjects, qualifications, availability, fee_per_hour, experience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [req.body.name, req.body.email, req.body.password, req.body.role, imageUrl, req.body.bio, req.body.subjects, req.body.qualifications, req.body.availability, req.body.fee_per_hour, req.body.experience]
-        );
-        res.status(201).json({ message: "Staff member added!" });
-    } catch (err) {
-        res.status(500).json({ error: "Error adding staff" });
-    }
-};
-
-// TCP check (forces IPv4) and supports ?port= override for quick tests
 exports.smtpTcpCheck = async (req, res) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = Number(req.query.port || process.env.SMTP_PORT || 465);
   const socket = new net.Socket();
   let done = false;
   const end = (status, info) => {
-    if (done) return; done = true;
+    if (done) return;
+    done = true;
     try { socket.destroy(); } catch {}
     res.status(status).json(info);
   };
@@ -482,42 +261,121 @@ exports.smtpTcpCheck = async (req, res) => {
   socket.connect({ host, port, family: 4 });
 };
 
-// Assign a role AFTER signup and create role-specific row if missing
-exports.assignRole = async (req, res) => {
-  const pool = require('../config/db');
-  const { id } = req.params;
-  const { role } = req.body;
+// ---------------- Helpers used by other pages ----------------
 
+exports.getTutorsBySubject = async (req, res) => {
   try {
-    if (!role || !['Student', 'Tutor'].includes(role)) {
-      return res.status(400).json({ error: 'Invalid role. Use "Student" or "Tutor".' });
+    const subject = String(req.params.subject || '').trim();
+    if (!subject) return res.json([]);
+    const [rows] = await pool.query(
+      `SELECT t.*, u.name, u.image
+       FROM tutors t
+       JOIN users u ON t.userID = u.userID
+       WHERE FIND_IN_SET(?, REPLACE(t.subjects, ' ', '')) OR t.subjects LIKE ?`,
+      [subject, `%${subject}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('getTutorsBySubject error:', err);
+    res.status(500).json({ error: 'Failed to fetch tutors' });
+  }
+};
+
+exports.getTutorAvailability = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT availability FROM tutors WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).json({ error: 'Tutor not found' });
+    res.json({ availability: rows[0].availability || '' });
+  } catch (err) {
+    console.error('getTutorAvailability error:', err);
+    res.status(500).json({ error: 'Failed to fetch availability' });
+  }
+};
+
+exports.getStudentIDByUserID = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).json({ error: 'Student not found' });
+    res.json({ studentID: rows[0].studentID });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch studentID' });
+  }
+};
+
+// Add staff (admin tool). Accepts optional image; will create role rows.
+exports.addStaff = async (req, res) => {
+  try {
+    const {
+      name, email, password, role = 'Admin',
+      bio = '', subjects = '', qualifications = '', availability = '',
+      fee_per_hour = 0, experience = ''
+    } = req.body;
+
+    if (!name || !email || !password) return res.status(400).json({ error: 'name, email, password required' });
+
+    const [exists] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
+    if (exists.length) return res.status(409).json({ error: 'Email already registered' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const imageUrl = await uploadImageIfAny(req);
+
+    const [userRes] = await pool.query(
+      'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      [imageUrl, name, email, hashed, role]
+    );
+    const userID = userRes.insertId;
+
+    if (role === 'Tutor') {
+      await pool.query(
+        `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, bio, subjects, qualifications, availability, fee_per_hour, experience]
+      );
+    } else if (role === 'Student') {
+      await pool.query(`INSERT INTO students (userID, status) VALUES (?, 'Active')`, [userID]);
+    } else if (role === 'Admin') {
+      await pool.query(`INSERT INTO admins (userID) VALUES (?)`, [userID]).catch(() => {});
     }
 
-    // Ensure user exists
-    const [u] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
-    if (!u.length) return res.status(404).json({ error: 'User not found' });
+    res.status(201).json({ userID });
+  } catch (err) {
+    console.error('addStaff error:', err);
+    res.status(500).json({ error: 'Failed to add staff' });
+  }
+};
 
-    // Update users.role
+// Assign a role after signup and create role-specific row if missing
+exports.assignRole = async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body || {};
+  if (!role) return res.status(400).json({ error: 'role required' });
+
+  try {
     await pool.query('UPDATE users SET role = ? WHERE userID = ?', [role, id]);
 
-    if (role === 'Student') {
-      // Create student row if not exists
-      const [s] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [id]);
-      if (!s.length) {
-        await pool.query(
-          'INSERT INTO students (userID, grade, school, address, status) VALUES (?, ?, ?, ?, ?)',
-          [id, '', '', '', 'Active']
-        );
-      }
-    } else if (role === 'Tutor') {
-      // Create tutor row if not exists
+    if (role === 'Tutor') {
       const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
       if (!t.length) {
         await pool.query(
-          'INSERT INTO tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
-          [id, '', '', '', '']
+          `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+           VALUES (?, '', '', '', '', 0, '')`,
+          [id]
         );
       }
+    } else if (role === 'Student') {
+      const [s] = await pool.query('SELECT userID FROM students WHERE userID = ?', [id]);
+      if (!s.length) {
+        await pool.query(
+          `INSERT INTO students (userID, grade, school, address, city, province, status)
+           VALUES (?, NULL, NULL, NULL, NULL, NULL, 'Active')`,
+          [id]
+        );
+      }
+    } else if (role === 'Admin') {
+      const [a] = await pool.query('SELECT userID FROM admins WHERE userID = ?', [id]);
+      if (!a.length) await pool.query('INSERT INTO admins (userID) VALUES (?)', [id]);
     }
 
     res.json({ ok: true, userID: Number(id), role });
@@ -527,45 +385,67 @@ exports.assignRole = async (req, res) => {
   }
 };
 
+// ---------------- Admin utilities moved from routes ----------------
+
 // Change a student's status (Admin-protected)
 exports.changeStatus = async (req, res) => {
-  const pool = require('../config/db');
-  const { userID, newStatus, adminPassword } = req.body;
-
+  const { userID, newStatus, adminPassword } = req.body || {};
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return res.json({ success: false, message: 'Incorrect admin password.' });
   }
-  try {
-    const [studentRows] = await pool.query(
-      'SELECT studentID FROM students WHERE userID = ?',
-      [userID]
-    );
-    if (!studentRows.length) {
-      return res.json({ success: false, message: 'Student not found.' });
-    }
-    const studentID = studentRows[0].studentID;
+  if (!userID || !newStatus) return res.json({ success: false, message: 'userID and newStatus required.' });
 
-    const [result] = await pool.query(
-      'UPDATE students SET status = ? WHERE studentID = ?',
-      [newStatus, studentID]
-    );
-    if (result.affectedRows === 0) {
-      return res.json({ success: false, message: 'Student not found.' });
-    }
+  try {
+    const [studentRows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!studentRows.length) return res.json({ success: false, message: 'Student not found.' });
+
+    const studentID = studentRows[0].studentID;
+    const [result] = await pool.query('UPDATE students SET status = ? WHERE studentID = ?', [newStatus, studentID]);
+    if (result.affectedRows === 0) return res.json({ success: false, message: 'Student not found.' });
+
     res.json({ success: true });
   } catch (err) {
+    console.error('changeStatus error:', err);
     res.status(500).json({ success: false, message: 'Error updating status.' });
   }
 };
 
 // Remove a user (Admin-protected)
 exports.removeUser = async (req, res) => {
-  const pool = require('../config/db');
-  const { userID, adminPassword } = req.body;
+  const { userID, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.json({ success: false, message: 'Incorrect admin password.' });
+  }
+  if (!userID) return res.json({ success: false, message: 'userID required.' });
 
   try {
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-      return res.json({ success: false, message: 'Incorrect admin password.' });
-    }
     const [result] = await pool.query('DELETE FROM users WHERE userID = ?', [userID]);
-    if
+    if (result.affectedRows === 0) return res.json({ success: false, message: 'User not found.' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('removeUser error:', err);
+    res.json({ success: false, message: 'Error removing user.', error: err.message });
+  }
+};
+
+// Get avatars and names for a set of studentIDs
+exports.userAvatars = async (req, res) => {
+  const { studentIDs } = req.body || {};
+  if (!Array.isArray(studentIDs) || !studentIDs.length) return res.json({});
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT s.studentID, u.image, u.name
+       FROM students s
+       JOIN users u ON s.userID = u.userID
+       WHERE s.studentID IN (?)`,
+      [studentIDs]
+    );
+    const images = {};
+    rows.forEach(r => { images[r.studentID] = { image: r.image, name: r.name }; });
+    res.json(images);
+  } catch (err) {
+    console.error('userAvatars error:', err);
+    res.status(500).json({ error: 'Failed to fetch user images' });
+  }
+};
