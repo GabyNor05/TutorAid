@@ -135,6 +135,28 @@ exports.getUser = async (req, res) => {
 const pool = require('../config/db');        // ok to keep (or require inside functions)
 async function uploadImageIfAny(req){ return null; }
 
+// One-time Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Helper: upload memory buffer to Cloudinary
+function uploadBufferToCloudinary(file, folder = 'tutoraid/users') {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image' },
+      (err, result) => {
+        if (err) return reject(err);
+        resolve(result?.secure_url || result?.url || null);
+      }
+    );
+    stream.end(file.buffer);
+  });
+}
+
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -147,7 +169,7 @@ exports.createUser = async (req, res) => {
     if (existing.length) return res.status(409).json({ error: 'Email already registered' });
 
     const hashed = await bcrypt.hash(password, 10);
-    const imageUrl = await uploadImageIfAny(req); // null if no file
+    const imageUrl = await uploadBufferToCloudinary(req.file);
 
     // role empty by design; funFact optional
     const [result] = await pool.query(
@@ -167,42 +189,32 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     const pool = require('../config/db');
     try {
-        let imageUrl;
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path, {
-                folder: "uploads"
-            });
-            imageUrl = result.secure_url;
-            fs.unlinkSync(req.file.path);
-        }
+        const imageUrl = await uploadBufferToCloudinary(req.file);
+        const { id } = req.params;
 
-        // Build update object for users table
+        // Merge body + uploaded image
         const updateData = { ...req.body };
         if (imageUrl) updateData.image = imageUrl;
 
-        await userModel.updateUser(req.params.id, updateData);
-
-        // If student fields are present, update Students table
-        if (
-            updateData.grade !== undefined ||
-            updateData.school !== undefined ||
-            updateData.address !== undefined ||
-            updateData.status !== undefined
-        ) {
-            await userModel.updateStudent(req.params.id, {
-                grade: updateData.grade,
-                school: updateData.school,
-                address: updateData.address,
-                status: updateData.status
-            });
+        // Build dynamic UPDATE to avoid clobbering other fields
+        const fields = [];
+        const values = [];
+        Object.entries(updateData).forEach(([k, v]) => {
+          fields.push(`${k} = ?`);
+          values.push(v);
+        });
+        if (!fields.length) {
+          const [user] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
+          return res.json(user?.[0] || {});
         }
+        values.push(id);
+        await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE userID = ?`, values);
 
-        // Optionally fetch updated user and return
-        const updatedUser = await userModel.getUserById(req.params.id);
-        res.json(updatedUser);
+        const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
+        res.json(rows?.[0] || {});
     } catch (err) {
-        console.error("Error in updateUser:", err);
-        res.status(500).json({ error: err.message });
+        console.error('updateUser error:', err);
+        res.status(500).json({ error: 'Failed to update user' });
     }
 };
 
@@ -514,3 +526,46 @@ exports.assignRole = async (req, res) => {
     res.status(500).json({ error: 'Failed to assign role' });
   }
 };
+
+// Change a student's status (Admin-protected)
+exports.changeStatus = async (req, res) => {
+  const pool = require('../config/db');
+  const { userID, newStatus, adminPassword } = req.body;
+
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.json({ success: false, message: 'Incorrect admin password.' });
+  }
+  try {
+    const [studentRows] = await pool.query(
+      'SELECT studentID FROM students WHERE userID = ?',
+      [userID]
+    );
+    if (!studentRows.length) {
+      return res.json({ success: false, message: 'Student not found.' });
+    }
+    const studentID = studentRows[0].studentID;
+
+    const [result] = await pool.query(
+      'UPDATE students SET status = ? WHERE studentID = ?',
+      [newStatus, studentID]
+    );
+    if (result.affectedRows === 0) {
+      return res.json({ success: false, message: 'Student not found.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error updating status.' });
+  }
+};
+
+// Remove a user (Admin-protected)
+exports.removeUser = async (req, res) => {
+  const pool = require('../config/db');
+  const { userID, adminPassword } = req.body;
+
+  try {
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      return res.json({ success: false, message: 'Incorrect admin password.' });
+    }
+    const [result] = await pool.query('DELETE FROM users WHERE userID = ?', [userID]);
+    if

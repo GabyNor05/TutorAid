@@ -28,6 +28,11 @@ function Onboarding() {
   const [subjects, setSubjects] = useState("");        // comma-separated
   const [qualifications, setQualifications] = useState("");
   const [availability, setAvailability] = useState("");
+  // Replace the simple availability string for tutors with a structured state
+  const [avail, setAvail] = useState({
+    monFri: { enabled: false, start: "", end: "" },
+    satSun: { enabled: false, start: "", end: "" },
+  });
 
   useSEO({
     title: 'Tutor Aid — Onboarding',
@@ -62,7 +67,14 @@ function Onboarding() {
             setBio(t.bio || '');
             setSubjects(t.subjects || '');
             setQualifications(t.qualifications || '');
+            // Try to hydrate availability into the structured state if it follows "Mon-Fri: HH:MM-HH:MM; Sat-Sun: HH:MM-HH:MM"
             setAvailability(t.availability || '');
+            const mf = /Mon-Fri:\s*([0-9:]{4,5})-([0-9:]{4,5})/i.exec(t.availability || '');
+            const ss = /Sat-Sun:\s*([0-9:]{4,5})-([0-9:]{4,5})/i.exec(t.availability || '');
+            setAvail({
+              monFri: { enabled: !!mf, start: mf?.[1] || '', end: mf?.[2] || '' },
+              satSun: { enabled: !!ss, start: ss?.[1] || '', end: ss?.[2] || '' },
+            });
           }
         }
       } catch {
@@ -111,7 +123,21 @@ function Onboarding() {
     if (!userID) return;
     setLoading(true);
     try {
-      await api.put(endpoints.tutorByUser(userID), { bio, subjects, qualifications, availability });
+      // Build availability string to match AddStaff format
+      let availabilityStr = '';
+      if (avail.monFri.enabled && avail.monFri.start && avail.monFri.end) {
+        availabilityStr += `Mon-Fri: ${avail.monFri.start}-${avail.monFri.end}; `;
+      }
+      if (avail.satSun.enabled && avail.satSun.start && avail.satSun.end) {
+        availabilityStr += `Sat-Sun: ${avail.satSun.start}-${avail.satSun.end}`;
+      }
+
+      await api.put(endpoints.tutorByUser(userID), {
+        bio,
+        subjects,
+        qualifications,
+        availability: availabilityStr.trim(),
+      });
       await api.put(endpoints.assignRole(userID), { role: 'Tutor' });
       navigate('/onboarding2'); 
     } catch (err) {
@@ -121,14 +147,14 @@ function Onboarding() {
 
   return (
     <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
-        <div className="hidden md:block bg-cyan-700/5">
+        <div className="hidden md:block bg-cyan-700/5 h-full min-h-0">
           <img src={onboardingImage} alt="onboarding" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="flex flex-col justify-center items-center p-6 sm:p-8">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">
             {role === 'Student' ? 'Tell us about yourself' : 'Tell us about your tutoring'}
           </h2>
@@ -236,13 +262,75 @@ function Onboarding() {
               </div>
               {errors.qualifications && <span className="text-red-600 text-xs">{errors.qualifications}</span>}
 
-              <div className="flex flex-row item-start gap-2">
-                <label>Availability</label>
-                <input
-                  type="text" id="availability" name="availability" placeholder="e.g., Mon–Fri: 14:00–18:00"
-                  value={availability} onChange={(e) => setAvailability(e.target.value)}
-                  className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                />
+              {/* Availability (AddStaff-style) */}
+              <div className="space-y-3">
+                <label className="block">Availability</label>
+
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <span>Mon–Fri</span>
+                    <input
+                      type="checkbox"
+                      checked={avail.monFri.enabled}
+                      onChange={() => setAvail(p => ({ ...p, monFri: { ...p.monFri, enabled: !p.monFri.enabled } }))}
+                    />
+                  </div>
+                  {avail.monFri.enabled && (
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <label className="text-sm">
+                        Start
+                        <input
+                          type="time" className="block w-full border rounded p-2"
+                          value={avail.monFri.start}
+                          onChange={e => setAvail(p => ({ ...p, monFri: { ...p.monFri, start: e.target.value } }))}
+                          required
+                        />
+                      </label>
+                      <label className="text-sm">
+                        End
+                        <input
+                          type="time" className="block w-full border rounded p-2"
+                          value={avail.monFri.end}
+                          onChange={e => setAvail(p => ({ ...p, monFri: { ...p.monFri, end: e.target.value } }))}
+                          required
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <span>Sat–Sun</span>
+                    <input
+                      type="checkbox"
+                      checked={avail.satSun.enabled}
+                      onChange={() => setAvail(p => ({ ...p, satSun: { ...p.satSun, enabled: !p.satSun.enabled } }))}
+                    />
+                  </div>
+                  {avail.satSun.enabled && (
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <label className="text-sm">
+                        Start
+                        <input
+                          type="time" className="block w-full border rounded p-2"
+                          value={avail.satSun.start}
+                          onChange={e => setAvail(p => ({ ...p, satSun: { ...p.satSun, start: e.target.value } }))}
+                          required
+                        />
+                      </label>
+                      <label className="text-sm">
+                        End
+                        <input
+                          type="time" className="block w-full border rounded p-2"
+                          value={avail.satSun.end}
+                          onChange={e => setAvail(p => ({ ...p, satSun: { ...p.satSun, end: e.target.value } }))}
+                          required
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}

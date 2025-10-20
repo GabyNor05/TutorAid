@@ -97,14 +97,14 @@ export default function Onboarding2() {
 
   return (
     <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
-        <div className="hidden md:block bg-cyan-700/5">
+        <div className="hidden md:block bg-cyan-700/5 h-full min-h-0">
           <img src={onboardingImage} alt="onboarding step 2" className="h-full w-full object-cover" />
         </div>
 
         {/* Form */}
-        <div className="flex flex-col justify-center items-center p-6 sm:p-8 w-full">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">
             Add a profile photo and fun fact
           </h2>
