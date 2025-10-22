@@ -239,6 +239,11 @@ function Booking() {
         return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
     };
 
+    const [allTutors, setAllTutors] = useState([]);
+    const [allSubjects, setAllSubjects] = useState([]);
+    const [availableSubjects, setAvailableSubjects] = useState([]);
+    const [subjectsLoading, setSubjectsLoading] = useState(false);
+
     // Fetch all tutors and subjects once to build the available subjects list
     useEffect(() => {
         let cancelled = false;

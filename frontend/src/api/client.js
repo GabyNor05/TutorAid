@@ -48,6 +48,7 @@ export const endpoints = {
   progressNotes: () => '/api/progressNotes',
   upload: () => '/api/progressNotes/upload',
   feedback: () => '/api/feedback',
+  messages: () => '/api/messages',
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
   ratings: () => '/api/ratings',
   tutorsBySubject: (subject) => `/api/users/tutors/by-subject/${encodeURIComponent(subject)}`,

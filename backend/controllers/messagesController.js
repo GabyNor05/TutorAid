@@ -31,11 +31,11 @@ exports.getSent = async (req, res) => {
 // Send a new message
 exports.sendMessage = async (req, res) => {
     const pool = require('../config/db');
-    const { senderID, receiverID, subject, body } = req.body;
+    const { senderID, receiverID, subject, body, type = 'Private Message' } = req.body;
     try {
         await pool.query(
-            "INSERT INTO messages (senderID, receiverID, subject, body) VALUES (?, ?, ?, ?)",
-            [senderID, receiverID, subject, body]
+            "INSERT INTO messages (senderID, receiverID, subject, body, type) VALUES (?, ?, ?, ?, ?)",
+            [senderID, receiverID, subject, body, type]
         );
         res.status(201).json({ message: "Message sent!" });
     } catch (err) {
