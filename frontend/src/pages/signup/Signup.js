@@ -92,13 +92,13 @@ function Signup() {
         </div>
 
         {/* Form */}
-        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto flex flex-col justify-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-4 text-center md:text-center">
             Create your account
           </h2>
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
               <input
                 type="text"
@@ -112,7 +112,7 @@ function Signup() {
               {errors.username && <span className="text-red-600 text-xs">{errors.username}</span>}
             </div>
 
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="text"
@@ -126,7 +126,7 @@ function Signup() {
               {errors.email && <span className="text-red-600 text-xs">{errors.email}</span>}
             </div>
 
-            <div>
+            <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"

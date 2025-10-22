@@ -15,7 +15,8 @@ import {
   ListChecks,
   ChatText,
   Megaphone,
-  UserList                     // needed for "Manage Users" icon
+  UserList,
+  SignOut                    
 } from "@phosphor-icons/react";
 import Logo from "../reusableAssets/logo.png";
 import MessageCard from "./MessageCard";
@@ -273,11 +274,16 @@ function Navbar() {
                     <div className="flex flex-col">
                       <span className="font-semibold">{user?.name || "User"}</span>
                       <span className="text-sm text-gray-600">{user?.email || ""}</span>
+                      <span className="text-sm text-gray-500 underline" onClick={() => handleNav("/userprofile")}>View Profile</span>
                     </div>
                   </div>
                   <div className="flex flex-row items-center justify-between">
-                    <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
+                    <div>
+                      <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
+                    </div>
+                    <div>
+                      <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
+                    </div>
                   </div>
                   
                   {/* Role-specific */}
@@ -286,36 +292,35 @@ function Navbar() {
                   <div className="flex flex-col">
                     {role === "Tutor" && (
                       <>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row item-center gap-2" onClick={() => handleNav("/lessonrequests")}><ClockCountdown size={22} /> Lesson Requests</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/studentfiles")}><UsersThree size={22} /> Student Files</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/lessonfeedback")}><ChatText size={22} /> Lesson Feedback</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/lessonrequests")}><ClockCountdown size={22} /> Lesson Requests</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentfiles")}><UsersThree size={22} /> Student Files</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/lessonfeedback")}><ChatText size={22} /> Lesson Feedback</button>
                       </>
                     )}
                     {role === "Admin" && (
                       <>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/addstaff")}><UserPlus size={22} /> Add Staff</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/userexperiencefeedback")}><ClipboardText size={22} /> User Experience Feedback</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/addstaff")}><UserPlus size={22} /> Add Staff</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userexperiencefeedback")}><ClipboardText size={22} /> User Experience Feedback</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/managereports")}><Megaphone size={22} /> Manage Reports</button>
                       </>
                     )}
                     {role === "Student" && (
                       <>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/booking")}><Calendar size={22} /> Book Lessons</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/requestform")}><QuestionMark size={22} /> Request Form</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/requestform")}><QuestionMark size={22} /> Request Form</button>
                       </>
                     )}
                   </div>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/userprofile")}>My Profile</button>
                   <button
-                    className="w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600"
+                    className="w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600 flex flex-row gap-2"
                     onClick={() => {
                       localStorage.removeItem("userID");
                       handleNav("/login");
                     }}
                   >
-                    Log out
+                    <SignOut size={22} /> Log out
                   </button>
                 </>
               ) : (
@@ -354,7 +359,7 @@ function Navbar() {
       {/* Inbox Modal (responsive) */}
       {inboxOpen && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-stretch md:items-center z-[100] p-0 md:p-4">
-          <div className="bg-white w-full h-full md:h-[80vh] md:max-w-5xl md:rounded-2xl shadow-lg p-0 relative flex flex-col overflow-hidden">
+          <div className="bg-white w-5/6 h-5/6 md:h-[80vh] md:max-w-5xl md:rounded-2xl shadow-lg p-0 relative flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b">
               <h2 className="text-lg sm:text-xl font-bold text-[#2B5561]">
                 Inbox <span className="text-gray-500">({messages.length})</span>
@@ -374,7 +379,7 @@ function Navbar() {
               {tabs.map(t => (
                 <button
                   key={t.key}
-                  className={`px-3 py-1 rounded-full font-semibold text-sm ${activeTab === t.key ? "bg-cyan-100 text-[#2B5561]" : "text-gray-500"}`}
+                  className={`px-3 py-1 rounded-full font-semibold text- ${activeTab === t.key ? "bg-cyan-100 text-[#2B5561]" : "text-gray-500"}`}
                   onClick={() => setActiveTab(t.key)}
                 >
                   {t.label}

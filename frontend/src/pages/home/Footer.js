@@ -62,7 +62,7 @@ function Footer() {
             45 Greenhill Road, Sandton, Johannesburg, 2196
           </p>
           <div>
-            <span className="flex flex-row gap-2 text-sm text-white mb-1"><PhoneIcon size={18} /> +27 11 123 4567</span>
+            <span className="flex flex-row gap-2 text-sm text-white mb-1 "><PhoneIcon size={18} /> +27 11 123 4567</span>
           </div>
           
           <span className=" flex flex-row gap-2 text-sm text-white mb-4"><EnvelopeIcon size={18} /> tutoraid.dv200@gmail.com</span>

@@ -176,7 +176,7 @@ function Otp() {
         </div>
 
         {/* Form */}
-        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto flex flex-col justify-center items-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-2 text-center md:text-center">
             OTP Verification
           </h2>
@@ -208,7 +208,7 @@ function Otp() {
           {errors.otp && <div className="text-red-600 text-xs mb-2">{errors.otp}</div>}
 
           <button
-            className="w-full h-11 rounded-lg bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold transition"
+            className="w-3/4 h-11 rounded-lg bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold transition"
             type="button"
             onClick={handleVerify}
           >
