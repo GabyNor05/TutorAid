@@ -101,9 +101,9 @@ function Dashboard() {
     {/* Mobile: text-only pills */}
     <div className="md:hidden w-full px-4">
       <div className="mobile-nav-list">
-        <button className="navpill" onClick={() => handleNavigation("/lessonrequests")}> <ClockCountdown size={24} className="navcard-icon opacity-30"/> Lesson Requests</button>
-        <button className="navpill" onClick={() => handleNavigation("/studentfiles")}> <UsersThree size={24} className="navcard-icon opacity-30"/> Student Profiles</button>
-        <button className="navpill" onClick={() => handleNavigation("/lessonfeedback")}> <ChatText size={24} className="navcard-icon opacity-30"/> Lesson Feedback</button>
+        <button className="navpill" onClick={() => handleNavigation("/lessonrequests")}> <ClockCountdown size={24} className="opacity-30 mr-2"/> Lesson Requests</button>
+        <button className="navpill" onClick={() => handleNavigation("/studentfiles")}> <UsersThree size={24} className="opacity-30 mr-2"/> Student Profiles</button>
+        <button className="navpill" onClick={() => handleNavigation("/lessonfeedback")}> <ChatText size={24} className="opacity-30 mr-2"/> Lesson Feedback</button>
       </div>
     </div>
 
@@ -145,13 +145,13 @@ function Dashboard() {
 )}
                     {role === "Admin" && (
   <>
-    <div className="md:hidden w-full px-4">
+    <div className="md:hidden w-1/2 px-4">
       <div className="mobile-nav-list">
-        <button className="navpill" onClick={() => handleNavigation("/addstaff")}><UserCirclePlusIcon size={24} /> Add Staff</button>
-        <button className="navpill" onClick={() => handleNavigation("/manageusers")}><UserList size={24} className="navcard-icon opacity-30"/> Manage Users</button>
-        <button className="navpill" onClick={() => handleNavigation("/studentrequests")}><ListChecks size={24} className="navcard-icon opacity-30"/> Manage Requests</button>
-        <button className="navpill" onClick={() => handleNavigation("/userexperiencefeedback")}><ClipboardText size={24} className="navcard-icon opacity-30"/> User Experience Feedback</button>
-        <button className="navpill navpill-red" onClick={() => handleNavigation("/managereports")}><Megaphone size={24} className="navcard-icon opacity-30"/> Manage Reports</button>
+        <button className="navpill" onClick={() => handleNavigation("/addstaff")}><UserCirclePlusIcon size={24} className="opacity-30 mr-2"/> Add Staff</button>
+        <button className="navpill" onClick={() => handleNavigation("/manageusers")}><UserList size={24} className="opacity-30 mr-2"/> Manage Users</button>
+        <button className="navpill" onClick={() => handleNavigation("/studentrequests")}><ListChecks size={24} className="opacity-30 mr-2"/> Manage Requests</button>
+        <button className="navpill" onClick={() => handleNavigation("/userexperiencefeedback")}><ClipboardText size={24} className="opacity-30 mr-2"/> User Experience Feedback</button>
+        <button className="navpill navpill-red" onClick={() => handleNavigation("/managereports")}><Megaphone size={24} className="opacity-30 mr-2"/> Manage Reports</button>
       </div>
     </div>
 
@@ -168,7 +168,7 @@ function Dashboard() {
                                 </button>
                                 <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/manageusers")}>
                                     <div className="navcard-content">
-                                        <UserList size={120} className="navcard-icon mb-[10px]"/>
+                                        <UserList size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
                                             <h2>Manage Users</h2>
                                         </div>
@@ -206,8 +206,8 @@ function Dashboard() {
   <>
     <div className="md:hidden w-full px-4">
       <div className="mobile-nav-list">
-        <button className="navpill" onClick={() => handleNavigation("/booking")}><Calendar size={24} className="navcard-icon opacity-30"/>Book Lessons</button>
-        <button className="navpill" onClick={() => handleNavigation("/requestform")}><QuestionMark size={24} className="navcard-icon opacity-30"/>Request Form</button>
+        <button className="navpill" onClick={() => handleNavigation("/booking")}><Calendar size={24} className="opacity-30 mr-2"/>Book Lessons</button>
+        <button className="navpill" onClick={() => handleNavigation("/requestform")}><QuestionMark size={24} className="opacity-30 mr-2"/>Request Form</button>
       </div>
     </div>
 

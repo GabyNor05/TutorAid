@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   List as ListIcon,            // alias to avoid duplicate identifier
@@ -22,15 +22,14 @@ import MessageCard from "./MessageCard";
 import { api, endpoints } from "../../api/client";
 
 function Navbar() {
-  const [showMenu, setShowMenu] = useState(false);      // desktop profile menu
-  const [mobileOpen, setMobileOpen] = useState(false);  // mobile nav menu
+  const [showMenu, setShowMenu] = useState(false);      // optional: can be removed
+  const [mobileOpen, setMobileOpen] = useState(false);  // shared drawer for all
   const [role, setRole] = useState(null);
   const [user, setUser] = useState(null); 
   const [messages, setMessages] = useState([]);
   const [activeTab, setActiveTab] = useState("all"); 
   const [inboxOpen, setInboxOpen] = useState(false);
   const navigate = useNavigate();
-  const dropdownRef = useRef(null); 
 
   const userId = localStorage.getItem("userID");
 
@@ -57,29 +56,6 @@ function Navbar() {
         .catch(() => setMessages([]));
     }
   }, [userId, inboxOpen]);
-
-  useEffect(() => {
-    // Close profile menu on outside click or ESC
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        setShowMenu(false);
-        setMobileOpen(false);
-      }
-    };
-    const onClick = (e) => {
-      if (showMenu && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowMenu(false);
-      }
-    };
-    if (showMenu) {
-      document.addEventListener("keydown", onKey);
-      document.addEventListener("mousedown", onClick);
-    }
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onClick);
-    };
-  }, [showMenu]);
 
   const handleNav = (path) => {
     setShowMenu(false);       // keep in sync
@@ -218,51 +194,19 @@ function Navbar() {
                 <EnvelopeSimple size={24} weight="bold" />
               </button>
 
-              {/* Profile menu trigger */}
+              {/* Open the same side panel on desktop */}
               <button
                 className="rounded-md px-3 py-2 font-semibold"
                 onClick={() => {
-                  setMobileOpen(false);
-                  setShowMenu((p) => !p);
+                  setShowMenu(false);   // keep in sync (not used anymore)
+                  setMobileOpen(true);  // open drawer on desktop
                 }}
-                aria-haspopup="menu"
-                aria-expanded={showMenu}
-                title="Profile menu"
+                aria-haspopup="dialog"
+                aria-expanded={mobileOpen}
+                title="Open menu"
               >
                 <ListIcon size={24} weight="bold" />
               </button>
-
-              {/* Desktop overlay to match mobile drawer behavior */}
-              {showMenu && (
-                <div
-                  className="hidden md:block fixed inset-0 z-[55]"
-                  onClick={() => setShowMenu(false)}
-                  aria-hidden="true"
-                />
-              )}
-
-              {/* Dropdown */}
-              {showMenu && (
-                <div
-                  ref={dropdownRef}                              // ADD
-                  className="absolute right-4 top-16 w-56 bg-white text-gray-800 rounded-md shadow-lg py-2 z-[60]" // z above overlay
-                  role="menu"
-                >
-                  <button className="dropdown-item" onClick={() => handleNav("/")}>Home</button>
-                  <button className="dropdown-item" onClick={() => handleNav("/dashboard")}>Dashboard</button>
-                  <RoleLinks />
-                  <button className="dropdown-item" onClick={() => handleNav("/userprofile")}>My Profile</button>
-                  <button
-                    className="dropdown-item text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      localStorage.removeItem("userID");
-                      handleNav("/login");
-                    }}
-                  >
-                    Log out
-                  </button>
-                </div>
-              )}
             </>
           ) : (
             <>
@@ -297,15 +241,15 @@ function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu panel */}
+      {/* Mobile/Desktop side panel (now for all screen sizes) */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-[60]">
+        <div className="fixed inset-0 z-[60]">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white text-gray-800 shadow-xl flex flex-col">
+          <div className="absolute right-0 top-0 h-full w-80 md:w-[420px] max-w-[85%] bg-white text-gray-800 shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-4 h-16 border-b">
               <button
                 onClick={() => setMobileOpen(false)}
@@ -331,15 +275,18 @@ function Navbar() {
                       <span className="text-sm text-gray-600">{user?.email || ""}</span>
                     </div>
                   </div>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
+                  <div className="flex flex-row items-center justify-between">
+                    <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
+                  <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
+                  </div>
+                  
                   {/* Role-specific */}
                   <div className="px-2 py-1 text-xs uppercase tracking-wide text-gray-500">Shortcuts</div>
                   {/* Reuse links */}
                   <div className="flex flex-col">
                     {role === "Tutor" && (
                       <>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/lessonrequests")}><ClockCountdown size={22} /> Lesson Requests</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row item-center gap-2" onClick={() => handleNav("/lessonrequests")}><ClockCountdown size={22} /> Lesson Requests</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/studentfiles")}><UsersThree size={22} /> Student Files</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/lessonfeedback")}><ChatText size={22} /> Lesson Feedback</button>
                       </>
