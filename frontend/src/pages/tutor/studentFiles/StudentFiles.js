@@ -4,8 +4,14 @@ import StudentFileCard from "./studentFileCard";
 import { MagnifyingGlassIcon, FunnelSimple } from "@phosphor-icons/react"; 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {useSEO} from '../../../lib/seo';
 
 function StudentFiles() {
+    useSEO({
+        title: 'Tutor Aid — Student Files',
+        description: 'University Project: View and manage student files.',
+        canonical: 'https://gabydv.xyz/studentfiles',
+      });
     const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [statuses, setStatuses] = useState([]);

@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import LessonCards from "../../generalComponents/lessonCards";
+import {useSEO} from '../../../lib/seo';
 
 function LessonRequests() {
+    useSEO({
+        title: 'Tutor Aid — Lesson Requests',
+        description: 'University Project: View and manage your lesson requests.',
+        canonical: 'https://gabydv.xyz/lessonrequests',
+      });
     const [lessons, setLessons] = useState([]);
     const tutorID = localStorage.getItem("userID");
     const API_URL =  process.env.REACT_APP_API_URL;  

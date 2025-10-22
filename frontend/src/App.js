@@ -73,11 +73,6 @@ export default function App() {
         <Route path="/" element={<Home />} />
       </Routes>
 
-      {userId && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#2B5561] rounded-full shadow-lg flex items-center justify-center cursor-pointer w-16 h-16 hover:bg-[#2B5561]/70 transition" title="Inbox">
-          <EnvelopeSimple size={32} color="#fff" weight="bold" />
-        </div>
-      )}
     </div>
   );
 }

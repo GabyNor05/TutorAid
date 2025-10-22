@@ -1,19 +1,67 @@
 const nodemailer = require('nodemailer'); // For sending emails
 
 exports.createLesson = async (req, res) => {
-    const pool = require('../config/db');
-    const { tutorID, studentID, date, startTime, duration, subject } = req.body;
-    try {
-        await pool.query(
-            `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [tutorID, studentID, subject, date, startTime, duration]
-        );
-        res.json({ message: "Lesson booked!" });
-    } catch (err) {
-        console.error("Error booking lesson:", err);
-        res.status(500).json({ error: "Failed to book lesson" });
+  const pool = require('../config/db');
+  try {
+    const { tutorID, studentID, subject, date, startTime, duration, total_fee } = req.body;
+
+    if (!tutorID || !studentID || !subject || !date || !startTime || !duration) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Insert lesson
+    const insertLessonSql = `
+      INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    await pool.query(insertLessonSql, [
+      tutorID,
+      studentID,
+      subject,
+      date,
+      startTime,
+      duration,
+      total_fee ?? null,
+    ]);
+
+    // Find student name for the message subject
+    const [studentNameRows] = await pool.query(
+      `SELECT u.name AS studentName
+       FROM students s
+       JOIN users u ON s.userID = u.userID
+       WHERE s.studentID = ?`,
+      [studentID]
+    );
+    const studentName = studentNameRows?.[0]?.studentName || 'Student';
+
+    // Build message: type "Lesson Request"
+    const subjectLine = `${studentName} requested a lesson`;
+    const body = [
+      `Subject: ${subject}`,
+      `Date: ${date}`,
+      `Start Time: ${startTime}`,
+      `Duration: ${duration} minutes`,
+      total_fee != null ? `Total Fee: R ${Number(total_fee).toFixed(2)}` : null,
+    ].filter(Boolean).join('\n');
+
+    // Insert message (sender=student, receiver=tutor)
+    const insertMsgSql = `
+      INSERT INTO messages (senderID, receiverID, subject, body, type)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    await pool.query(insertMsgSql, [
+      studentID,
+      tutorID,
+      subjectLine,
+      body,
+      'Lesson Request',
+    ]);
+
+    return res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('createLesson error:', err);
+    return res.status(500).json({ error: 'Failed to create lesson' });
+  }
 };
 
 // Example controller for GET /api/lessons
@@ -22,7 +70,7 @@ exports.getLessonsForTutor = async (req, res) => {
     const tutorID = req.query.tutorID;
     try {
         const [rows] = await pool.query(
-            `SELECT l.lessonID, l.status, u.name AS studentName, u.image AS studentImage, l.date, l.startTime, l.endTime, l.subject, s.address
+            `SELECT l.lessonID, l.status, u.name AS studentName, u.image AS studentImage, l.total_fee,l.date, l.startTime, l.endTime, l.subject, s.address
              FROM lessons l
              LEFT JOIN students s ON l.studentID = s.studentID
              LEFT JOIN users u ON s.userID = u.userID
@@ -77,57 +125,53 @@ exports.deleteLesson = async (req, res) => {
 };
 
 exports.getAcceptedLessons = async (req, res) => {
-    const pool = require('../config/db');
-    const { userID, role } = req.query;
+  const pool = require('../config/db');
+  const { userID, role } = req.query;
 
-    let query = "";
-    let params = [];
+  let query = "";
+  let params = [];
 
-    if (role === "Student") {
-        const [studentRows] = await pool.query(
-            "SELECT studentID FROM students WHERE userID = ?",
-            [userID]
-        );
-        if (studentRows.length === 0) {
-            return res.json([]);
-        }
-        const studentID = studentRows[0].studentID;
-
-        query = `
-            SELECT l.*, u.name AS tutorName, u.image AS tutorImage
-            FROM lessons l
-            JOIN Tutors t ON l.tutorID = t.tutorID
-            JOIN students s ON l.studentID = s.studentID
-            JOIN users u ON t.userID = u.userID
-            WHERE l.studentID = ?
-            AND l.status = 'accepted'
-            ORDER BY l.date ASC
-        `;
-        params = [studentID];
-    } else if (role === "Tutor") {
-        // Get lessons for this tutor, join users for student info
-        query = `
-            SELECT l.*, u.name AS studentName, u.image AS studentImage
-            FROM lessons l
-            JOIN students s ON l.studentID = s.studentID
-            JOIN users u ON s.userID = u.userID
-            WHERE l.tutorID = ?
-            AND l.status = 'accepted'
-            ORDER BY l.date ASC
-        `;
-        params = [userID];
-    } else {
-        // For admin or other roles, return empty or handle as needed
-        return res.json([]);
+  if (role === "Student") {
+    const [studentRows] = await pool.query(
+      "SELECT studentID FROM students WHERE userID = ?",
+      [userID]
+    );
+    if (studentRows.length === 0) {
+      return res.json([]);
     }
+    const studentID = studentRows[0].studentID;
 
-    try {
-        
-        const [rows] = await pool.query(query, params);
-        
-        res.json(rows);
-    } catch (err) {
-        console.error("Failed to fetch accepted lessons:", err);
-        res.status(500).json({ error: "Failed to fetch accepted lessons" });
-    }
+    query = `
+      SELECT l.*, u.name AS tutorName, u.image AS tutorImage, s.address AS address
+      FROM lessons l
+      JOIN Tutors t ON l.tutorID = t.tutorID
+      JOIN students s ON l.studentID = s.studentID
+      JOIN users u ON t.userID = u.userID
+      WHERE l.studentID = ?
+      AND l.status = 'accepted'
+      ORDER BY l.date ASC
+    `;
+    params = [studentID];
+  } else if (role === "Tutor") {
+    query = `
+      SELECT l.*, u.name AS studentName, u.image AS studentImage, s.address AS address
+      FROM lessons l
+      JOIN students s ON l.studentID = s.studentID
+      JOIN users u ON s.userID = u.userID
+      WHERE l.tutorID = ?
+      AND l.status = 'accepted'
+      ORDER BY l.date ASC
+    `;
+    params = [userID];
+  } else {
+    return res.json([]);
+  }
+
+  try {
+    const [rows] = await pool.query(query, params);
+    res.json(rows);
+  } catch (err) {
+    console.error("Failed to fetch accepted lessons:", err);
+    res.status(500).json({ error: "Failed to fetch accepted lessons" });
+  }
 };

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import "./css/onboarding.css";
 import onboardingImage from "./assets/calendarImage.png";
 import { useNavigate } from "react-router-dom";
-import { useSEO } from '../../lib/seo';
 import logo from '../reusableAssets/logo.png';
 import { api, endpoints } from '../../api/client';
 
@@ -25,7 +24,7 @@ function Onboarding() {
 
   // Tutor fields
   const [bio, setBio] = useState("");
-  const [subjects, setSubjects] = useState("");        // comma-separated
+  const [subjects, setSubjects] = useState("");        // comma-separated (backend expects string)
   const [qualifications, setQualifications] = useState("");
   const [availability, setAvailability] = useState("");
   // Replace the simple availability string for tutors with a structured state
@@ -34,11 +33,10 @@ function Onboarding() {
     satSun: { enabled: false, start: "", end: "" },
   });
 
-  useSEO({
-    title: 'Tutor Aid — Onboarding',
-    description: 'University Project: Tell us about yourself to personalize your Tutor Aid experience.',
-    canonical: 'https://gabydv.xyz/onboarding',
-  });
+  // ADD: subjects table data + selection
+  const [allSubjects, setAllSubjects] = useState([]);          // [{ subjectID, name }]
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState([]); // ['Math', 'English', ...]
 
   useEffect(() => {
     const id = localStorage.getItem("userID");
@@ -66,6 +64,13 @@ function Onboarding() {
           if (t) {
             setBio(t.bio || '');
             setSubjects(t.subjects || '');
+            // hydrate selection from stored comma-separated list
+            const parsed = String(t.subjects || '')
+              .split(',')
+              .map(s => s.trim())
+              .filter(Boolean);
+            setSelectedSubjects(parsed);
+
             setQualifications(t.qualifications || '');
             // Try to hydrate availability into the structured state if it follows "Mon-Fri: HH:MM-HH:MM; Sat-Sun: HH:MM-HH:MM"
             setAvailability(t.availability || '');
@@ -82,6 +87,33 @@ function Onboarding() {
       }
     })();
   }, [navigate]);
+
+  // ADD: load subjects from Subjects table
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      setSubjectsLoading(true);
+      try {
+        const rows = await api.get(endpoints.subjects());
+        if (!ignore) setAllSubjects(Array.isArray(rows) ? rows : []);
+      } catch {
+        if (!ignore) setAllSubjects([]);
+      } finally {
+        if (!ignore) setSubjectsLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, []);
+
+  // ADD: toggle subject selection and keep subjects string in sync
+  const toggleSubject = (name) => {
+    setSelectedSubjects(prev => {
+      const has = prev.includes(name);
+      const next = has ? prev.filter(s => s !== name) : [...prev, name];
+      setSubjects(next.join(', ')); // backend expects comma-separated
+      return next;
+    });
+  };
 
   const validateStudent = () => {
     const e = {};
@@ -134,7 +166,7 @@ function Onboarding() {
 
       await api.put(endpoints.tutorByUser(userID), {
         bio,
-        subjects,
+        subjects, // already synced from selectedSubjects
         qualifications,
         availability: availabilityStr.trim(),
       });
@@ -232,7 +264,7 @@ function Onboarding() {
             </form>
           ) : (
             <form onSubmit={(e) => e.preventDefault()} className="space-y-4 w-full">
-              <div className="flex flex-row item-start gap-2">
+              <div className="flex flex-col item-start gap-2">
                 <label>Bio</label>
                 <textarea
                   id="bio" name="bio" rows={3} value={bio}
@@ -242,17 +274,38 @@ function Onboarding() {
               </div>
               {errors.bio && <span className="text-red-600 text-xs">{errors.bio}</span>}
 
-              <div className="flex flex-row item-start gap-2">
+              {/* REPLACED: Subjects input -> multi-select from Subjects table */}
+              <div className="flex flex-col item-start gap-2">
                 <label>Subjects</label>
-                <input
-                  type="text" id="subjects" name="subjects" placeholder="e.g., Maths, Science, English"
-                  value={subjects} onChange={(e) => setSubjects(e.target.value)}
-                  className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                />
+                <div className="bg-transparent rounded-lg border-2 border-gray-300 shadow-inner w-full p-2 max-h-48 overflow-y-auto">
+                  {subjectsLoading ? (
+                    <div className="text-sm text-gray-500">Loading subjects…</div>
+                  ) : allSubjects.length === 0 ? (
+                    <div className="text-sm text-gray-500">No subjects available.</div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {allSubjects.map((s) => (
+                        <label
+                          key={s.subjectID || s.name}
+                          className="flex items-center gap-2 text-sm text-gray-800"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSubjects.includes(s.name)}
+                            onChange={() => toggleSubject(s.name)}
+                          />
+                          <span>{s.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* keep string for API payload */}
+                <input type="hidden" name="subjects" value={subjects} />
               </div>
               {errors.subjects && <span className="text-red-600 text-xs">{errors.subjects}</span>}
 
-              <div className="flex flex-row item-start gap-2">
+              <div className="flex flex-col item-start gap-2">
                 <label>Qualifications</label>
                 <input
                   type="text" id="qualifications" name="qualifications" value={qualifications}

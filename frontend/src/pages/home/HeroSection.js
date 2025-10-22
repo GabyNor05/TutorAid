@@ -39,7 +39,7 @@ const HeroSection = () => {
                 <p className="text-base md:text-xl leading-relaxed mb-6">
                   This is a University Project, so feel free to look around and explore, I would really appreciate your feedback and I need google analytics to present from this app. Please note that this Tutor Aid and its services are not real. 
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <div className="flex flex-row sm:flex-row gap-4 justify-center md:justify-start">
                   <button className="login-button text-white px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0" onClick={() => navigate('/login')}>Login</button>
                   <button
                     className="signup-button text-white border border-yellow-400 px-6 py-3 rounded-[4px] font-semibold transition w-40 h-12 mt-2 sm:mt-0"

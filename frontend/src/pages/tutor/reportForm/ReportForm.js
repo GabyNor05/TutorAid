@@ -2,8 +2,14 @@ import React, { useState, useEffect } from "react";
 import "./reportForm.css";
 import { CaretLeft } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
+import {useSEO} from '../../../lib/seo';
 
 function ReportForm() {
+    useSEO({
+        title: 'Tutor Aid — Report Form',
+        description: 'University Project: Submit a report for a student after a lesson.',
+        canonical: 'https://gabydv.xyz/reportform',
+      });
     const [students, setStudents] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState("");

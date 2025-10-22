@@ -279,10 +279,10 @@ function Navbar() {
                   </div>
                   <div className="flex flex-row items-center justify-between">
                     <div>
-                      <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
+                      <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/")}> <House size={22} /> Home</button>
                     </div>
                     <div>
-                      <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-col item-center gap-2" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
+                      <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
                     </div>
                   </div>
                   
@@ -303,12 +303,12 @@ function Navbar() {
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userexperiencefeedback")}><ClipboardText size={22} /> User Experience Feedback</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/managereports")}><Megaphone size={22} /> Manage Reports</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/managereports")}><Megaphone size={22} /> Manage Reports</button>
                       </>
                     )}
                     {role === "Student" && (
                       <>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100" onClick={() => handleNav("/booking")}><Calendar size={22} /> Book Lessons</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/booking")}><Calendar size={22} /> Book Lessons</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/requestform")}><QuestionMark size={22} /> Request Form</button>
                       </>
                     )}
@@ -328,7 +328,7 @@ function Navbar() {
                   <button className="w-full px-4 py-2 rounded-[4px] bg-[#2B5561] text-white font-semibold hover:bg-[#2B5561]/70" onClick={() => handleNav("/login")}>
                     Login
                   </button>
-                  <button className="w-full px-4 py-2 rounded-md border border-yellow-500 text-black font-semibold hover:bg-yellow-500 hover:text-white" onClick={() => handleNav("/signup")}>
+                  <button className="w-full px-4 py-2 rounded-md border border-[#2B5561] text-[#2B5561] font-semibold hover:bg-[#2B5561]/50 hover:text-white" onClick={() => handleNav("/signup")}>
                     Sign Up
                   </button>
                 </div>

@@ -29,3 +29,16 @@
     color: white
 }
 
+.subscribe-button{
+    background: linear-gradient(270deg, #E9AD53 0%, #866026 100%);
+    font-weight: 600;
+    border: none;
+    transition: background 0.8s ease;
+}
+
+.subscribe-button:hover {
+    background: linear-gradient(270deg, #866026 0%, #E9AD53 100%);
+    box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
+    transition: background 0.8s ease;
+}
+

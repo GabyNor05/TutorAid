@@ -32,6 +32,7 @@ export const api = {
 export const endpoints = {
   tutors: () => '/api/tutors',
   subjects: () => '/api/subjects',
+  subjectById: (id) => `/api/subjects/${id}`,
   users: () => '/api/users',
   userById: (id) => `/api/users/${id}`,
   login: () => '/api/users/login',
@@ -49,6 +50,14 @@ export const endpoints = {
   feedback: () => '/api/feedback',
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
   ratings: () => '/api/ratings',
+  tutorsBySubject: (subject) => `/api/users/tutors/by-subject/${encodeURIComponent(subject)}`,
+  tutorAvailability: (id) => `/api/users/tutor/${id}/availability`,
 };
 
 export { API_URL };
+
+
+export const subjectsApi = {
+  list: () => api.get(endpoints.subjects()),
+  get: (id) => api.get(endpoints.subjectById(id)),
+};

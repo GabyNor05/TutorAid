@@ -17,25 +17,25 @@ function Footer() {
             Empowering students through quality tutoring and personal growth across South Africa.
           </p>
           <form
-            className="w-full max-w-sm sm:max-w-md lg:max-w-none flex flex-col sm:flex-row"
+            className="w-full max-w-sm sm:max-w-md lg:max-w-none flex flex-col gap-2 sm:flex-row"
             noValidate
           >
             <input
               type="email"
               placeholder="Enter email"
               autoComplete="email"
-              className="w-full sm:w-2/3 sm:flex-1 min-w-0 p-2.5 rounded-lg sm:rounded-l-lg sm:rounded-r-none border border-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-transparent placeholder-white/80"
+              className="w-2/3 sm:w-2/3 sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-transparent placeholder-white/80 h-10"
             />
             <button
-              className="flex justify-center text-center w-full sm:w-1/3 mt-0 sm:mt-0 sm:ml-2 bg-yellow-500 text-white px-4 py-2 rounded-lg sm:rounded-r-lg sm:rounded-l-none hover:bg-yellow-500 transition" onClick={onSubscribe}
+              className="subscribe-button flex justify-center text-center w-1/3 sm:w-1/3 mt-0 sm:mt-0 sm:ml-2 transition h-10" onClick={onSubscribe}
             >
               Subscribe
             </button>
           </form>
         </div>
-
-        {/* Quick Navigation */}
-        <div>
+        <div >
+          {/* Quick Navigation */}
+        <div className="flex flex-col justify-center items-center text-center">
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Quick Navigation</h3>
           <ul className="space-y-2 text-sm">
             <li><a href="/" className="hover:text-yellow-500">Home</a></li>
@@ -79,6 +79,8 @@ function Footer() {
             </a>
           </div>
         </div>
+        </div>
+        
       </div>
 
       {/* Bottom bar */}
