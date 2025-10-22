@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { List, EnvelopeSimple, X, House, User, SquaresFour, SignOut, UserPlus, File, ClipboardText, Calendar, NotePencil, UsersThree, ClockCountdown, QuestionMark, ListChecks, ChatText, Megaphone} from "@phosphor-icons/react";
+import {
+  List as ListIcon,            // alias to avoid duplicate identifier
+  EnvelopeSimple,
+  X,
+  House,
+  SquaresFour,
+  UserPlus,
+  ClipboardText,
+  Calendar,
+  UsersThree,
+  ClockCountdown,
+  QuestionMark,
+  ListChecks,
+  ChatText,
+  Megaphone,
+  UserList                     // needed for "Manage Users" icon
+} from "@phosphor-icons/react";
 import Logo from "../reusableAssets/logo.png";
 import MessageCard from "./MessageCard";
 import { api, endpoints } from "../../api/client";
@@ -206,14 +222,14 @@ function Navbar() {
               <button
                 className="rounded-md px-3 py-2 font-semibold"
                 onClick={() => {
-                  setMobileOpen(false);           // exclusive with mobile drawer
+                  setMobileOpen(false);
                   setShowMenu((p) => !p);
                 }}
                 aria-haspopup="menu"
                 aria-expanded={showMenu}
                 title="Profile menu"
               >
-                <List size={24} weight="bold" />
+                <ListIcon size={24} weight="bold" />
               </button>
 
               {/* Desktop overlay to match mobile drawer behavior */}
@@ -271,12 +287,12 @@ function Navbar() {
           <button
             className="rounded-md p-2"
             onClick={() => {
-              setShowMenu(false);           // exclusive with profile menu
+              setShowMenu(false);
               setMobileOpen(true);
             }}
             aria-label="Open menu"
           >
-            <List size={24} weight="bold" />
+            <ListIcon size={24} weight="bold" />
           </button>
         </div>
       </nav>
