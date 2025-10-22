@@ -5,7 +5,7 @@ import Clock from "./assets/clock.svg";
 import People from "./assets/people.svg";
 import Task from "./assets/task.svg";
 import LessonCards from "../generalComponents/lessonCards";
-import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NotePencil, UsersThree, ClockCountdown, QuestionMark, ListChecks, ChatText, Megaphone, Clipboard, Calandar, List } from "@phosphor-icons/react";
+import { File, ClipboardText, UserCirclePlusIcon, WarningIcon, Calendar, NotePencil, UsersThree, ClockCountdown, QuestionMark, ListChecks, ChatText, Megaphone, Clipboard, Calandar, List, UserList } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
 import { useSEO } from '../../lib/seo';
 
