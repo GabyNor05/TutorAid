@@ -37,14 +37,15 @@ async function sendEmail({ to, subject, text }) {
     console.log('[email] RESEND_API_KEY missing; skipping send', { to, subject });
     return { ok: false, skipped: true, reason: 'no-api-key' };
   }
-  const from = process.env.RESEND_FROM || 'Tutor Aid <tutoraid.dv200@gmail.com>';
+  // Use verified domain sender if set; otherwise fallback to Resend onboarding
+  const from = process.env.RESEND_FROM || 'Tutor Aid <onboarding@resend.dev>';
   try {
     const { error } = await resend.emails.send({ from, to, subject, text });
     if (error) throw error;
     return { ok: true };
   } catch (err) {
-    console.error('[resend] send failed:', err.message || err.toString());
-    return { ok: false, reason: err.message };
+    console.error('[resend] send failed:', err?.message || String(err), { to, from });
+    return { ok: false, reason: err?.message || 'unknown' };
   }
 }
 
@@ -196,10 +197,13 @@ exports.sendOtp = async (req, res) => {
     const result = await sendEmail({
       to: email,
       subject: 'Tutor Aid - Verification OTP',
-      text: `Please use the One Time Pin(OTP) below to verify your account. \n\n${otp} \n\nThis OTP is valid for 1 minute. `,
+      text: `Please use the One Time Pin(OTP) below to verify your account.\n\n${otp}\n\nThis OTP is valid for 1 minute.`,
     });
 
-    return res.json({ success: true, delivered: !!result.ok });
+    // Include reason in non-production to diagnose why others don’t receive
+    const payload = { success: true, delivered: !!result.ok };
+    if (!result.ok && process.env.NODE_ENV !== 'production') payload.reason = result.reason;
+    return res.json(payload);
   } catch (err) {
     console.error('sendOtp error:', err);
     return res.json({ success: true, delivered: false });
