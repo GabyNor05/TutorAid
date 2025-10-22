@@ -52,7 +52,7 @@ export const endpoints = {
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
   ratings: () => '/api/ratings',
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
-  tutorAvailability: (id) => `/api/tutors/${id}/availability`,
+  tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
 };
 
 export { API_URL };

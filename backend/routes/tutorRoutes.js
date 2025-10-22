@@ -23,4 +23,8 @@ router.get('/by-user/:userID', tutorController.getTutorByUserID);
 // Save tutor profile by user ID
 router.put('/by-user/:userID', tutorController.saveTutorProfile);
 
+// ADD these routes
+router.get('/by-subject/:subject', tutorController.getTutorsBySubject);
+router.get('/:tutorID/availability', tutorController.getTutorAvailability);
+
 module.exports = router;

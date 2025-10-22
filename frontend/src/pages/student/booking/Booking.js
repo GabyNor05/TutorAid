@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./booking.css";
 import { api, endpoints } from "../../../api/client";
+import { analytics } from '../../../lib/analytics';
 
 // Reusable helper
 function getAvailableSubjects(tutors, subjects) {
@@ -224,6 +225,13 @@ function Booking() {
         };
         setPendingBooking(lessonPayload);
         setConfirmOpen(true); // only open modal
+
+        analytics.event('lesson_booking_started', {
+          subject: selectedSubject,
+          tutor_id: selectedTutor,
+          duration_min: parseInt(duration || '0', 10),
+          has_availability: availability.length > 0,
+        });
       } catch (err) {
         alert(err.message || "Booking failed");
       }
@@ -242,6 +250,14 @@ function Booking() {
         setPendingBooking(null);
         alert("Lesson booked!");
         navigate("/dashboard");
+
+        analytics.event('lesson_booking_confirmed', {
+          subject: pendingBooking.subject,
+          tutor_id: pendingBooking.tutorID,
+          duration_min: pendingBooking.duration,
+          value: Number(calcTotalFee()),   // GA4 monetary value
+          currency: 'ZAR',
+        });
       } catch (err) {
         setConfirmError(err.message || "Failed to book lesson.");
       }
@@ -328,6 +344,7 @@ function Booking() {
                                             const data = await api.get(endpoints.tutorsBySubject(subject));
                                             const list = normalizeTutors(data);
                                             setTutors(list);
+                                            analytics.event('subject_selected', { subject });
                                             if (list.length === 0) {
                                               console.warn("No tutors returned for subject:", subject, data);
                                             }
@@ -390,6 +407,8 @@ function Booking() {
                                             if (userID) {
                                               fetchTutorDetails(userID);
                                             }
+
+                                            analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: userID || tutorID });
                                         }}
                                     >
                                         <option value="">Select Tutor</option>

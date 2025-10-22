@@ -6,6 +6,7 @@ import WhiteWallpaper from '../reusableAssets/whitepaper.png';
 import logo from '../reusableAssets/logo.png';
 import { useSEO } from '../../lib/seo';
 import { api, endpoints } from '../../api/client';
+import { analytics } from '../../lib/analytics';
 
 function Signup() {
   const navigate = useNavigate();
@@ -64,6 +65,8 @@ function Signup() {
       localStorage.setItem("userID", userID);
       setCreatedUserId(userID);
       setShowRoleModal(true); // prompt for role
+
+      analytics.event('sign_up', { method: 'password' });
     } catch (error) {
       setErrors({ api: error.message || "Signup failed. Please try again." });
     } finally {
@@ -78,6 +81,9 @@ function Signup() {
       // Navigate based on selection
       if (role === 'Student') navigate('/onboarding');
       else navigate('/onboarding');
+
+      analytics.setUser(createdUserId, { role });
+      analytics.event('role_selected', { role });
     } catch (e) {
       setPopupMessage("Failed to assign role. Please try again.");
     }

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { X } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
 import { useSEO } from '../../lib/seo';
+import { analytics } from '../../api/../lib/analytics';
 
 function Login() {
   const navigate = useNavigate();
@@ -48,7 +49,10 @@ function Login() {
           setBlockedModalOpen(true);
           setStudentID(res.student.studentID);
         } else if (res.userID) {
-          localStorage.setItem("userID", res.userID);
+          const { userID, role } = res;
+          localStorage.setItem('userID', userID);
+          analytics.setUser(userID, { role });            // set user_id + role
+          analytics.event('login', { method: 'password' }); // GA4 recommended event
           navigate("/otp");
         } else {
           setErrors({ general: "Login failed" });

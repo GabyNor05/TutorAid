@@ -23,17 +23,12 @@ import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
 import { EnvelopeSimple } from "@phosphor-icons/react"; 
+import { analytics } from './lib/analytics';
 
 function usePageTracking() {
   const location = useLocation();
   React.useEffect(() => {
-    if (!window.gtag) return;
-    window.gtag('event', 'page_view', {
-      page_path: location.pathname + location.search,
-      page_location: window.location.href,
-      page_title: document.title,
-      debug_mode: true,
-    });
+    analytics.pageView(location.pathname + location.search, document.title);
   }, [location]);
 }
 

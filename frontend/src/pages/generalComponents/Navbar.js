@@ -186,15 +186,6 @@ function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {userId ? (
             <>
-              {/* Inbox button */}
-              <button
-                className="relative rounded-full p-2 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-white/50"
-                onClick={() => setInboxOpen(true)}
-                title="Inbox"
-              >
-                <EnvelopeSimple size={24} weight="bold" />
-              </button>
-
               {/* Open the same side panel on desktop */}
               <button
                 className="rounded-md px-3 py-2 font-semibold"
