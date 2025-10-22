@@ -34,18 +34,17 @@ function normalizeTutors(data) {
     ? data.rows
     : [];
 
-  // Map to { userID, name } expected by your UI
-  return list.map((t) => ({
-    userID:
-      t.userID ??
-      t.user_id ??
-      t.user?.userID ??
-      t.user?.id ??
-      t.tutorUserID ??
-      t.tutor_user_id ??
-      t.id, // last resort
-    name: t.name ?? t.fullName ?? t.userName ?? t.user?.name ?? "Tutor",
-  })).filter(x => x.userID && x.name);
+  return list
+    .map((t) => {
+      const tutorID =
+        t.tutorID ?? t.tutor_id ?? t.id ?? t.tutorUserID ?? t.tutor_user_id ?? null;
+      const userID =
+        t.userID ?? t.user_id ?? t.user?.userID ?? t.user?.id ?? null;
+      const name = t.name ?? t.fullName ?? t.userName ?? t.user?.name ?? "Tutor";
+      return { tutorID, userID, name };
+    })
+    // Accept if we have a name and at least one identifier
+    .filter((x) => x.name && (x.tutorID || x.userID));
 }
 
 function Booking() {
@@ -304,6 +303,8 @@ function Booking() {
         setAvailableSubjects(getAvailableSubjects(allTutors, allSubjects));
     }, [allTutors, allSubjects]);
 
+    const [selectedTutorUserID, setSelectedTutorUserID] = useState(null);
+
     return (
         <div className="page-background">
             <div className="booking-container">
@@ -318,15 +319,21 @@ function Booking() {
                                 onChange={async e => {
                                     const subject = e.target.value;
                                     setSelectedSubject(subject);
-                                    setSelectedTutor(""); // Reset tutor selection
+                                    setSelectedTutor(""); // reset selected tutorID
+                                    setSelectedTutorUserID(null);
                                     setSelectedTutorInfo(null);
                                     setSelectedDate(null);
                                     if (subject) {
                                         try {
                                             const data = await api.get(endpoints.tutorsBySubject(subject));
-                                            setTutors(normalizeTutors(data)); 
-                                        } catch {
-                                            setTutors([]);
+                                            const list = normalizeTutors(data);
+                                            setTutors(list);
+                                            if (list.length === 0) {
+                                              console.warn("No tutors returned for subject:", subject, data);
+                                            }
+                                        } catch (err) {
+                                          console.error("tutorsBySubject failed:", err);
+                                          setTutors([]);
                                         }
                                     } else {
                                         setTutors([]);
@@ -352,29 +359,48 @@ function Booking() {
                                     <select
                                         value={selectedTutor}
                                         onChange={async e => {
-                                            const tutorID = e.target.value;
-                                            setSelectedTutor(tutorID);
+                                            const pickedId = e.target.value; // could be tutorID or userID
+                                            // Find the tutor object by matching either id
+                                            const tObj = tutors.find(
+                                              (t) =>
+                                                String(t.tutorID ?? "") === pickedId ||
+                                                String(t.userID ?? "") === pickedId
+                                            );
+                                            const tutorID = tObj?.tutorID ?? null;
+                                            const userID = tObj?.userID ?? null;
+
+                                            setSelectedTutor(tutorID ?? userID ?? ""); // for availability, prefer tutorID
+                                            setSelectedTutorUserID(userID ?? null);    // for profile card
                                             setSelectedDate(null);
                                             setAvailability([]);
                                             setSelectedTutorInfo(null);
+
                                             if (tutorID) {
-                                                try {
-                                                    const data = await api.get(endpoints.tutorAvailability(tutorID));
-                                                    const availStr = data?.availability || data?.[0]?.availability || "";
-                                                    const parsed = parseAvailabilityString(availStr);
-                                                    setAvailability(parsed);
-                                                } catch {
-                                                    setAvailability([]);
-                                                }
-                                                // Load tutor details for the card
-                                                fetchTutorDetails(tutorID);
+                                              try {
+                                                const data = await api.get(endpoints.tutorAvailability(tutorID));
+                                                const availStr = data?.availability || data?.[0]?.availability || "";
+                                                const parsed = parseAvailabilityString(availStr);
+                                                setAvailability(parsed);
+                                              } catch {
+                                                setAvailability([]);
+                                              }
+                                            }
+
+                                            // Load tutor details for the card only if we have userID
+                                            if (userID) {
+                                              fetchTutorDetails(userID);
                                             }
                                         }}
                                     >
                                         <option value="">Select Tutor</option>
-                                        {tutors.map(tutor => (
-                                            <option key={tutor.userID} value={tutor.userID}>{tutor.name}</option>
-                                        ))}
+                                        {tutors.map((tutor, idx) => {
+                                          const value = String(tutor.tutorID ?? tutor.userID);
+                                          return (
+                                            <option key={`${value}-${idx}`} value={value}>
+                                              {tutor.name}
+                                            </option>
+                                          );
+                                        })}
                                     </select>
                                 </div>
                             )}
@@ -456,7 +482,7 @@ function Booking() {
                         />
                     </div>
 
-                    <button type="submit" className="login-btn">Book Lesson</button>
+                    <button type="submit" className="login-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70">Book Lesson</button>
                 </form>
             </div>
 
