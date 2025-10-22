@@ -51,8 +51,8 @@ export const endpoints = {
   messages: () => '/api/messages',
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
   ratings: () => '/api/ratings',
-  tutorsBySubject: (subject) => `/api/users/tutors/by-subject/${encodeURIComponent(subject)}`,
-  tutorAvailability: (id) => `/api/users/tutor/${id}/availability`,
+  tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
+  tutorAvailability: (id) => `/api/tutors/${id}/availability`,
 };
 
 export { API_URL };

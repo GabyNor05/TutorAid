@@ -22,6 +22,32 @@ function getAvailableSubjects(tutors, subjects) {
   return subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
 }
 
+// Normalize possible API shapes for tutors
+function normalizeTutors(data) {
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.tutors)
+    ? data.tutors
+    : Array.isArray(data?.users)
+    ? data.users
+    : Array.isArray(data?.rows)
+    ? data.rows
+    : [];
+
+  // Map to { userID, name } expected by your UI
+  return list.map((t) => ({
+    userID:
+      t.userID ??
+      t.user_id ??
+      t.user?.userID ??
+      t.user?.id ??
+      t.tutorUserID ??
+      t.tutor_user_id ??
+      t.id, // last resort
+    name: t.name ?? t.fullName ?? t.userName ?? t.user?.name ?? "Tutor",
+  })).filter(x => x.userID && x.name);
+}
+
 function Booking() {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState("");
@@ -283,8 +309,10 @@ function Booking() {
             <div className="booking-container">
                 <form className="booking-form" onSubmit={handleSubmit}>
                     <div className="booking-form-group">
+                        <h2 className="booking-form-title">Book a Lesson</h2>
                         <div className="booking-top-row">
-                            <label>Subject:</label>
+                            <div className="flex flex-col justify-center items-start">
+                                <label>Subject:</label>
                             <select
                                 value={selectedSubject}
                                 onChange={async e => {
@@ -296,7 +324,7 @@ function Booking() {
                                     if (subject) {
                                         try {
                                             const data = await api.get(endpoints.tutorsBySubject(subject));
-                                            setTutors(Array.isArray(data) ? data : []);
+                                            setTutors(normalizeTutors(data)); 
                                         } catch {
                                             setTutors([]);
                                         }
@@ -315,6 +343,8 @@ function Booking() {
                                     <option key={subject} value={subject}>{subject}</option>
                                 ))}
                             </select>
+                            </div>
+                            
 
                             {tutors.length > 0 && (
                                 <div className="">
@@ -324,7 +354,7 @@ function Booking() {
                                         onChange={async e => {
                                             const tutorID = e.target.value;
                                             setSelectedTutor(tutorID);
-                                            setSelectedDate(null); // Reset date when tutor changes
+                                            setSelectedDate(null);
                                             setAvailability([]);
                                             setSelectedTutorInfo(null);
                                             if (tutorID) {
@@ -426,7 +456,7 @@ function Booking() {
                         />
                     </div>
 
-                    <button type="submit" className="login-button">Book Lesson</button>
+                    <button type="submit" className="login-btn">Book Lesson</button>
                 </form>
             </div>
 
