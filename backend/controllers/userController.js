@@ -335,7 +335,16 @@ exports.addStaff = async (req, res) => {
 // Assign a role after signup and create role-specific row if missing
 exports.assignRole = async (req, res) => {
   const { id } = req.params;
-  const { role } = req.body || {};
+  const {
+    role,
+    // Optional tutor fields from onboarding step 1
+    bio = '',
+    subjects = '',
+    qualifications = '',
+    availability = '',
+    fee_per_hour = 0,
+    experience = '',
+  } = req.body || {};
   if (!role) return res.status(400).json({ error: 'role required' });
 
   try {
@@ -344,10 +353,33 @@ exports.assignRole = async (req, res) => {
     if (role === 'Tutor') {
       const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
       if (!t.length) {
+        // Create tutor row with provided fields
         await pool.query(
           `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
-           VALUES (?, '', '', '', '', 0, '')`,
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [id, bio, subjects, qualifications, availability, fee_per_hour ?? 0, experience]
+        );
+      } else {
+        // Update existing row with any provided fields (keep existing if blanks)
+        const [currRows] = await pool.query(
+          `SELECT bio, subjects, qualifications, availability, fee_per_hour, experience
+             FROM tutors WHERE userID = ? LIMIT 1`,
           [id]
+        );
+        const curr = currRows?.[0] || {};
+        await pool.query(
+          `UPDATE tutors
+             SET bio = ?, subjects = ?, qualifications = ?, availability = ?, fee_per_hour = ?, experience = ?
+           WHERE userID = ?`,
+          [
+            bio || curr.bio || '',
+            subjects || curr.subjects || '',
+            qualifications || curr.qualifications || '',
+            availability || curr.availability || '',
+            fee_per_hour ?? curr.fee_per_hour ?? 0,
+            experience || curr.experience || '',
+            id,
+          ]
         );
       }
     } else if (role === 'Student') {

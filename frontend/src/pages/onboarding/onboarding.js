@@ -164,13 +164,24 @@ function Onboarding() {
         availabilityStr += `Sat-Sun: ${avail.satSun.start}-${avail.satSun.end}`;
       }
 
+      // IMPORTANT: assign role first and pass tutor fields, so the row is created with data
+      await api.put(endpoints.assignRole(userID), {
+        role: 'Tutor',
+        bio,
+        subjects,              // comma-separated
+        qualifications,
+        availability: availabilityStr.trim(),
+        // fee_per_hour / experience are set in step 2 (Onboarding2)
+      });
+
+      // Optional: ensure values saved (idempotent)
       await api.put(endpoints.tutorByUser(userID), {
         bio,
-        subjects, // already synced from selectedSubjects
+        subjects,
         qualifications,
         availability: availabilityStr.trim(),
       });
-      await api.put(endpoints.assignRole(userID), { role: 'Tutor' });
+
       navigate('/onboarding2'); 
     } catch (err) {
       setErrors({ api: err.message || 'Onboarding failed. Please try again.' });
