@@ -6,31 +6,31 @@ const path = require('path');
 
 const app = express();
 
-// CORS (allow your domains + Vercel previews)
-const allowOrigin = (origin) => {
-  if (!origin) return true; // non-browser
-  try {
-    const h = new URL(origin).hostname;
-    return (
-      origin === 'https://gabydv.xyz' ||
-      origin === 'https://www.gabydv.xyz' ||
-      h === 'localhost' ||
-      h.endsWith('.vercel.app')
-    );
-  } catch {
-    return false;
-  }
-};
+// CORS config
+const allowed = new Set([
+  process.env.FRONTEND_URL,                 // e.g. https://your-site.vercel.app
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://gabydv.xyz',
+].filter(Boolean));
 
-app.use(cors({
-  origin: (origin, cb) => (allowOrigin(origin) ? cb(null, true) : cb(new Error('Not allowed by CORS'))),
+const corsOptions = {
+  origin(origin, cb) {
+    // Allow same-origin or non-browser (e.g., curl)
+    if (!origin) return cb(null, true);
+    if (allowed.has(origin)) return cb(null, true);
+    // Allow any vercel preview/prod for this app
+    if (/\.vercel\.app$/.test(origin)) return cb(null, true);
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true, // allow cookies if you ever need them
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
-  credentials: false,
-}));
+  maxAge: 86400,
+};
 
-// Express 5: avoid '*' here
-app.options(/.*/, cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // preflight
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

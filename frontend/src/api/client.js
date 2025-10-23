@@ -8,22 +8,21 @@ const BASE = API_URL.replace(/\/+$/, '');
 
 async function request(method, url, data, options = {}) {
   const headers = new Headers(options.headers || {});
-  let body = undefined;
+  let body;
 
-  // Only set JSON headers if not sending FormData
   const isForm = typeof FormData !== 'undefined' && data instanceof FormData;
   if (!isForm) {
     headers.set('Content-Type', 'application/json');
     if (data !== undefined) body = JSON.stringify(data);
   } else {
-    body = data; // let the browser set multipart boundaries
+    body = data;
   }
 
-  const res = await fetch(`${BASE}${url}`, {   // FIX: use BASE instead of apiBase
+  const res = await fetch(`${BASE}${url}`, {
     method,
     headers,
     body,
-    credentials: 'include',
+    credentials: options.credentials || 'omit',   // CHANGED: don’t include cookies by default
   });
 
   if (!res.ok) {
