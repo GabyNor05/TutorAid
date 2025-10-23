@@ -2,16 +2,10 @@ import React, { useEffect, useState } from "react";
 import "./studentFiles.css";
 import StudentFileCard from "./studentFileCard";
 import { MagnifyingGlassIcon, FunnelSimple } from "@phosphor-icons/react"; 
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import {useSEO} from '../../../lib/seo';
+import { api, endpoints } from "../../../api/client"; 
 
 function StudentFiles() {
-    useSEO({
-        title: 'Tutor Aid — Student Files',
-        description: 'University Project: View and manage student files.',
-        canonical: 'https://gabydv.xyz/studentfiles',
-      });
     const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [statuses, setStatuses] = useState([]);
@@ -19,13 +13,13 @@ function StudentFiles() {
     const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
     const [showSortMenu, setShowSortMenu] = useState(false);
     const navigate = useNavigate();
-    const API_URL =  process.env.REACT_APP_API_URL;  
+
 
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const response = await axios.get(`${API_URL}/api/students`);
-                setStudents(response.data);
+                const data = await api.get(endpoints.students());
+                setStudents(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error('Error fetching students:', error);
             }
@@ -37,8 +31,8 @@ function StudentFiles() {
     useEffect(() => {
         const fetchStatuses = async () => {
             try {
-                const response = await axios.get(`${API_URL}/api/students/statuses`);
-                setStatuses(response.data); // Should be an array of status strings
+                const data = await api.get(endpoints.studentsStatuses());
+                setStatuses(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error('Error fetching statuses:', error);
             }
@@ -90,7 +84,7 @@ function StudentFiles() {
                     >
                         <option value="">All Statuses</option>
                         {statuses.map(status => (
-                            <option  className = "text-black" key={status} value={status}>{status}</option>
+                            <option className="text-black" key={status} value={status}>{status}</option>
                         ))}
                     </select>
                     <div className="relative">

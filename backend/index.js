@@ -30,7 +30,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('(.*)', cors(corsOptions)); // ✅ matches all paths
+
+// FIX: use a RegExp for Express 5 preflight, not a string
+app.options(/.*/, cors(corsOptions)); // handles all OPTIONS preflights
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -102,11 +104,6 @@ app.get('/uploads/progressnotes/:filename', (req, res) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', 'inline');
   res.sendFile(filePath);
-});
-
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
 });
 
 module.exports = app;

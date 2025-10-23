@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 import "./progressNotes.css";
 import PdfCard from "./PdfCard";
+import { api, endpoints } from "../../../../api/client"; // ADD
 
 function ProgressNotes({ studentID }) {
     const [notes, setNotes] = useState([]);
-    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/progressnotes/student/${studentID}`);
-                const data = await res.json();
-                setNotes(data);
+                const data = await api.get(endpoints.progressNotesByStudent(studentID)); // FIX
+                setNotes(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Error fetching progress notes:", err);
             }

@@ -22,7 +22,7 @@ async function request(method, url, data, options = {}) {
     method,
     headers,
     body,
-    credentials: options.credentials || 'omit',   // CHANGED: don’t include cookies by default
+    credentials: options.credentials || 'omit',
   });
 
   if (!res.ok) {
@@ -57,20 +57,28 @@ export const endpoints = {
   tutorByUser: (id) => `/api/tutors/by-user/${id}`,
   lessons: () => '/api/lessons',
   lessonReports: () => '/api/lessonReports',
+
+  // Progress Notes (match routes/progressNotesController)
   progressNotes: () => '/api/progressNotes',
+  progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
+  progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}/lesson-notes`,
+  progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
+  progressNotesUpload: () => '/api/progressNotes/upload',
+  progressNotesPublish: () => '/api/progressNotes/publish',
+
+  // Back-compat alias (if other code uses 'upload')
   upload: () => '/api/progressNotes/upload',
+
   feedback: () => '/api/feedback',
   messages: () => '/api/messages',
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
   ratings: () => '/api/ratings',
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
-  progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
   studentRequests: () => '/api/studentRequests',
 };
 
 export { API_URL };
-
 
 export const subjectsApi = {
   list: () => api.get(endpoints.subjects()),

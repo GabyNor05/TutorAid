@@ -3,23 +3,22 @@ import { useParams } from "react-router-dom";
 import "./studentFileView.css";
 import StudentFileViewCard from "./StudentFileViewCard";
 import ProgressNotes from "./progressNotes/ProgressNotes";
+import { api, endpoints } from "../../../api/client";
 
 function StudentFileView() {
     const { userID } = useParams();
     const [student, setStudent] = useState(null);
-    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const response = await fetch(`${API_URL}/api/students/by-user/${userID}`);
-                const data = await response.json();
-                setStudent(data);
+                const data = await api.get(endpoints.studentByUser(userID));
+                setStudent(Array.isArray(data) ? data[0] : data);
             } catch (error) {
                 console.error("Error fetching student:", error);
             }
         };
-        fetchStudent();
+        if (userID) fetchStudent();
     }, [userID]);
 
     if (!student) return <div>Loading...</div>;
