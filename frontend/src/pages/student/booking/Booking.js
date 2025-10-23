@@ -324,9 +324,10 @@ function Booking() {
     return (
         <div className="page-background">
             <div className="booking-container">
+                <h2 className="booking-form-title">Book a Lesson</h2>
                 <form className="booking-form" onSubmit={handleSubmit}>
                     <div className="booking-form-group">
-                        <h2 className="booking-form-title">Book a Lesson</h2>
+                        
                         <div className="booking-top-row">
                             <div className="flex flex-col justify-center items-start">
                                 <label>Subject:</label>
