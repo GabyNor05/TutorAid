@@ -41,7 +41,6 @@ export const endpoints = {
   assignRole: (id) => `/api/users/${id}/assign-role`,
   students: () => '/api/students',
   studentByUser: (id) => `/api/students/by-user/${id}`,
-  tutors: () => '/api/tutors',
   tutorByUser: (id) => `/api/tutors/by-user/${id}`,
   lessons: () => '/api/lessons',
   lessonReports: () => '/api/lessonReports',
@@ -53,6 +52,8 @@ export const endpoints = {
   ratings: () => '/api/ratings',
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
+  // ADD: published notes for a student
+  progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
 };
 
 export { API_URL };

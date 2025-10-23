@@ -1,38 +1,38 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "./css/userprofile.css";
 import UserCard from "./UserCards";
 import PdfCard from "../../tutor/studentFileView/progressNotes/PdfCard";
+import { api, endpoints } from "../../../api/client";
 
 function UserProfile() {
     const [user, setUser] = useState(null);
     const [notes, setNotes] = useState([]);
-    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const userId = localStorage.getItem("userID");
-        axios.get(`${API_URL}/api/users/${userId}`)
-            .then(res => {
-               
-                setUser(res.data);
-                if (res.data.role === "Student" && res.data.studentID) {
-                    
-                    axios.get(`${API_URL}/api/progressNotes/student/${res.data.studentID}/published`)
-                        .then(res => {
-                            
-                            setNotes(res.data);
-                        })
-                        .catch(err => console.error("Failed to fetch notes:", err));
+        if (!userId) return;
+
+        (async () => {
+            try {
+                const u = await api.get(endpoints.userById(userId));
+                setUser(u);
+
+                const studentID = u?.studentID;
+                if (u?.role === "Student" && studentID) {
+                    const published = await api.get(endpoints.progressNotesStudentPublished(studentID));
+                    setNotes(Array.isArray(published) ? published : []);
                 }
-            })
-            .catch(err => console.error("Failed to fetch user:", err));
+            } catch (err) {
+                console.error("Failed to fetch user/profile data:", err);
+            }
+        })();
     }, []);
 
     const handleSave = async (updatedData) => {
         const userId = localStorage.getItem("userID");
         try {
-            const res = await axios.put(`${API_URL}/api/users/${userId}`, updatedData);
-            setUser(res.data); // Update local state with new data
+            const updated = await api.put(endpoints.userById(userId), updatedData);
+            setUser(updated);
         } catch (err) {
             console.error("Failed to update user:", err);
         }

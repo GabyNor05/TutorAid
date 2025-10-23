@@ -4,9 +4,9 @@ const tutorController = require('../controllers/tutorController');
 
 // Specific routes FIRST
 router.get('/', tutorController.getAllTutors);
-router.get('/by-user/:userID', tutorController.getTutorByUserID);
-router.put('/by-user/:userID', tutorController.saveTutorProfile);
 router.get('/by-subject/:subject', tutorController.getTutorsBySubject);
+router.get('/by-user/:userID', tutorController.getTutorByUserID);
+router.put('/by-user/:userID', tutorController.updateTutorByUserID);
 router.get('/:tutorID/availability', tutorController.getTutorAvailability);
 
 // Generic ID routes AFTER specifics

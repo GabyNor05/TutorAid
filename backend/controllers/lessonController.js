@@ -2,65 +2,74 @@ const nodemailer = require('nodemailer'); // For sending emails
 
 exports.createLesson = async (req, res) => {
   const pool = require('../config/db');
+  const { tutorID, studentID, subject, date, startTime, duration, total_fee } = req.body;
+
+  if (!tutorID || !studentID || !subject || !date || !startTime || !duration) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  let conn;
   try {
-    const { tutorID, studentID, subject, date, startTime, duration, total_fee } = req.body;
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
 
-    if (!tutorID || !studentID || !subject || !date || !startTime || !duration) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Insert lesson
-    const insertLessonSql = `
-      INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    await pool.query(insertLessonSql, [
-      tutorID,
-      studentID,
-      subject,
-      date,
-      startTime,
-      duration,
-      total_fee ?? null,
-    ]);
+    const [lessonResult] = await conn.query(
+      `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [tutorID, studentID, subject, date, startTime, duration, total_fee ?? null]
+    );
+    const lessonID = lessonResult.insertId;
 
     // Find student name for the message subject
-    const [studentNameRows] = await pool.query(
+    const [studentNameRows] = await conn.query(
       `SELECT u.name AS studentName
        FROM students s
        JOIN users u ON s.userID = u.userID
-       WHERE s.studentID = ?`,
+       WHERE s.studentID = ? LIMIT 1`,
       [studentID]
     );
     const studentName = studentNameRows?.[0]?.studentName || 'Student';
 
-    // Build message: type "Lesson Request"
     const subjectLine = `${studentName} requested a lesson`;
-    const body = [
+    const bodyParts = [
       `Subject: ${subject}`,
       `Date: ${date}`,
       `Start Time: ${startTime}`,
       `Duration: ${duration} minutes`,
       total_fee != null ? `Total Fee: R ${Number(total_fee).toFixed(2)}` : null,
-    ].filter(Boolean).join('\n');
+      `Lesson ID: ${lessonID}`,
+    ].filter(Boolean);
+    const body = bodyParts.join('\n');
 
-    // Insert message (sender=student, receiver=tutor)
-    const insertMsgSql = `
-      INSERT INTO messages (senderID, receiverID, subject, body, type)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    await pool.query(insertMsgSql, [
-      studentID,
-      tutorID,
-      subjectLine,
-      body,
-      'Lesson Request',
-    ]);
+    // Try insert with type; fallback if column doesn't exist
+    try {
+      await conn.query(
+        `INSERT INTO messages (senderID, receiverID, subject, body, type)
+         VALUES (?, ?, ?, ?, ?)`,
+        [studentID, tutorID, subjectLine, body, 'Lesson Request']
+      );
+    } catch (e) {
+      if (e.code === 'ER_BAD_FIELD_ERROR') {
+        await conn.query(
+          `INSERT INTO messages (senderID, receiverID, subject, body)
+           VALUES (?, ?, ?, ?)`,
+          [studentID, tutorID, subjectLine, body]
+        );
+      } else {
+        throw e;
+      }
+    }
 
-    return res.status(201).json({ success: true });
+    await conn.commit();
+    return res.status(201).json({ success: true, lessonID });
   } catch (err) {
+    if (conn) {
+      try { await conn.rollback(); } catch (_) {}
+    }
     console.error('createLesson error:', err);
     return res.status(500).json({ error: 'Failed to create lesson' });
+  } finally {
+    if (conn) conn.release();
   }
 };
 

@@ -265,8 +265,10 @@ function Booking() {
 
     // Helpers
     const calcTotalFee = () => {
-        const rate = Number(selectedTutorInfo?.fee_per_hour || 0);
-        return +(duration * rate).toFixed(2);
+      const minutes = parseInt(duration, 10) || 0;
+      const hours = minutes / 60;
+      const rate = Number(selectedTutorInfo?.fee_per_hour || 0);
+      return +(hours * rate).toFixed(2);
     };
 
     const formatDateTime = (d) => {
@@ -330,7 +332,7 @@ function Booking() {
                         <div className="booking-form-group">
                         
                         <div className="booking-top-row">
-                            <div className="flex flex-col justify-center items-start">
+                            <div className="flex flex-col justify-center items-start w-1/2">
                                 <label>Subject:</label>
                             <select
                                 value={selectedSubject}
@@ -373,7 +375,7 @@ function Booking() {
                             
 
                             {tutors.length > 0 && (
-                                <div className="">
+                                <div className="flex flex-col justify-center items-start w-1/2">
                                     <label>Tutor:</label>
                                     <select
                                         value={selectedTutor}
@@ -492,6 +494,7 @@ function Booking() {
                     <div className="booking-form-group">
                         <label>Date:</label>
                         <DatePicker
+                            className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                             selected={selectedDate}
                             onChange={date => setSelectedDate(date)}
                             minDate={tomorrow}
