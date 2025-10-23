@@ -215,20 +215,20 @@ function Booking() {
           alert("Student profile not found.");
           return;
         }
+        const startTime = selectedDate.toTimeString().slice(0, 8); // HH:MM:SS
         const lessonPayload = {
-          tutorID: selectedTutor,
+          tutorID: Number(selectedTutor),
           studentID: studentData.studentID,
           subject: selectedSubject,
           date: selectedDate.toISOString().slice(0, 10),
-          startTime: selectedDate.toTimeString().slice(0, 5),
+          startTime,
           duration: parseInt(duration, 10),
         };
         setPendingBooking(lessonPayload);
-        setConfirmOpen(true); // only open modal
-
+        setConfirmOpen(true);
         analytics.event('lesson_booking_started', {
           subject: selectedSubject,
-          tutor_id: selectedTutor,
+          tutor_id: Number(selectedTutor),
           duration_min: parseInt(duration || '0', 10),
           has_availability: availability.length > 0,
         });
@@ -328,7 +328,7 @@ function Booking() {
             <div className="booking-container">
                 <h2 className="booking-form-title">Book a Lesson</h2>
                 <form className="booking-form" onSubmit={handleSubmit}>
-                    <div className="flex flex-col items-start">
+                    <div className="flex flex-col items-start w-[600px]">
                         <div className="booking-form-group">
                         
                         <div className="booking-top-row">
@@ -380,18 +380,12 @@ function Booking() {
                                     <select
                                         value={selectedTutor}
                                         onChange={async e => {
-                                            const pickedId = e.target.value; // could be tutorID or userID
-                                            // Find the tutor object by matching either id
-                                            const tObj = tutors.find(
-                                              (t) =>
-                                                String(t.tutorID ?? "") === pickedId ||
-                                                String(t.userID ?? "") === pickedId
-                                            );
-                                            const tutorID = tObj?.tutorID ?? null;
+                                            const tutorID = Number(e.target.value);
+                                            const tObj = tutors.find(t => Number(t.tutorID) === tutorID);
                                             const userID = tObj?.userID ?? null;
 
-                                            setSelectedTutor(tutorID ?? userID ?? ""); // for availability, prefer tutorID
-                                            setSelectedTutorUserID(userID ?? null);    // for profile card
+                                            setSelectedTutor(String(tutorID));  // always tutorID
+                                            setSelectedTutorUserID(userID);     // for profile card
                                             setSelectedDate(null);
                                             setAvailability([]);
                                             setSelectedTutorInfo(null);
@@ -406,24 +400,17 @@ function Booking() {
                                                 setAvailability([]);
                                               }
                                             }
+                                            if (userID) fetchTutorDetails(userID);
 
-                                            // Load tutor details for the card only if we have userID
-                                            if (userID) {
-                                              fetchTutorDetails(userID);
-                                            }
-
-                                            analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: userID || tutorID });
+                                            analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: tutorID });
                                         }}
                                     >
                                         <option value="">Select Tutor</option>
-                                        {tutors.map((tutor, idx) => {
-                                          const value = String(tutor.tutorID ?? tutor.userID);
-                                          return (
-                                            <option key={`${value}-${idx}`} value={value}>
-                                              {tutor.name}
-                                            </option>
-                                          );
-                                        })}
+                                        {tutors.map((tutor) => (
+                                          <option key={tutor.tutorID} value={String(tutor.tutorID)}>
+                                            {tutor.name}
+                                          </option>
+                                        ))}
                                     </select>
                                 </div>
                             )}

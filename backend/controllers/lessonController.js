@@ -13,14 +13,29 @@ exports.createLesson = async (req, res) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
 
-    const [lessonResult] = await conn.query(
-      `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [tutorID, studentID, subject, date, startTime, duration, total_fee ?? null]
-    );
-    const lessonID = lessonResult.insertId;
+    // Try insert with total_fee; if column missing, retry without it
+    let lessonID;
+    try {
+      const [r] = await conn.query(
+        `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [tutorID, studentID, subject, date, startTime, duration, total_fee ?? null]
+      );
+      lessonID = r.insertId;
+    } catch (e) {
+      if (e.code === 'ER_BAD_FIELD_ERROR') {
+        const [r2] = await conn.query(
+          `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [tutorID, studentID, subject, date, startTime, duration]
+        );
+        lessonID = r2.insertId;
+      } else {
+        throw e;
+      }
+    }
 
-    // Build message
+    // Build message (Lesson Request)
     const [studentRows] = await conn.query(
       `SELECT u.name AS studentName
        FROM students s JOIN users u ON s.userID = u.userID
@@ -61,7 +76,7 @@ exports.createLesson = async (req, res) => {
     res.status(201).json({ success: true, lessonID });
   } catch (err) {
     if (conn) { try { await conn.rollback(); } catch (_) {} }
-    console.error('createLesson error:', err);
+    console.error('createLesson error:', err.code, err.sqlMessage || err.message);
     res.status(500).json({ error: 'Failed to create lesson' });
   } finally {
     if (conn) conn.release();
