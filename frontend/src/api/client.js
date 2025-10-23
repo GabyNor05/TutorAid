@@ -52,8 +52,8 @@ export const endpoints = {
   ratings: () => '/api/ratings',
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
-  // ADD: published notes for a student
   progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
+  studentRequests: () => '/api/studentRequests',
 };
 
 export { API_URL };

@@ -132,48 +132,54 @@ exports.getAcceptedLessons = async (req, res) => {
   const pool = require('../config/db');
   const { userID, role } = req.query;
 
-  let query = "";
-  let params = [];
-
-  if (role === "Student") {
-    const [studentRows] = await pool.query(
-      "SELECT studentID FROM students WHERE userID = ?",
-      [userID]
-    );
-    if (studentRows.length === 0) {
-      return res.json([]);
-    }
-    const studentID = studentRows[0].studentID;
-
-    query = `
-      SELECT l.*, u.name AS tutorName, u.image AS tutorImage, s.address AS address
-      FROM lessons l
-      JOIN Tutors t ON l.tutorID = t.tutorID
-      JOIN students s ON l.studentID = s.studentID
-      JOIN users u ON t.userID = u.userID
-      WHERE l.studentID = ?
-      AND l.status = 'accepted'
-      ORDER BY l.date ASC
-    `;
-    params = [studentID];
-  } else if (role === "Tutor") {
-    query = `
-      SELECT l.*, u.name AS studentName, u.image AS studentImage, s.address AS address
-      FROM lessons l
-      JOIN students s ON l.studentID = s.studentID
-      JOIN users u ON s.userID = u.userID
-      WHERE l.tutorID = ?
-      AND l.status = 'accepted'
-      ORDER BY l.date ASC
-    `;
-    params = [userID];
-  } else {
-    return res.json([]);
-  }
-
   try {
-    const [rows] = await pool.query(query, params);
-    res.json(rows);
+    if (role === "Student") {
+      const [studentRows] = await pool.query(
+        "SELECT studentID FROM students WHERE userID = ?",
+        [userID]
+      );
+      if (studentRows.length === 0) return res.json([]);
+
+      const studentID = studentRows[0].studentID;
+      const [rows] = await pool.query(
+        `
+        SELECT l.*, u.name AS tutorName, u.image AS tutorImage, s.address AS address
+        FROM lessons l
+        JOIN tutors t ON l.tutorID = t.tutorID
+        JOIN students s ON l.studentID = s.studentID
+        JOIN users u ON t.userID = u.userID
+        WHERE l.studentID = ? AND l.status = 'accepted'
+        ORDER BY l.date ASC
+        `,
+        [studentID]
+      );
+      return res.json(rows);
+    }
+
+    if (role === "Tutor") {
+      // map userID -> tutorID first
+      const [trows] = await pool.query(
+        "SELECT tutorID FROM tutors WHERE userID = ? LIMIT 1",
+        [userID]
+      );
+      if (!trows.length) return res.json([]);
+      const tutorID = trows[0].tutorID;
+
+      const [rows] = await pool.query(
+        `
+        SELECT l.*, u.name AS studentName, u.image AS studentImage, s.address AS address
+        FROM lessons l
+        JOIN students s ON l.studentID = s.studentID
+        JOIN users u ON s.userID = u.userID
+        WHERE l.tutorID = ? AND l.status = 'accepted'
+        ORDER BY l.date ASC
+        `,
+        [tutorID]
+      );
+      return res.json(rows);
+    }
+
+    return res.json([]);
   } catch (err) {
     console.error("Failed to fetch accepted lessons:", err);
     res.status(500).json({ error: "Failed to fetch accepted lessons" });
