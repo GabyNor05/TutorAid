@@ -7,5 +7,6 @@ router.post('/', lessonController.createLesson);
 router.post('/update-status', lessonController.updateLessonStatus);
 router.post('/delete', lessonController.deleteLesson);
 router.get('/accepted', lessonController.getAcceptedLessons);
+router.get('/debug/schema', lessonController.debugSchema);
 
 module.exports = router;
