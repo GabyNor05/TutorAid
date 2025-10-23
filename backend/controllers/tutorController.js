@@ -150,35 +150,41 @@ const pool = require('../config/db');
 
 // Return tutors who teach :subject
 exports.getTutorsBySubject = async (req, res) => {
+  const pool = require('../config/db');
   const { subject } = req.params;
   try {
-    // If your Tutors table stores a comma-separated "subjects" field
+    // normalize: remove spaces for exact token match within comma-separated list
+    const subj = String(subject || '').replace(/\s+/g, '');
     const [rows] = await pool.query(
-      `SELECT t.tutorID, u.userID, u.name
-       FROM Tutors t
-       JOIN users u ON t.userID = u.userID
-       WHERE REPLACE(t.subjects, ' ', '') LIKE CONCAT('%', REPLACE(?, ' ', ''), '%')`,
-      [subject]
+      `
+      SELECT t.tutorID, u.userID, u.name
+      FROM tutors t
+      JOIN users u ON t.userID = u.userID
+      WHERE CONCAT(',', REPLACE(REPLACE(IFNULL(t.subjects, ''), ', ', ','), ' ', ''), ',')
+            LIKE CONCAT('%,', ?, ',%')
+      `,
+      [subj]
     );
-    res.json(rows);
+    return res.json(rows);
   } catch (err) {
-    console.error('getTutorsBySubject error:', err);
-    res.status(500).json({ error: 'Failed to fetch tutors' });
+    console.error('getTutorsBySubject error:', err.code, err.sqlMessage || err.message);
+    return res.status(500).json({ error: 'Failed to fetch tutors' });
   }
 };
 
 // Return availability string for a tutor
 exports.getTutorAvailability = async (req, res) => {
+  const pool = require('../config/db');
   const { tutorID } = req.params;
   try {
     const [rows] = await pool.query(
-      `SELECT availability FROM Tutors WHERE tutorID = ?`,
+      `SELECT availability FROM tutors WHERE tutorID = ?`,
       [tutorID]
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
-    res.json(rows[0]);
+    return res.json(rows[0]);
   } catch (err) {
-    console.error('getTutorAvailability error:', err);
-    res.status(500).json({ error: 'Failed to fetch availability' });
+    console.error('getTutorAvailability error:', err.code, err.sqlMessage || err.message);
+    return res.status(500).json({ error: 'Failed to fetch availability' });
   }
 };

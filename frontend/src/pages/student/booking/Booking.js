@@ -326,7 +326,8 @@ function Booking() {
             <div className="booking-container">
                 <h2 className="booking-form-title">Book a Lesson</h2>
                 <form className="booking-form" onSubmit={handleSubmit}>
-                    <div className="booking-form-group">
+                    <div className="flex flex-col items-start">
+                        <div className="booking-form-group">
                         
                         <div className="booking-top-row">
                             <div className="flex flex-col justify-center items-start">
@@ -500,6 +501,7 @@ function Booking() {
                             includeTimes={getAvailableTimesForDate(selectedDate, availability)}
                             disabled={!selectedTutor}
                         />
+                    </div>
                     </div>
 
                     <button type="submit" className="login-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70">Book Lesson</button>
