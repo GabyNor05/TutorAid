@@ -3,6 +3,9 @@ const API_URL =
   process.env.REACT_APP_API_URL ||
   'http://localhost:5000';
 
+// Normalize base (remove trailing slash)
+const BASE = API_URL.replace(/\/+$/, '');
+
 async function request(method, url, data, options = {}) {
   const headers = new Headers(options.headers || {});
   let body = undefined;
@@ -16,7 +19,7 @@ async function request(method, url, data, options = {}) {
     body = data; // let the browser set multipart boundaries
   }
 
-  const res = await fetch(apiBase + url, {
+  const res = await fetch(`${BASE}${url}`, {   // FIX: use BASE instead of apiBase
     method,
     headers,
     body,
