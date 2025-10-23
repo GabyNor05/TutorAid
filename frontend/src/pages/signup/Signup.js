@@ -16,7 +16,7 @@ function Signup() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [popupMessage, setPopupMessage] = useState("");
-  const [showRoleModal, setShowRoleModal] = useState(false);
+  // const [showRoleModal, setShowRoleModal] = useState(false); // commented out
   const [createdUserId, setCreatedUserId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -57,14 +57,15 @@ function Signup() {
         name: username,
         email,
         password,
-        role: "" // leave empty; backend createUser will only add role-specific rows when role is set
+        role: "Student" // leave empty; backend createUser will only add role-specific rows when role is set
       });
       const userID = res.userID || res?.user?.userID || res?.id; // handle shapes
       if (!userID) throw new Error("Signup failed (no userID).");
 
       localStorage.setItem("userID", userID);
       setCreatedUserId(userID);
-      setShowRoleModal(true); // prompt for role
+      // setShowRoleModal(true); // commented out
+      navigate('/onboarding'); // go straight to onboarding
 
       analytics.event('sign_up', { method: 'password' });
     } catch (error) {
@@ -166,29 +167,32 @@ function Signup() {
         </div>
       </div>
 
-      {/* Role selection modal */}
-      {showRoleModal && (
-        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-bold text-[#2B5561] mb-2">Choose your role</h3>
-            <p className="text-sm text-gray-600 mb-6">Tell us how you want to use Tutor Aid.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                className="h-11 rounded-md bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold"
-                onClick={() => assignRole('Student')}
-              >
-                I’m a Student
-              </button>
-              <button
-                className="h-11 rounded-md bg-white border border-[#2B5561] text-[#2B5561] hover:bg-[#2B5561]/10 font-semibold"
-                onClick={() => assignRole('Tutor')}
-              >
-                I’m a Tutor
-              </button>
-            </div>
-          </div>
+      
+{/*
+  // Role selection modal disabled
+  {showRoleModal && (
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <h3 className="text-xl font-bold text-[#2B5561] mb-2">Choose your role</h3>
+        <p className="text-sm text-gray-600 mb-6">Tell us how you want to use Tutor Aid.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            className="h-11 rounded-md bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold"
+            onClick={() => assignRole('Student')}
+          >
+            I’m a Student
+          </button>
+          <button
+            className="h-11 rounded-md bg-white border border-[#2B5561] text-[#2B5561] hover:bg-[#2B5561]/10 font-semibold"
+            onClick={() => assignRole('Tutor')}
+          >
+            I’m a Tutor
+          </button>
         </div>
-      )}
+      </div>
+    </div>
+  )}
+*/}
     </div>
   );
 }

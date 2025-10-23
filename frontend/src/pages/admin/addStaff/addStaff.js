@@ -1,10 +1,9 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/addStaff.css";
-import axios from "axios";
+import { api, endpoints } from "../../../api/client"; // ADD
 
 function AddStaff() {
-    const API_URL =  process.env.REACT_APP_API_URL;  
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -12,11 +11,10 @@ function AddStaff() {
         role: "Admin",
         image: null,
         bio: "",
-        subjects: "",
         qualifications: "",
-        availability: "",
         fee_per_hour: "",
-        experience: ""
+        experience: "",
+        experience_unit: "years", // ADD default
     });
 
     // Availability state
@@ -32,9 +30,8 @@ function AddStaff() {
     useEffect(() => {
         async function fetchSubjects() {
             try {
-                const res = await fetch(`${API_URL}/api/subjects`);
-                const data = await res.json();
-                setSubjectOptions(data.map(s => s.name));
+                const data = await api.get(endpoints.subjects()); // USE client.js
+                setSubjectOptions((Array.isArray(data) ? data : []).map(s => s.name));
             } catch (err) {
                 console.error("Error fetching subjects:", err);
             }
@@ -45,7 +42,7 @@ function AddStaff() {
     const handleChange = e => {
         const { name, value, files } = e.target;
         if (name === "image") {
-            setForm({ ...form, image: files[0] });
+            setForm({ ...form, image: files?.[0] || null });
         } else {
             setForm({ ...form, [name]: value });
         }
@@ -64,57 +61,71 @@ function AddStaff() {
             [period]: { ...prev[period], enabled: !prev[period].enabled }
         }));
     };
-     const handleSubjectChange = (index, value) => {
+
+    const handleSubjectChange = (index, value) => {
         const newSubjects = [...subjects];
         newSubjects[index] = value;
         setSubjects(newSubjects);
     };
 
-    const handleSubmit = async e => {
-        e.preventDefault();
-        // Build availability string for backend
-        let availabilityStr = "";
+    const buildAvailabilityString = () => {
+        let str = "";
         if (availability.monFri.enabled && availability.monFri.start && availability.monFri.end) {
-            availabilityStr += `Mon-Fri: ${availability.monFri.start}-${availability.monFri.end}; `;
+            str += `Mon-Fri: ${availability.monFri.start}-${availability.monFri.end}; `;
         }
         if (availability.satSun.enabled && availability.satSun.start && availability.satSun.end) {
-            availabilityStr += `Sat-Sun: ${availability.satSun.start}-${availability.satSun.end}`;
+            str += `Sat-Sun: ${availability.satSun.start}-${availability.satSun.end}`;
         }
+        return str.trim();
+    };
 
-        // Prepare form data
-         const data = new FormData();
-        data.append("image", form.image); // file
-        data.append("name", form.name);
-        data.append("email", form.email);
-        data.append("password", form.password);
-        data.append("bio", form.bio);
-        data.append("subjects", subjects.filter(s => s).join(", ")); // comma-separated
-        data.append("qualifications", form.qualifications);
-        data.append("availability", availabilityStr.trim());
-        data.append("role", form.role);
-        data.append("fee_per_hour", form.fee_per_hour);
-        data.append("experience", form.experience);
-        
+    const handleSubmit = async e => {
+        e.preventDefault();
 
-        // TODO: Send data to backend
+        // 1) Create user (with image) via multipart
         try {
-            const response = await axios.post(`${API_URL}/api/users`, data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            
+            const userFd = new FormData();
+            if (form.image) userFd.append("image", form.image);
+            userFd.append("name", form.name);
+            userFd.append("email", form.email);
+            userFd.append("password", form.password);
+            userFd.append("role", form.role); // createUser saves role on users table
+
+            const created = await api.post(endpoints.users(), userFd); // returns { userID }
+            const userID = created?.userID;
+            if (!userID) throw new Error("User not created");
+
+            // 2) If Tutor, upsert tutor profile with extra fields
+            if (form.role === "Tutor") {
+                const availabilityStr = buildAvailabilityString();
+                const subjectsStr = subjects.filter(Boolean).join(", ");
+                const experienceText = form.experience
+                    ? `${form.experience} ${form.experience_unit || "years"}`
+                    : "";
+
+                await api.put(endpoints.tutorByUser(userID), {
+                    bio: form.bio || "",
+                    subjects: subjectsStr,
+                    qualifications: form.qualifications || "",
+                    availability: availabilityStr,
+                    fee_per_hour: form.fee_per_hour ? Number(form.fee_per_hour) : 0,
+                    experience: experienceText,
+                });
+            }
+
             alert("Staff member added!");
             navigate("/dashboard");
         } catch (error) {
-            alert("Error adding staff: " + error.response?.data?.error || error.message);
+            console.error("Error adding staff:", error);
+            alert("Error adding staff: " + (error.message || "Unknown error"));
         }
     };
 
     return (
         <div className="page-background">
-            
             <div className="addstaff-form-container">
                 <div className="pt-2 text-center">
-                    <h2>Add Staff Member</h2>  
+                    <h2>Add Staff Member</h2>
                 </div>
                 <form className="addstaff-form" onSubmit={handleSubmit}>
                     <div className="addStaff-form-group">
@@ -136,16 +147,18 @@ function AddStaff() {
                             <option value="Tutor">Tutor</option>
                         </select>
                     </div>
+
                     {form.role === "Tutor" && (
-                         <>
+                        <>
                             <div className="addStaff-form-group">
                                 <label>Bio</label>
                                 <textarea name="bio" value={form.bio} onChange={handleChange} />
                             </div>
+
                             <div className="addStaff-form-group">
                                 <label>Subjects</label>
-                               <div className="subjects-selects">
-                                    {[0,1,2].map(i => (
+                                <div className="subjects-selects">
+                                    {[0, 1, 2].map(i => (
                                         <select
                                             key={i}
                                             value={subjects[i]}
@@ -161,17 +174,23 @@ function AddStaff() {
                                     ))}
                                 </div>
                             </div>
+
                             <div className="addStaff-form-group">
                                 <label>Qualifications</label>
                                 <textarea name="qualifications" value={form.qualifications} onChange={handleChange} />
                             </div>
+
                             <div className="addStaff-form-group">
                                 <label>Availability</label>
                                 <div className="availability-block">
                                     <div className="availability-block-row">
-                                        <label> Mon-Fri</label>
-                                    <input type="checkbox" checked={availability.monFri.enabled}onChange={() => handleAvailabilityToggle("monFri")}/>
-                                    </div> 
+                                        <label>Mon-Fri</label>
+                                        <input
+                                            type="checkbox"
+                                            checked={availability.monFri.enabled}
+                                            onChange={() => handleAvailabilityToggle("monFri")}
+                                        />
+                                    </div>
                                     {availability.monFri.enabled && (
                                         <div className="availability-times">
                                             <label>
@@ -195,18 +214,16 @@ function AddStaff() {
                                         </div>
                                     )}
                                 </div>
+
                                 <div className="availability-block">
                                     <div className="availability-block-row">
-                                        <label>
-                                         Sat-Sun
-                                        </label>
+                                        <label>Sat-Sun</label>
                                         <input
                                             type="checkbox"
                                             checked={availability.satSun.enabled}
                                             onChange={() => handleAvailabilityToggle("satSun")}
                                         />
                                     </div>
-                                    
                                     {availability.satSun.enabled && (
                                         <div className="availability-times">
                                             <label>
@@ -231,6 +248,7 @@ function AddStaff() {
                                     )}
                                 </div>
                             </div>
+
                             <div className="addStaff-form-group">
                                 <label>Fee per hour (Rand)</label>
                                 <input
@@ -244,12 +262,14 @@ function AddStaff() {
                                     required
                                 />
                             </div>
+
                             <div className="addStaff-form-group">
                                 <label>Experience</label>
                                 <input
-                                    type="text"
+                                    type="number"
+                                    min="0"
                                     name="experience"
-                                    placeholder="Experience"
+                                    placeholder="Amount"
                                     value={form.experience}
                                     onChange={handleChange}
                                     className="border rounded p-2 w-full"
@@ -259,7 +279,7 @@ function AddStaff() {
                                     name="experience_unit"
                                     value={form.experience_unit}
                                     onChange={handleChange}
-                                    className="border rounded p-2 w-full"
+                                    className="border rounded p-2 w-full mt-2"
                                     required
                                 >
                                     <option value="months">Months</option>
@@ -268,12 +288,14 @@ function AddStaff() {
                             </div>
                         </>
                     )}
+
                     <div className="addStaff-form-group">
                         <label>Profile Image</label>
                         <input type="file" name="image" accept="image/*" onChange={handleChange} required />
                     </div>
+
                     <div className="addStaff-form-group">
-                    <button type="submit">Add Staff</button>
+                        <button type="submit">Add Staff</button>
                     </div>
                 </form>
             </div>
