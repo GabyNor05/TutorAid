@@ -82,7 +82,7 @@ export default function Onboarding2() {
       if (role === 'Tutor') {
         const experience = expValue ? `${expValue} ${expUnit}` : '';
         await api.put(endpoints.tutorByUser(user.userID), {
-          fee_per_hour: feePerHour ? Number(feePerHour) : 0, // NOT NULL in DB
+          fee_per_hour: feePerHour ? Number(feePerHour) : 0,
           experience,
         });
       }

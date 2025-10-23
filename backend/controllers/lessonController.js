@@ -35,7 +35,8 @@ exports.createLesson = async (req, res) => {
       }
     }
 
-    // Build message (Lesson Request)
+    // COMMENTED OUT: creating a message on booking (temporarily disabled)
+    /*
     const [studentRows] = await conn.query(
       `SELECT u.name AS studentName
        FROM students s JOIN users u ON s.userID = u.userID
@@ -53,7 +54,6 @@ exports.createLesson = async (req, res) => {
       `Lesson ID: ${lessonID}`,
     ].filter(Boolean).join('\n');
 
-    // Insert message; fallback if "type" column missing
     try {
       await conn.query(
         `INSERT INTO messages (senderID, receiverID, subject, body, type)
@@ -71,6 +71,7 @@ exports.createLesson = async (req, res) => {
         throw e;
       }
     }
+    */
 
     await conn.commit();
     res.status(201).json({ success: true, lessonID });

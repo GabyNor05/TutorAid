@@ -237,7 +237,7 @@ function Booking() {
       }
     };
 
-    // Confirm: include total_fee and create the lesson
+    // Confirm: include total_fee and create the lesson (no message API call)
     const handleConfirmBooking = async () => {
       if (!pendingBooking) return;
       try {
@@ -255,7 +255,7 @@ function Booking() {
           subject: pendingBooking.subject,
           tutor_id: pendingBooking.tutorID,
           duration_min: pendingBooking.duration,
-          value: Number(calcTotalFee()),   // GA4 monetary value
+          value: Number(calcTotalFee()),
           currency: 'ZAR',
         });
       } catch (err) {
@@ -514,7 +514,7 @@ function Booking() {
                             </div>
                             <div className="flex justify-between">
                                 <span>Date & Time</span>
-                                <span className="font-semibold">{formatDateTime(selectedDate)}</span>
+                               
                             </div>
                             <div className="flex justify-between">
                                 <span>Duration</span>
