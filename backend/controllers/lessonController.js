@@ -1,20 +1,10 @@
 const nodemailer = require('nodemailer'); // For sending emails
 const pool = require('../config/db');
 
-function hhmmss(t) {
-  if (!t) return t;
-  // Accept "HH:MM" or "HH:MM:SS"
-  const m = String(t).match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
-  if (!m) return t;
-  return m[3] ? t : `${m[1]}:${m[2]}:00`;
-}
-
 exports.createLesson = async (req, res) => {
   const { tutorID, studentID, subject, date, startTime, duration, total_fee } = req.body;
-  console.log('[createLesson] payload:', { tutorID, studentID, subject, date, startTime, duration, total_fee });
 
   if (!tutorID || !studentID || !subject || !date || !startTime || !duration) {
-    console.error('[createLesson] Missing required fields');
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -23,50 +13,29 @@ exports.createLesson = async (req, res) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
 
-    // Validate foreign keys exist
-    const [[tExists]] = await conn.query(`SELECT COUNT(*) AS c FROM tutors WHERE tutorID = ?`, [tutorID]);
-    const [[sExists]] = await conn.query(`SELECT COUNT(*) AS c FROM students WHERE studentID = ?`, [studentID]);
-    console.log('[createLesson] FK check:', { tutorID, tutorExists: tExists.c, studentID, studentExists: sExists.c });
-    if (!tExists.c) {
-      await conn.rollback();
-      return res.status(400).json({ error: 'Invalid tutorID' });
-    }
-    if (!sExists.c) {
-      await conn.rollback();
-      return res.status(400).json({ error: 'Invalid studentID' });
-    }
-
-    // Detect optional columns
-    const [[feeCol]] = await conn.query(
-      `SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'lessons' AND COLUMN_NAME = 'total_fee'`
-    );
-    const [[typeCol]] = await conn.query(
-      `SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'messages' AND COLUMN_NAME = 'type'`
-    );
-    console.log('[createLesson] columns:', { lessons_total_fee: feeCol.c, messages_type: typeCol.c });
-
-    const start = hhmmss(startTime);
+    // Try insert with total_fee; if column missing, retry without it
     let lessonID;
-
-    if (feeCol.c) {
-      const sql = `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)`;
-      const params = [tutorID, studentID, subject, date, start, duration, total_fee ?? null];
-      console.log('[createLesson] INSERT lessons with total_fee:', { sql, params });
-      const [r] = await conn.query(sql, params);
+    try {
+      const [r] = await conn.query(
+        `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [tutorID, studentID, subject, date, startTime, duration, total_fee ?? null]
+      );
       lessonID = r.insertId;
-    } else {
-      const sql = `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration)
-                   VALUES (?, ?, ?, ?, ?, ?)`;
-      const params = [tutorID, studentID, subject, date, start, duration];
-      console.log('[createLesson] INSERT lessons WITHOUT total_fee:', { sql, params });
-      const [r] = await conn.query(sql, params);
-      lessonID = r.insertId;
+    } catch (e) {
+      if (e.code === 'ER_BAD_FIELD_ERROR') {
+        const [r2] = await conn.query(
+          `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [tutorID, studentID, subject, date, startTime, duration]
+        );
+        lessonID = r2.insertId;
+      } else {
+        throw e;
+      }
     }
 
-    // Build message
+    // Build message (Lesson Request)
     const [studentRows] = await conn.query(
       `SELECT u.name AS studentName
        FROM students s JOIN users u ON s.userID = u.userID
@@ -78,44 +47,37 @@ exports.createLesson = async (req, res) => {
     const body = [
       `Subject: ${subject}`,
       `Date: ${date}`,
-      `Start Time: ${start}`,
+      `Start Time: ${startTime}`,
       `Duration: ${duration} minutes`,
       total_fee != null ? `Total Fee: R ${Number(total_fee).toFixed(2)}` : null,
       `Lesson ID: ${lessonID}`,
     ].filter(Boolean).join('\n');
 
-    if (typeCol.c) {
-      const sql = `INSERT INTO messages (senderID, receiverID, subject, body, type)
-                   VALUES (?, ?, ?, ?, ?)`;
-      const params = [studentID, tutorID, subjectLine, body, 'Lesson Request'];
-      console.log('[createLesson] INSERT message with type:', { sql, params });
-      await conn.query(sql, params);
-    } else {
-      const sql = `INSERT INTO messages (senderID, receiverID, subject, body)
-                   VALUES (?, ?, ?, ?)`;
-      const params = [studentID, tutorID, subjectLine, body];
-      console.log('[createLesson] INSERT message WITHOUT type:', { sql, params });
-      await conn.query(sql, params);
+    // Insert message; fallback if "type" column missing
+    try {
+      await conn.query(
+        `INSERT INTO messages (senderID, receiverID, subject, body, type)
+         VALUES (?, ?, ?, ?, ?)`,
+        [studentID, tutorID, subjectLine, body, 'Lesson Request']
+      );
+    } catch (e) {
+      if (e.code === 'ER_BAD_FIELD_ERROR') {
+        await conn.query(
+          `INSERT INTO messages (senderID, receiverID, subject, body)
+           VALUES (?, ?, ?, ?)`,
+          [studentID, tutorID, subjectLine, body]
+        );
+      } else {
+        throw e;
+      }
     }
 
     await conn.commit();
-    console.log('[createLesson] committed, lessonID:', lessonID);
     res.status(201).json({ success: true, lessonID });
   } catch (err) {
     if (conn) { try { await conn.rollback(); } catch (_) {} }
-    console.error('createLesson error:', {
-      code: err.code,
-      sqlState: err.sqlState,
-      sqlMessage: err.sqlMessage,
-      message: err.message,
-      stack: err.stack,
-    });
-    // Return debug info temporarily to help identify the issue
-    return res.status(500).json({
-      error: 'Failed to create lesson',
-      errorCode: err.code,
-      errorDetail: err.sqlMessage || err.message,
-    });
+    console.error('createLesson error:', err.code, err.sqlMessage || err.message);
+    res.status(500).json({ error: 'Failed to create lesson' });
   } finally {
     if (conn) conn.release();
   }
@@ -236,34 +198,5 @@ exports.getAcceptedLessons = async (req, res) => {
   } catch (err) {
     console.error("Failed to fetch accepted lessons:", err);
     res.status(500).json({ error: "Failed to fetch accepted lessons" });
-  }
-};
-
-// ADD: schema debug helper
-exports.debugSchema = async (_req, res) => {
-  try {
-    const [[lFee]] = await pool.query(
-      `SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'lessons' AND COLUMN_NAME = 'total_fee'`
-    );
-    const [[mType]] = await pool.query(
-      `SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'messages' AND COLUMN_NAME = 'type'`
-    );
-    const [[lessonsCount]] = await pool.query(`SELECT COUNT(*) AS c FROM lessons`);
-    const [[tutorsCount]] = await pool.query(`SELECT COUNT(*) AS c FROM tutors`);
-    const [[studentsCount]] = await pool.query(`SELECT COUNT(*) AS c FROM students`);
-    res.json({
-      lessons_total_fee: !!lFee.c,
-      messages_type: !!mType.c,
-      counts: {
-        lessons: lessonsCount.c,
-        tutors: tutorsCount.c,
-        students: studentsCount.c,
-      },
-    });
-  } catch (err) {
-    console.error('debugSchema error:', err);
-    res.status(500).json({ error: 'debug failed', detail: err.message });
   }
 };
