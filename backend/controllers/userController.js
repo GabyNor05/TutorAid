@@ -19,16 +19,19 @@ cloudinary.config({
 async function uploadImageIfAny(req) {
   const file = req.file;
   if (!file) return null;
-  if (!cloudinary.config().cloud_name) {
-    console.warn('[cloudinary] config missing; skipping upload');
+
+  const cfg = cloudinary.config();
+  if (!cfg.cloud_name || !cfg.api_key || !cfg.api_secret) {
+    console.warn('[cloudinary] missing config; skipping upload');
+    try { fs.unlinkSync(file.path); } catch {}
     return null;
   }
   try {
-    const res = await cloudinary.uploader.upload(file.path, {
+    const up = await cloudinary.uploader.upload(file.path, {
       folder: 'tutoraid/users',
       resource_type: 'image',
     });
-    return res.secure_url || res.url || null;
+    return up.secure_url || up.url || null;
   } catch (e) {
     console.error('[cloudinary] upload failed:', e?.message || e);
     return null;
@@ -115,10 +118,10 @@ exports.createUser = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
+  const { id } = req.params;
   try {
-    const { id } = req.params;
     const imageUrl = await uploadImageIfAny(req);
-    const body = { ...req.body };
+    const body = req.body || {};
 
     const fields = [];
     const values = [];
@@ -130,8 +133,8 @@ exports.updateUser = async (req, res) => {
       fields.push('password = ?'); values.push(hashed);
     }
     if (body.role !== undefined) { fields.push('role = ?'); values.push(body.role); }
-    if (imageUrl) { fields.push('image = ?'); values.push(imageUrl); }
     if (body.funFact !== undefined) { fields.push('funFact = ?'); values.push(body.funFact); }
+    if (imageUrl) { fields.push('image = ?'); values.push(imageUrl); }
 
     if (!fields.length) {
       const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
@@ -139,13 +142,18 @@ exports.updateUser = async (req, res) => {
     }
 
     values.push(id);
-    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE userID = ?`, values);
+    const sql = `UPDATE users SET ${fields.join(', ')} WHERE userID = ?`;
+    await pool.query(sql, values);
 
     const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
-    res.json(rows[0] || {});
+    return res.json(rows[0] || {});
   } catch (err) {
-    console.error('updateUser error:', err);
-    res.status(500).json({ error: 'Failed to update user' });
+    console.error('updateUser error:', {
+      code: err.code,
+      message: err.message,
+      stack: err.stack,
+    });
+    return res.status(500).json({ error: 'Failed to update user', detail: err.message });
   }
 };
 

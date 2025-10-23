@@ -34,16 +34,16 @@ const getUserById = async (userID) => {
 const createUser = async (user) => {
   console.log('Creating user:', user);
   const [result] = await pool.query(
-    'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
-    [user.image, user.name, user.email, user.password, user.role]
+    'INSERT INTO users (image, name, email, password, role, funFact) VALUES (?, ?, ?, ?, ?, ?)',
+    [user.image, user.name, user.email, user.password, user.role, user.funFact]
   );
   const userID = result.insertId;
   console.log('User created with ID:', userID);
 
   if (user.role === 'Tutor') {
     await pool.query(
-      'INSERT INTO tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
-      [userID, user.bio || '', user.subjects || '', user.qualifications || '', user.availability || '']
+      'INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour) VALUES (?, ?, ?, ?, ?, ?)',
+      [userID, user.bio || '', user.subjects || '', user.qualifications || '', user.availability || '', user.fee_per_hour || 0]
     );
   } else if (user.role === 'Student') {
     await pool.query(
@@ -65,6 +65,7 @@ const updateUser = async (userID, user) => {
   if (user.email !== undefined) { fields.push('email = ?'); values.push(user.email); }
   if (user.password !== undefined) { fields.push('password = ?'); values.push(user.password); }
   if (user.role !== undefined) { fields.push('role = ?'); values.push(user.role); }
+  if (user.funFact !== undefined) { fields.push('funFact = ?'); values.push(user.funFact); }
   if (user.image !== undefined) { fields.push('image = ?'); values.push(user.image); }
 
   if (!fields.length) return;
@@ -79,17 +80,17 @@ const deleteUser = async (userID) => {
   return { message: 'User deleted' };
 };
 
-const createTutor = async ({ userID, bio, subjects, qualifications, availability }) => {
+const createTutor = async ({ userID, bio, subjects, qualifications, availability, fee_per_hour }) => {
   await pool.query(
-    'INSERT INTO tutors (userID, bio, subjects, qualifications, availability) VALUES (?, ?, ?, ?, ?)',
-    [userID, bio, subjects, qualifications, availability]
+    'INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour) VALUES (?, ?, ?, ?, ?, ?)',
+    [userID, bio, subjects, qualifications, availability, fee_per_hour]
   );
 };
 
 const updateTutor = async (userID, tutor) => {
   await pool.query(
-    'UPDATE tutors SET bio = ?, subjects = ?, qualifications = ?, availability = ? WHERE userID = ?',
-    [tutor.bio, tutor.subjects, tutor.qualifications, tutor.availability, userID]
+    'UPDATE tutors SET bio = ?, subjects = ?, qualifications = ?, availability = ?, fee_per_hour = ? WHERE userID = ?',
+    [tutor.bio, tutor.subjects, tutor.qualifications, tutor.availability, tutor.fee_per_hour, userID]
   );
 };
 

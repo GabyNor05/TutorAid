@@ -163,25 +163,24 @@ function Onboarding() {
       if (avail.satSun.enabled && avail.satSun.start && avail.satSun.end) {
         availabilityStr += `Sat-Sun: ${avail.satSun.start}-${avail.satSun.end}`;
       }
-
-      // Create/ensure tutor row with fields
-      await api.put(endpoints.assignRole(userID), {
-        role: 'Tutor',
+      const payload = {
         bio,
-        subjects,
+        subjects,                    // comma-separated string
         qualifications,
         availability: availabilityStr.trim(),
-      });
+      };
 
-      // Idempotent update
-      await api.put(endpoints.tutorByUser(userID), {
-        bio,
-        subjects,
-        qualifications,
-        availability: availabilityStr.trim(),
-      });
+      // 1) Save tutor profile via tutors API (UPSERT)
+      await api.put(endpoints.tutorByUser(userID), payload);
 
-      navigate('/onboarding2'); 
+      // 2) If role is not yet Tutor, set it (assignRole ONLY sets role)
+      if (role !== 'Tutor') {
+        await api.put(endpoints.assignRole(userID), { role: 'Tutor' });
+        // update local role state so UI reflects it
+        setRole('Tutor');
+      }
+
+      navigate('/onboarding2');
     } catch (err) {
       setErrors({ api: err.message || 'Onboarding failed. Please try again.' });
     } finally { setLoading(false); }

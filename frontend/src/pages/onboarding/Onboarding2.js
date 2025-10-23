@@ -74,9 +74,8 @@ export default function Onboarding2() {
       const form = new FormData();
       if (file) form.append('image', file);
       form.append('funFact', funFact || '');
-      await api.put(endpoints.userById(user.userID), form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+
+      await api.put(endpoints.userById(user.userID), form);
 
       // 2) Tutor extras
       if (role === 'Tutor') {
