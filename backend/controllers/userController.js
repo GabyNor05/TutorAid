@@ -19,14 +19,20 @@ cloudinary.config({
 async function uploadImageIfAny(req) {
   const file = req.file;
   if (!file) return null;
+  if (!cloudinary.config().cloud_name) {
+    console.warn('[cloudinary] config missing; skipping upload');
+    return null;
+  }
   try {
     const res = await cloudinary.uploader.upload(file.path, {
       folder: 'tutoraid/users',
       resource_type: 'image',
     });
     return res.secure_url || res.url || null;
+  } catch (e) {
+    console.error('[cloudinary] upload failed:', e?.message || e);
+    return null;
   } finally {
-    // cleanup temp file
     try { fs.unlinkSync(file.path); } catch {}
   }
 }
@@ -125,7 +131,7 @@ exports.updateUser = async (req, res) => {
     }
     if (body.role !== undefined) { fields.push('role = ?'); values.push(body.role); }
     if (imageUrl) { fields.push('image = ?'); values.push(imageUrl); }
-    if (body.funFact !== undefined) { fields.push('funFact = ?'); values.push(body.funFact); } // if column exists
+    if (body.funFact !== undefined) { fields.push('funFact = ?'); values.push(body.funFact); }
 
     if (!fields.length) {
       const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);

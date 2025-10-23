@@ -79,7 +79,21 @@ async function updateTutorByUserID(req, res) {
        WHERE userID = ?`,
       [bio || '', subjects || '', qualifications || '', availability || '', fee_per_hour ?? 0, experience || '', userID]
     );
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Tutor not found' });
+
+    if (result.affectedRows === 0) {
+      // UPSERT if tutor row doesn't exist yet
+      const [ins] = await pool.query(
+        `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, bio || '', subjects || '', qualifications || '', availability || '', fee_per_hour ?? 0, experience || '']
+      );
+      const [rows] = await pool.query(
+        `SELECT userID, bio, subjects, qualifications, availability, fee_per_hour, experience
+         FROM tutors WHERE userID = ? LIMIT 1`,
+        [userID]
+      );
+      return res.json(rows[0]);
+    }
 
     const [rows] = await pool.query(
       `SELECT userID, bio, subjects, qualifications, availability, fee_per_hour, experience

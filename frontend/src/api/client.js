@@ -3,30 +3,41 @@ const API_URL =
   process.env.REACT_APP_API_URL ||
   'http://localhost:5000';
 
-async function request(path, { method = 'GET', body, headers = {} } = {}) {
-  const res = await fetch(`${API_URL}${path}`, {
+async function request(method, url, data, options = {}) {
+  const headers = new Headers(options.headers || {});
+  let body = undefined;
+
+  // Only set JSON headers if not sending FormData
+  const isForm = typeof FormData !== 'undefined' && data instanceof FormData;
+  if (!isForm) {
+    headers.set('Content-Type', 'application/json');
+    if (data !== undefined) body = JSON.stringify(data);
+  } else {
+    body = data; // let the browser set multipart boundaries
+  }
+
+  const res = await fetch(apiBase + url, {
     method,
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: body ? JSON.stringify(body) : undefined,
+    headers,
+    body,
+    credentials: 'include',
   });
 
-  // Try to parse JSON regardless of status
-  let data;
-  try { data = await res.json(); } catch { data = null; }
-
   if (!res.ok) {
-    const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
-    throw new Error(msg);
+    let detail = '';
+    try { detail = await res.text(); } catch {}
+    throw new Error(`HTTP ${res.status}${detail ? ` - ${detail}` : ''}`);
   }
-  return data;
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
 }
 
 // Convenience helpers
 export const api = {
-  get: (path) => request(path),
-  post: (path, body) => request(path, { method: 'POST', body }),
-  put: (path, body) => request(path, { method: 'PUT', body }),
-  del: (path) => request(path, { method: 'DELETE' }),
+  get: (u, o) => request('GET', u, undefined, o),
+  post: (u, d, o) => request('POST', u, d, o),
+  put: (u, d, o) => request('PUT', u, d, o),
+  delete: (u, d, o) => request('DELETE', u, d, o),
 };
 
 export const endpoints = {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); 
+const upload = multer({ dest: 'uploads/' });
 const userController = require('../controllers/userController');
 
 // Auth + OTP
@@ -19,7 +19,7 @@ router.post('/user-avatars', userController.userAvatars);
 router.post('/', upload.single('image'), userController.createUser);
 router.get('/', userController.getAllUsers);
 router.get('/:id', userController.getUser);
-router.put('/:id', upload.single('image'), userController.updateUser); 
+router.put('/:id', upload.single('image'), userController.updateUser); // ENABLE file upload
 router.put('/:id/assign-role', userController.assignRole);
 router.delete('/:id', userController.deleteUser);
 

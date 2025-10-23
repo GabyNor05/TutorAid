@@ -155,7 +155,7 @@ function Onboarding() {
     if (!userID) return;
     setLoading(true);
     try {
-      // Build availability string to match AddStaff format
+      // Build availability string
       let availabilityStr = '';
       if (avail.monFri.enabled && avail.monFri.start && avail.monFri.end) {
         availabilityStr += `Mon-Fri: ${avail.monFri.start}-${avail.monFri.end}; `;
@@ -164,10 +164,16 @@ function Onboarding() {
         availabilityStr += `Sat-Sun: ${avail.satSun.start}-${avail.satSun.end}`;
       }
 
-      // IMPORTANT: assign role first and pass tutor fields, so the row is created with data
-      await api.put(endpoints.assignRole(userID), { role: 'Tutor' });
+      // Create/ensure tutor row with fields
+      await api.put(endpoints.assignRole(userID), {
+        role: 'Tutor',
+        bio,
+        subjects,
+        qualifications,
+        availability: availabilityStr.trim(),
+      });
 
-      // Optional: ensure values saved (idempotent)
+      // Idempotent update
       await api.put(endpoints.tutorByUser(userID), {
         bio,
         subjects,
