@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer'); // For sending emails
+const pool = require('../config/db');
 
 exports.createLesson = async (req, res) => {
-  const pool = require('../config/db');
   const { tutorID, studentID, subject, date, startTime, duration, total_fee } = req.body;
 
   if (!tutorID || !studentID || !subject || !date || !startTime || !duration) {
@@ -20,28 +20,25 @@ exports.createLesson = async (req, res) => {
     );
     const lessonID = lessonResult.insertId;
 
-    // Find student name for the message subject
-    const [studentNameRows] = await conn.query(
+    // Build message
+    const [studentRows] = await conn.query(
       `SELECT u.name AS studentName
-       FROM students s
-       JOIN users u ON s.userID = u.userID
+       FROM students s JOIN users u ON s.userID = u.userID
        WHERE s.studentID = ? LIMIT 1`,
       [studentID]
     );
-    const studentName = studentNameRows?.[0]?.studentName || 'Student';
-
+    const studentName = studentRows?.[0]?.studentName || 'Student';
     const subjectLine = `${studentName} requested a lesson`;
-    const bodyParts = [
+    const body = [
       `Subject: ${subject}`,
       `Date: ${date}`,
       `Start Time: ${startTime}`,
       `Duration: ${duration} minutes`,
       total_fee != null ? `Total Fee: R ${Number(total_fee).toFixed(2)}` : null,
       `Lesson ID: ${lessonID}`,
-    ].filter(Boolean);
-    const body = bodyParts.join('\n');
+    ].filter(Boolean).join('\n');
 
-    // Try insert with type; fallback if column doesn't exist
+    // Insert message; fallback if "type" column missing
     try {
       await conn.query(
         `INSERT INTO messages (senderID, receiverID, subject, body, type)
@@ -61,13 +58,11 @@ exports.createLesson = async (req, res) => {
     }
 
     await conn.commit();
-    return res.status(201).json({ success: true, lessonID });
+    res.status(201).json({ success: true, lessonID });
   } catch (err) {
-    if (conn) {
-      try { await conn.rollback(); } catch (_) {}
-    }
+    if (conn) { try { await conn.rollback(); } catch (_) {} }
     console.error('createLesson error:', err);
-    return res.status(500).json({ error: 'Failed to create lesson' });
+    res.status(500).json({ error: 'Failed to create lesson' });
   } finally {
     if (conn) conn.release();
   }

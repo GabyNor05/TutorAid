@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 
-// List basic tutor info (used for subject filtering, etc.)
-exports.getAllTutors = async (_req, res) => {
+// List tutors (minimal fields)
+async function getAllTutors(_req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT t.tutorID, t.userID, t.subjects, t.availability, t.fee_per_hour, u.name, u.image
@@ -13,10 +13,10 @@ exports.getAllTutors = async (_req, res) => {
     console.error('getAllTutors error:', err);
     res.status(500).json({ error: 'Failed to fetch tutors' });
   }
-};
+}
 
-// Return tutors who teach :subject (comma-separated in tutors.subjects)
-exports.getTutorsBySubject = async (req, res) => {
+// Tutors who teach :subject (subjects stored comma-separated)
+async function getTutorsBySubject(req, res) {
   const { subject } = req.params;
   try {
     const token = String(subject || '').replace(/\s+/g, '');
@@ -33,10 +33,10 @@ exports.getTutorsBySubject = async (req, res) => {
     console.error('getTutorsBySubject error:', err);
     res.status(500).json({ error: 'Failed to fetch tutors' });
   }
-};
+}
 
 // Availability by tutorID
-exports.getTutorAvailability = async (req, res) => {
+async function getTutorAvailability(req, res) {
   const { tutorID } = req.params;
   try {
     const [rows] = await pool.query(
@@ -49,10 +49,10 @@ exports.getTutorAvailability = async (req, res) => {
     console.error('getTutorAvailability error:', err);
     res.status(500).json({ error: 'Failed to fetch availability' });
   }
-};
+}
 
-// Tutor profile by userID (for fee_per_hour, bio, etc.)
-exports.getTutorByUserID = async (req, res) => {
+// Tutor profile by userID
+async function getTutorByUserID(req, res) {
   const { userID } = req.params;
   try {
     const [rows] = await pool.query(
@@ -66,9 +66,10 @@ exports.getTutorByUserID = async (req, res) => {
     console.error('getTutorByUserID error:', err);
     res.status(500).json({ error: 'Failed to fetch tutor' });
   }
-};
+}
 
-exports.updateTutorByUserID = async (req, res) => {
+// Update tutor by userID
+async function updateTutorByUserID(req, res) {
   const { userID } = req.params;
   const { bio, subjects, qualifications, availability, fee_per_hour, experience } = req.body || {};
   try {
@@ -79,6 +80,7 @@ exports.updateTutorByUserID = async (req, res) => {
       [bio || '', subjects || '', qualifications || '', availability || '', fee_per_hour ?? 0, experience || '', userID]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Tutor not found' });
+
     const [rows] = await pool.query(
       `SELECT userID, bio, subjects, qualifications, availability, fee_per_hour, experience
        FROM tutors WHERE userID = ? LIMIT 1`,
@@ -89,4 +91,12 @@ exports.updateTutorByUserID = async (req, res) => {
     console.error('updateTutorByUserID error:', err);
     res.status(500).json({ error: 'Failed to update tutor' });
   }
+}
+
+module.exports = {
+  getAllTutors,
+  getTutorsBySubject,
+  getTutorAvailability,
+  getTutorByUserID,
+  updateTutorByUserID,
 };
