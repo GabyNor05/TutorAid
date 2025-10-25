@@ -5,6 +5,7 @@ import { api, endpoints } from "../../api/client";
 import { analytics } from "../../lib/analytics";
 
 function Footer() {
+  const [name, setName] = useState("");              // ADD
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState("");
@@ -22,13 +23,11 @@ function Footer() {
 
     setSubmitting(true);
     try {
-      await api.post(endpoints.newsletterSubscribe(), { email: clean });
+      await api.post(endpoints.newsletterSubscribe(), { email: clean, name }); 
       setMsg("Thanks for subscribing! Please check your email.");
       const domain = clean.split('@')[1] || '';
-      analytics.event('newsletter_subscribed', {
-        placement: 'footer',
-        email_domain: domain,
-      });
+      analytics.event('newsletter_subscribed', { placement: 'footer', email_domain: domain });
+      setName(""); 
       setEmail("");
     } catch (err) {
       console.error('Subscribe failed:', err);

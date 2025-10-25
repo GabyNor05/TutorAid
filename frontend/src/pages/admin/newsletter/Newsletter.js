@@ -12,7 +12,6 @@ function Newsletter() {
   const [msg, setMsg] = useState("");
 
   const previewHtml = useMemo(() => {
-    // simple client-side preview: replace {{name}} with "there"
     return (tpl.content_html || "").replace(/\{\{\s*name\s*\}\}/g, "there");
   }, [tpl]);
 
@@ -78,7 +77,7 @@ function Newsletter() {
 
   const deleteTemplate = async () => {
     if (!selectedId) return;
-    if (!confirm("Delete this template?")) return;
+    if (!window.confirm("Delete this template?")) return; 
     try {
       await api.delete(endpoints.newsletterTemplateById(selectedId));
       onNew();
@@ -104,7 +103,7 @@ function Newsletter() {
 
   const sendAll = async () => {
     if (!selectedId) { setMsg("Select a template first."); return; }
-    if (!confirm(`Send to all ${subs.length} subscribers?`)) return;
+    if (!window.confirm(`Send to all ${subs.length} subscribers?`)) return; // FIX
     setSending(true); setMsg("");
     try {
       const r = await api.post(endpoints.newsletterSend(), { templateId: selectedId });
@@ -165,7 +164,7 @@ function Newsletter() {
               <input className="w-full border rounded px-2 py-1" value={tpl.subject} onChange={e => setTpl({ ...tpl, subject: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-sm">HTML Content (supports {{name}})</label>
+              <label className="text-sm">HTML Content (supports {'{{name}}'})</label> 
               <textarea className="w-full border rounded px-2 py-1 h-48" value={tpl.content_html} onChange={e => setTpl({ ...tpl, content_html: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
