@@ -161,6 +161,8 @@ function Home() {
                 <div><span className="font-semibold">Subjects:</span> {selectedTutor.subjects}</div>
                 <div><span className="font-semibold">Fee per hour:</span> R{selectedTutor.fee_per_hour}</div>
                 <div><span className="font-semibold">Experience:</span> {selectedTutor.experience}</div>
+                <div><span className="font-semibold">Qualifications:</span> {selectedTutor.qualifications}</div>
+                <div><span className="font-semibold">Bio:</span> {selectedTutor.bio}</div>
               </dl>
               {selectedTutor.bio && (
                 <p className="text-gray-600 mt-4">{selectedTutor.bio}</p>

@@ -1,6 +1,9 @@
 import './App.css';
 import React from "react";
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { analytics } from './lib/analytics';
+
+//Pages
 import Dashboard from './pages/dashboard/Dashboard';
 import Signup from './pages/signup/Signup';
 import Login from './pages/login/login';
@@ -22,8 +25,8 @@ import RequestForm from './pages/student/requestForm/RequestForm';
 import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
-import { EnvelopeSimple } from "@phosphor-icons/react"; 
-import { analytics } from './lib/analytics';
+import Newsletter from './pages/admin/newsletter/Newsletter'
+
 
 function usePageTracking() {
   const location = useLocation();
@@ -66,6 +69,8 @@ export default function App() {
         <Route path="/studentrequests" element={<StudentRequests />} />
         <Route path="/managereports" element={<ManageReports />} />
         <Route path="/" element={<Home />} />
+        <Route path="/newsletter" element={<Newsletter />}/>
+        
       </Routes>
 
     </div>

@@ -57,8 +57,7 @@ export const endpoints = {
   tutorByUser: (id) => `/api/tutors/by-user/${id}`,
   lessons: () => '/api/lessons',
   lessonReports: () => '/api/lessonReports',
-
-  // Progress Notes (match routes/progressNotesController)
+  lessonReportEscalate: (studentID) => `/api/lessonReports/escalate/${studentID}`,
   progressNotes: () => '/api/progressNotes',
   progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
   progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}/lesson-notes`,
@@ -76,6 +75,12 @@ export const endpoints = {
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
   studentRequests: () => '/api/studentRequests',
+  newsletterSubscribe: () => '/api/newsletter/subscribe',
+  newsletterSubscribers: () => '/api/newsletter/subscribers',
+  newsletterUnsubscribe: () => '/api/newsletter/unsubscribe',
+  newsletterTemplates: () => '/api/newsletter/templates',
+  newsletterTemplateById: (id) => `/api/newsletter/templates/${id}`,
+  newsletterSend: () => '/api/newsletter/send',
 };
 
 export { API_URL };

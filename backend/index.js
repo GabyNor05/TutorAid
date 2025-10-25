@@ -106,4 +106,7 @@ app.get('/uploads/progressnotes/:filename', (req, res) => {
   res.sendFile(filePath);
 });
 
+const newsletterRoutes = require('./routes/newsletterRoutes');
+app.use('/api/newsletter', newsletterRoutes);
+
 module.exports = app;

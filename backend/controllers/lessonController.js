@@ -1,8 +1,16 @@
 const nodemailer = require('nodemailer'); // For sending emails
-const pool = require('../config/db');
+const pool = require('../config/db'); // ensure this is present
+
+function normTime(t) {
+  if (!t) return t;
+  return /^\d{2}:\d{2}(:\d{2})?$/.test(t) ? (t.length === 5 ? `${t}:00` : t) : t;
+}
 
 exports.createLesson = async (req, res) => {
-  const { tutorID, studentID, subject, date, startTime, duration, total_fee } = req.body;
+  const payload = req.body || {};
+  const { tutorID, studentID, subject, date, startTime, duration, total_fee } = payload;
+
+  console.log('[createLesson] payload:', payload);
 
   if (!tutorID || !studentID || !subject || !date || !startTime || !duration) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -13,21 +21,30 @@ exports.createLesson = async (req, res) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
 
-    // Try insert with total_fee; if column missing, retry without it
+    // FK existence checks give clearer errors than ER_NO_REFERENCED_ROW
+    const [[tutorChk]] = await conn.query(`SELECT COUNT(*) AS c FROM tutors WHERE tutorID = ?`, [tutorID]);
+    const [[studChk]]  = await conn.query(`SELECT COUNT(*) AS c FROM students WHERE studentID = ?`, [studentID]);
+    if (!tutorChk.c) throw new Error('Invalid tutorID');
+    if (!studChk.c) throw new Error('Invalid studentID');
+
+    const time = normTime(startTime);
     let lessonID;
+
+    // Try with total_fee first; retry without if column is missing
     try {
       const [r] = await conn.query(
         `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [tutorID, studentID, subject, date, startTime, duration, total_fee ?? null]
+        [tutorID, studentID, subject, date, time, duration, total_fee ?? null]
       );
       lessonID = r.insertId;
     } catch (e) {
-      if (e.code === 'ER_BAD_FIELD_ERROR') {
+      if (e.code === 'ER_BAD_FIELD_ERROR' || e.code === 'ER_NO_DEFAULT_FOR_FIELD') {
+        console.warn('[createLesson] retrying without total_fee due to:', e.code);
         const [r2] = await conn.query(
           `INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration)
            VALUES (?, ?, ?, ?, ?, ?)`,
-          [tutorID, studentID, subject, date, startTime, duration]
+          [tutorID, studentID, subject, date, time, duration]
         );
         lessonID = r2.insertId;
       } else {
@@ -35,50 +52,23 @@ exports.createLesson = async (req, res) => {
       }
     }
 
-    // COMMENTED OUT: creating a message on booking (temporarily disabled)
-    /*
-    const [studentRows] = await conn.query(
-      `SELECT u.name AS studentName
-       FROM students s JOIN users u ON s.userID = u.userID
-       WHERE s.studentID = ? LIMIT 1`,
-      [studentID]
-    );
-    const studentName = studentRows?.[0]?.studentName || 'Student';
-    const subjectLine = `${studentName} requested a lesson`;
-    const body = [
-      `Subject: ${subject}`,
-      `Date: ${date}`,
-      `Start Time: ${startTime}`,
-      `Duration: ${duration} minutes`,
-      total_fee != null ? `Total Fee: R ${Number(total_fee).toFixed(2)}` : null,
-      `Lesson ID: ${lessonID}`,
-    ].filter(Boolean).join('\n');
-
-    try {
-      await conn.query(
-        `INSERT INTO messages (senderID, receiverID, subject, body, type)
-         VALUES (?, ?, ?, ?, ?)`,
-        [studentID, tutorID, subjectLine, body, 'Lesson Request']
-      );
-    } catch (e) {
-      if (e.code === 'ER_BAD_FIELD_ERROR') {
-        await conn.query(
-          `INSERT INTO messages (senderID, receiverID, subject, body)
-           VALUES (?, ?, ?, ?)`,
-          [studentID, tutorID, subjectLine, body]
-        );
-      } else {
-        throw e;
-      }
-    }
-    */
-
     await conn.commit();
-    res.status(201).json({ success: true, lessonID });
+    console.log('[createLesson] committed:', { lessonID });
+    return res.status(201).json({ success: true, lessonID });
   } catch (err) {
-    if (conn) { try { await conn.rollback(); } catch (_) {} }
-    console.error('createLesson error:', err.code, err.sqlMessage || err.message);
-    res.status(500).json({ error: 'Failed to create lesson' });
+    if (conn) { try { await conn.rollback(); } catch {} }
+    console.error('[createLesson] error:', {
+      code: err.code,
+      sqlState: err.sqlState,
+      sqlMessage: err.sqlMessage,
+      message: err.message,
+    });
+    // Temporarily include detail so the frontend shows the DB cause
+    return res.status(500).json({
+      error: 'Failed to create lesson',
+      detail: err.sqlMessage || err.message,
+      code: err.code || null,
+    });
   } finally {
     if (conn) conn.release();
   }
