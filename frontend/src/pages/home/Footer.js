@@ -55,10 +55,11 @@ function Footer() {
               placeholder="Enter name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-2/3 sm:w-2/3 sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-transparent placeholder-white/80 h-10"
+              className="w-full sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-transparent placeholder-white/80 h-10"
               required
             />
-            <input
+            <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-0">
+              <input
               type="email"
               placeholder="Enter email"
               autoComplete="email"
@@ -70,16 +71,18 @@ function Footer() {
             <button
               type="submit"
               disabled={submitting}
-              className="bg-gradient-to-l from-[#E9AD53] to-[#866026] flex justify-center text-center w-full sm:w-1/3 mt-0 sm:mt-0 sm:ml-2 transition h-10"
+              className="bg-gradient-to-l from-[#E9AD53] to-[#866026]  w-full sm:w-1/3 mt-0 sm:mt-0 sm:ml-2 transition h-12"
             >
               {submitting ? 'Subscribing…' : 'Subscribe'}
             </button>
+            </div>
+
           </form>
           {msg && <div className="mt-2 text-sm">{msg}</div>}
         </div>
-        <div >
+        <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 justify-center">
           {/* Quick Navigation */}
-        <div className="flex flex-col justify-center items-center text-center">
+        <div className="flex flex-col justify-center items-center text-center sm:items-start sm:text-left">
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Quick Navigation</h3>
           <ul className="space-y-2 text-sm">
             <li><a href="/" className="hover:text-yellow-500">Home</a></li>
@@ -90,7 +93,7 @@ function Footer() {
         </div>
 
         {/* Legal */}
-        <div className="flex flex-col justify-center items-center text-center">
+        <div className="flex flex-col justify-center items-center text-center sm:items-start sm:text-left">
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Legal</h3>
           <ul className="space-y-2 text-sm">
             <li><a href="/terms" className="hover:text-yellow-500">Terms & Conditions</a></li>
@@ -100,7 +103,7 @@ function Footer() {
         </div>
 
         {/* Contact */}
-        <div className="flex flex-col justify-center items-center text-center">
+        <div className="flex flex-col justify-center items-center text-center sm:items-start sm:text-left">
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Contact</h3>
           <p className="text-sm text-white mb-2">
             45 Greenhill Road, Sandton, Johannesburg, 2196
@@ -128,7 +131,7 @@ function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="flex justify-center items-center border-t w-3/4 border-gray-200/50 mt-6 sm:mt-8 py-3 sm:py-4 text-center text-xs sm:text-sm text-gray-200/70">
+      <div className="flex justify-center items-center border-t w-full border-gray-200/50 mt-6 sm:mt-8 py-3 sm:py-4 text-center text-xs sm:text-sm text-gray-200/70">
         © 2025 Tutor Aid. All rights reserved.
       </div>
 

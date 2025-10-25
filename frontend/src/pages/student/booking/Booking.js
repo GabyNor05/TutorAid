@@ -60,7 +60,8 @@ function Booking() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingBooking, setPendingBooking] = useState(null);
   const [confirmError, setConfirmError] = useState("");
-  const [studentInfo, setStudentInfo] = useState(null); // ADD
+  const [studentInfo, setStudentInfo] = useState(null);
+  const [studentUser, setStudentUser] = useState(null); // ADD: user row for name
 
   const subjectOptions = [
       "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
@@ -209,17 +210,26 @@ function Booking() {
     }
     const userID = localStorage.getItem("userID");
     try {
-      const studentData = await api.get(endpoints.studentByUser(userID)); // already used
-      if (!studentData?.studentID) {
+      // Students row gives us studentID (for lessons) and userID (for messages)
+      const studentData = await api.get(endpoints.studentByUser(userID));
+      if (!studentData?.studentID || !studentData?.userID) {
         alert("Student profile not found.");
         return;
       }
-      setStudentInfo(studentData); // ADD: store fetched student
+      setStudentInfo(studentData);
+
+      // Fetch the student name from Users table
+      try {
+        const u = await api.get(endpoints.userById(studentData.userID));
+        setStudentUser(u || null);
+      } catch {
+        setStudentUser(null);
+      }
 
       const startTime = selectedDate.toTimeString().slice(0, 8); // HH:MM:SS
       const lessonPayload = {
         tutorID: Number(selectedTutor),
-        studentID: studentData.studentID, // keep using fetched ID
+        studentID: studentData.studentID,
         subject: selectedSubject,
         date: selectedDate.toISOString().slice(0, 10),
         startTime,
@@ -238,21 +248,30 @@ function Booking() {
     }
   };
 
-  // Confirm: include total_fee and create the lesson (no message API call)
+  // Confirm: include total_fee and create the lesson, then send a message (sender/receiver are userIDs)
   const handleConfirmBooking = async () => {
     if (!pendingBooking) return;
     try {
-      const payload = {
-        ...pendingBooking,
-        total_fee: calcTotalFee(),
-      };
+      const payload = { ...pendingBooking, total_fee: calcTotalFee() };
       const res = await api.post(endpoints.lessons(), payload);
       const lessonID = res?.lessonID;
 
-      // Send a message to the tutor via messagesController
+      // Send a message via messagesController with userIDs
       try {
-        const senderUserID = Number(localStorage.getItem("userID"));
-        const receiverUserID = Number(selectedTutorUserID);
+        let senderUserID = Number(studentInfo?.userID || 0);
+        if (!senderUserID) {
+          const uid = Number(localStorage.getItem("userID") || 0);
+          if (uid) {
+            const s = await api.get(endpoints.studentByUser(uid));
+            if (s?.userID) {
+              setStudentInfo(s);
+              senderUserID = Number(s.userID);
+              // refresh name if needed
+              try { setStudentUser(await api.get(endpoints.userById(s.userID))); } catch {}
+            }
+          }
+        }
+        const receiverUserID = Number(selectedTutorUserID || 0);
 
         if (senderUserID && receiverUserID) {
           const bodyParts = [
@@ -264,10 +283,10 @@ function Booking() {
             lessonID ? `Lesson ID: ${lessonID}` : null,
           ].filter(Boolean);
 
-          const studentName = studentInfo?.name || "A student";
+          const studentName = studentUser?.name || "A student"; // USE Users.name
           await api.post(endpoints.messages(), {
-            senderID: senderUserID,
-            receiverID: receiverUserID,
+            senderID: senderUserID,       // Users.userID
+            receiverID: receiverUserID,   // Tutor’s Users.userID
             type: 'Lesson Request',
             subject: `${studentName} requested a lesson`,
             body: bodyParts.join("\n"),

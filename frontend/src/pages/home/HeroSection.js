@@ -27,7 +27,7 @@ const HeroSection = () => {
                     Visit Dashboard
                   </button>
                   <button
-                    className="signup-button text-white border border-yellow-400 px-6 py-3 rounded-[4px] font-semibold transition w-1/2 h-12 mt-2 sm:mt-0"
+                    className="signup-button text-white border border-yellow-400 px-6 py-3 rounded-[4px] font-semibold transition w-full h-12 mt-2 sm:mt-0"
                     onClick={() => navigate('/userprofile')}
                   >
                     View Profile
