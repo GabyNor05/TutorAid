@@ -196,18 +196,35 @@ exports.send = async (req, res) => {
       return res.json({ ok: true, sent: 0, simulated: true });
     }
 
+    const vars = { name: 'there', year: new Date().getFullYear(), ...(variables || {}) };
+
+    const normalizeHtml = (str) => {
+      if (!str) return '';
+      let html = renderTemplate(str, vars);
+      const hasTags = /<\s*[a-z]/i.test(html);
+      // Convert both real newlines and escaped "\n" if not already proper HTML
+      if (!hasTags) {
+        html = html.replace(/\r?\n/g, '<br/>').replace(/\\n/g, '<br/>');
+      } else {
+        // If someone pasted escaped "\n" into HTML, still clean them
+        html = html.replace(/\\n/g, '<br/>');
+      }
+      return html;
+    };
+
+    const normalizeText = (str) => {
+      if (!str) return undefined;
+      // Render tokens and convert any escaped "\n" to real newlines
+      let txt = renderTemplate(str, vars);
+      return txt.replace(/\\n/g, '\n');
+    };
+
     // If testEmail provided, send only to that email
     if (testEmail) {
       if (!isValidEmail(testEmail)) return res.status(400).json({ error: 'Valid testEmail required' });
-      const html = renderTemplate(tpl.content_html, { name: 'there', ...(variables || {}) });
-      const text = renderTemplate(tpl.content_text || '', { name: 'there', ...(variables || {}) }) || undefined;
-      const { error } = await resend.emails.send({
-        from: FROM,
-        to: testEmail,
-        subject: tpl.subject,
-        html,
-        text,
-      });
+      const html = normalizeHtml(tpl.content_html);
+      const text = normalizeText(tpl.content_text);
+      const { error } = await resend.emails.send({ from: FROM, to: testEmail, subject: renderTemplate(tpl.subject, vars), html, text });
       if (error) {
         console.error('[newsletter] Resend test error:', error);
         return res.status(500).json({ error: 'Failed to send test email' });
@@ -215,24 +232,21 @@ exports.send = async (req, res) => {
       return res.json({ ok: true, sent: 1 });
     }
 
-    // Broadcast: get all subscribed recipients
-    const [subs] = await pool.query(
-      `SELECT name, email FROM newsletterSubscribers WHERE status = 'subscribed'`
-    );
+    // Broadcast
+    const [subs] = await pool.query(`SELECT name, email FROM newsletterSubscribers WHERE status = 'subscribed'`);
     if (!subs.length) return res.json({ ok: true, sent: 0 });
 
-    // Send in chunks to avoid rate limits
     const chunkSize = 50;
     let sent = 0;
     for (let i = 0; i < subs.length; i += chunkSize) {
       const chunk = subs.slice(i, i + chunkSize);
       const sends = await Promise.allSettled(
         chunk.map(({ name, email }) => {
-          const html = renderTemplate(tpl.content_html, { name: name || 'there', ...(variables || {}) });
-          const text = tpl.content_text
-            ? renderTemplate(tpl.content_text, { name: name || 'there', ...(variables || {}) })
-            : undefined;
-          return resend.emails.send({ from: FROM, to: email, subject: tpl.subject, html, text });
+          const perVars = { ...vars, name: name || 'there' };
+          const html = normalizeHtml(tpl.content_html);
+          const text = normalizeText(tpl.content_text);
+          const subject = renderTemplate(tpl.subject, perVars);
+          return resend.emails.send({ from: FROM, to: email, subject, html, text });
         })
       );
       sent += sends.filter(s => s.status === 'fulfilled' && !s.value?.error).length;

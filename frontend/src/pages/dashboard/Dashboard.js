@@ -15,6 +15,7 @@ function Dashboard() {
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [rateModalOpen, setRateModalOpen] = useState(false);
     const [selectedTutor, setSelectedTutor] = useState(null);
+    const [selectedTutorUserID, setSelectedTutorUserID] = useState(null); // ADD: tutor's userID
     const [ratingValue, setRatingValue] = useState("");
     const [ratingComment, setRatingComment] = useState("");
     const [contactSubject, setContactSubject] = useState(""); 
@@ -63,25 +64,54 @@ function Dashboard() {
         }
     };
 
-    const handleSendPrivateMessage = async (e) => { // ADD
+    // Helper to resolve tutor.userID from tutorID
+    const resolveTutorUserID = async (tutorID) => {
+        try {
+            // Ensure your client has endpoints.tutorById; fallback to `${endpoints.tutors()}/${id}`
+            const tutor =
+                (endpoints.tutorById ? await api.get(endpoints.tutorById(tutorID)) : await api.get(`${endpoints.tutors()}/${tutorID}`));
+            const uid = tutor?.userID ? Number(tutor.userID) : null;
+            setSelectedTutorUserID(uid);
+            return uid;
+        } catch (e) {
+            console.error("Failed to resolve tutor userID:", e);
+            setSelectedTutorUserID(null);
+            return null;
+        }
+    };
+
+    const handleSendPrivateMessage = async (e) => {
         e.preventDefault();
         if (!selectedTutor || !contactBody.trim()) return;
         try {
             const userId = localStorage.getItem("userID");
-            const res = await api.get(endpoints.studentByUser(userId));
-            const studentID = res.studentID;
+            // Get the Student row to obtain the student's userID (sender)
+            const studentRow = await api.get(endpoints.studentByUser(userId));
+            const senderUserID = Number(studentRow?.userID || 0); // MUST be Users.userID
+            if (!senderUserID) throw new Error("Could not resolve sender userID");
+
+            // Ensure we have tutor's userID (receiver)
+            let receiverUserID = Number(selectedTutorUserID || 0);
+            if (!receiverUserID) {
+                const uid = await resolveTutorUserID(selectedTutor);
+                receiverUserID = Number(uid || 0);
+            }
+            if (!receiverUserID) throw new Error("Could not resolve tutor userID");
+
             await api.post(endpoints.messages(), {
                 type: "Private Message",
                 subject: contactSubject,
                 body: contactBody,
-                senderID: studentID,
-                receiverID: selectedTutor,
+                senderID: senderUserID,     // Users.userID
+                receiverID: receiverUserID, // Users.userID
             });
+
             setContactModalOpen(false);
             setContactSubject("");
             setContactBody("");
         } catch (err) {
             console.error("Send message failed:", err);
+            // optional: surface a toast
         }
     };
 
@@ -140,7 +170,7 @@ function Dashboard() {
 )}
                     {role === "Admin" && (
   <>
-    <div className="md:hidden w-1/2 px-4">
+    <div className="flex flex-col items-center md:hidden w-2/3 px-4">
       <div className="mobile-nav-list">
         <button className="navpill" onClick={() => handleNavigation("/addstaff")}><UserCirclePlusIcon size={24} className="opacity-30 mr-2"/> Add Staff</button>
         <button className="navpill" onClick={() => handleNavigation("/manageusers")}><UserList size={24} className="opacity-30 mr-2"/> Manage Users</button>
@@ -240,36 +270,41 @@ function Dashboard() {
   </>
 )}
             {(role === "Tutor" || role === "Student") && (
-    <div className="upcoming-lessons pt-[15px]">
-        <div className="flex flex-col items-start justify-start gap-[20px] pb-[30px] w-[1000px] mx-auto">
-            <h1 className="section-title flex justify-start m-[20px]">Upcoming Lessons</h1>
-            <div className="flex flex-col items-start justify-start gap-[20px] pb-[30px]">
-                {acceptedLessons.length === 0 ? (
-                    <p className="ml-[20px] text-white">No upcoming lessons scheduled.</p>
-                ) : (
-                    acceptedLessons.map(lesson => (
-                        <LessonCards
-                            key={lesson.lessonID}
-                            lesson={lesson}
-                            role={role}
-                            tutorImage={lesson.tutorImage}   // should be set from backend
-                            tutorName={lesson.tutorName}     // should be set from backend
-                            showStatus={false}
-                            onContactTutor={() => {
-                                setSelectedTutor(lesson.tutorID);
-                                setContactModalOpen(true);
-                            }}
-                            onRateTutor={() => {
-                                setSelectedTutor(lesson.tutorID);
-                                setRateModalOpen(true);
-                            }}
-                        />
-                    ))
-                )}
-            </div>  
-        </div>
-    </div>
-)}
+                <div className="upcoming-lessons pt-4 sm:pt-5">
+                    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+                        <h1 className="section-title text-white text-xl sm:text-2xl md:text-3xl mb-3 sm:mb-4">
+                            Upcoming Lessons
+                        </h1>
+
+                        {acceptedLessons.length === 0 ? (
+                            <p className="text-white/90">No upcoming lessons scheduled.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 pb-6">
+                                {acceptedLessons.map(lesson => (
+                                    <LessonCards
+                                        key={lesson.lessonID}
+                                        lesson={lesson}
+                                        role={role}
+                                        tutorImage={lesson.tutorImage}
+                                        tutorName={lesson.tutorName}
+                                        showStatus={false}
+                                        onContactTutor={() => {
+                                            setSelectedTutor(lesson.tutorID);
+                                            resolveTutorUserID(lesson.tutorID);
+                                            setContactModalOpen(true);
+                                        }}
+                                        onRateTutor={() => {
+                                            setSelectedTutor(lesson.tutorID);
+                                            resolveTutorUserID(lesson.tutorID);
+                                            setRateModalOpen(true);
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
             {contactModalOpen && (
   <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
     <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">

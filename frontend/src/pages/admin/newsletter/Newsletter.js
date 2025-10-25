@@ -12,7 +12,14 @@ function Newsletter() {
   const [msg, setMsg] = useState("");
 
   const previewHtml = useMemo(() => {
-    return (tpl.content_html || "").replace(/\{\{\s*name\s*\}\}/g, "there");
+    let html = (tpl.content_html || '').replace(/\{\{\s*name\s*\}\}/g, 'there').replace(/\{\{\s*year\s*\}\}/g, String(new Date().getFullYear()));
+    const hasTags = /<\s*[a-z]/i.test(html);
+    if (!hasTags) {
+      html = html.replace(/\r?\n/g, '<br/>').replace(/\\n/g, '<br/>');
+    } else {
+      html = html.replace(/\\n/g, '<br/>');
+    }
+    return html;
   }, [tpl]);
 
   const loadData = async () => {
@@ -103,7 +110,7 @@ function Newsletter() {
 
   const sendAll = async () => {
     if (!selectedId) { setMsg("Select a template first."); return; }
-    if (!window.confirm(`Send to all ${subs.length} subscribers?`)) return; // FIX
+    if (!window.confirm(`Send to all ${subs.length} subscribers?`)) return;
     setSending(true); setMsg("");
     try {
       const r = await api.post(endpoints.newsletterSend(), { templateId: selectedId });
@@ -113,8 +120,21 @@ function Newsletter() {
     } finally { setSending(false); }
   };
 
+  // INSERT: helper to append unsubscribe link/footer
+  const insertUnsubscribeLink = () => {
+    const footer = `
+    <p style="margin-top:30px;"> Kind regards,<br/>The Tutor Aid Team <br/> Visit our website <a href="https://gabydv.xyz" target="_blank" rel="noopener noreferrer" style="color:#2B5561; text-decoration:underline;">here</a>.</p>
+<hr style="border:none; border-top:1px solid #eee; margin:20px 0;" />
+<p style="font-size:12px; color:#666;">
+  You’re receiving this because you subscribed to Tutor Aid newsletters.
+  If this isn’t for you, you can <a href="https://gabydv.xyz/unsubscribe" target="_blank" rel="noopener noreferrer" style="color:#2B5561; text-decoration:underline;">unsubscribe</a> anytime.
+</p>
+<p style="font-size:12px; color:#666;">© ${new Date().getFullYear()} Tutor Aid</p>`;
+    setTpl(prev => ({ ...prev, content_html: (prev.content_html || '') + footer }));
+  };
+
   return (
-    <div className="page-background max-w-6xl mx-auto p-4">
+    <div className="blue-page-background max-w-6xl p-4">
       <h1 className="blue-page-title mb-4">Newsletter</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Sidebar: templates list */}
@@ -164,8 +184,23 @@ function Newsletter() {
               <input className="w-full border rounded px-2 py-1" value={tpl.subject} onChange={e => setTpl({ ...tpl, subject: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-sm">HTML Content (supports {'{{name}}'})</label> 
-              <textarea className="w-full border rounded px-2 py-1 h-48" value={tpl.content_html} onChange={e => setTpl({ ...tpl, content_html: e.target.value })} />
+              <label className="text-sm">HTML Content (supports {'{{name}}'})</label>
+              <textarea
+                className="w-full border rounded px-2 py-1 h-48"
+                value={tpl.content_html}
+                onChange={e => setTpl({ ...tpl, content_html: e.target.value })}
+              />
+              {/* INSERT: quick action to add unsubscribe link */}
+              <div className="flex items-center justify-between mt-1">
+                <small className="text-gray-500">Tip: include an unsubscribe link.</small>
+                <button
+                  type="button"
+                  onClick={insertUnsubscribeLink}
+                  className="px-2 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200"
+                >
+                  Insert Unsubscribe Link
+                </button>
+              </div>
             </div>
             <div className="sm:col-span-2">
               <label className="text-sm">Plain Text (optional)</label>

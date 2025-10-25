@@ -1,227 +1,272 @@
-import React, { useState, useEffect} from "react";
-import { href, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
+import { api, endpoints } from "../../../api/client";
 import "./lessonFeedback.css";
 
 function FeedbackForm() {
-    const [rating, setRating] = useState(3);
-    const [subjects, setSubjects] = useState([]);
-    const [subject, setSubject] = useState(""); // <-- Add this line
-    const [date, setDate] = useState("");
-    const [punctual, setPunctual] = useState(false);
-    const [setwork, setSetwork] = useState("");
-    const [comments, setComments] = useState("");
-    const [students, setStudents] = useState([]);
-    const [selectedStudent, setSelectedStudent] = useState("");
-    const [tutorName, setTutorName] = useState("");
-    const tutorID = localStorage.getItem("userID");
-    const termsOfService = ""; // Placeholder for PDF link
-    const navigate = useNavigate();
-    const API_URL =  process.env.REACT_APP_API_URL;  
+  const [rating, setRating] = useState(3);
+  const [subjects, setSubjects] = useState([]);
+  const [subject, setSubject] = useState("");
+  const [date, setDate] = useState("");
+  const [punctual, setPunctual] = useState(false);
+  const [setwork, setSetwork] = useState("");
+  const [comments, setComments] = useState("");
+  const [students, setStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [tutorName, setTutorName] = useState("");
+  const tutorUserID = localStorage.getItem("userID"); // it's a userID
+  const termsOfService = "";
+  const navigate = useNavigate();
 
-    useEffect(() => {
-                async function fetchStudents() {
-                    try {
-                        const res = await fetch(`${API_URL}/api/students`);
-                        const data = await res.json();
-                        setStudents(data);
-                    } catch (err) {
-                        console.error("Error fetching students:", err);
-                    }
-                }
-                async function fetchSubjects() {
-                    try {
-                        const res = await fetch(`${API_URL}/api/subjects`);
-                        const data = await res.json();
-                        setSubjects(data);
-                    } catch (err) {
-                        console.error("Error fetching subjects:", err);
-                    }
-                }
-                fetchStudents();
-                fetchSubjects();
-            }, []);
-    
-    useEffect(() => {
-        async function fetchStudents() {
-            try {
-                const res = await fetch(`${API_URL}/api/students`);
-                const data = await res.json();
-                setStudents(data);
-            } catch (err) {
-                console.error("Error fetching students:", err);
-            }
-        }
-        fetchStudents();
-    }, []);
+  // Load students and subjects once
+  useEffect(() => {
+    (async () => {
+      try {
+        const [studentsRes, subjectsRes] = await Promise.all([
+          // Use endpoints if present; fallback to direct path
+          api.get(endpoints.students ? endpoints.students() : "/api/students"),
+          api.get(endpoints.subjects ? endpoints.subjects() : "/api/subjects"),
+        ]);
+        setStudents(Array.isArray(studentsRes) ? studentsRes : []);
+        setSubjects(Array.isArray(subjectsRes) ? subjectsRes : []);
+      } catch (err) {
+        console.error("Failed to load students/subjects:", err);
+      }
+    })();
+  }, []);
 
-    useEffect(() => {
-        async function fetchTutor() {
-            if (!tutorID) return;
-            try {
-                const res = await fetch(`${API_URL}/api/users/${tutorID}`);
-                const data = await res.json();
-                setTutorName(data.name);
-            } catch (err) {
-                console.error("Error fetching tutor:", err);
-            }
-        }
-        fetchTutor();
-    }, [tutorID]);
+  // Load tutor name from users table
+  useEffect(() => {
+    (async () => {
+      if (!tutorUserID) return;
+      try {
+        const u = await api.get(
+          endpoints.userById ? endpoints.userById(tutorUserID) : `/api/users/${tutorUserID}`
+        );
+        setTutorName(u?.name || "");
+      } catch (err) {
+        console.error("Failed to load tutor user:", err);
+      }
+    })();
+  }, [tutorUserID]);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-        navigate("/dashboard");
+    // Create PDF (better layout + wrapping)
+    const doc = new jsPDF();
+    const left = 12;
+    let y = 14;
 
-       /*  fetch('https://api.pdforge.com/v1/pdf/sync', {
-  method: 'POST',
-  headers: {
-   'Authorization' : 'Bearer pdforge_api_402108e86672f0dbecadd510f5a53eb7' 
-   'Content-Type': 'application/json'
-   },
-  body: JSON.stringify({ templateName: '861c53381c' , data: {
-  "logo_src": "your logo_src here",
-  "tutor_name": "your tutor_name here",
-  "date": "your date here",
-  "student_name": "your student_name here",
-  "subject": "your subject here",
-  "punctual_yes_no": "your punctual_yes_no here",
-  "setwork": "your setwork here",
-  "rating": "your rating here",
-  "comments": "your comments here",
-  "org_email": "your org_email here",
-  "org_phone": "your org_phone here",
-  "org_address": "your org_address here",
-  "terms_summary": "your terms_summary here"
-} 
-  })
-}); */
+    doc.setFontSize(16);
+    doc.text("Lesson Feedback", left, y);
+    y += 10;
 
-        // Create PDF
-        const doc = new jsPDF();
-        doc.setFontSize(14);
-        doc.text("Lesson Feedback", 10, 10);
-        doc.text(`Date of Lesson: ${date}`, 10, 20);
-        doc.text(`Subject Taught: ${subject}`, 10, 30);
-        doc.text(`Student On Time: ${punctual ? "Yes" : "No"}`, 10, 40);
-        doc.text(`Setwork Covered: ${setwork}`, 10, 50);
-        doc.text(`Participation Rating: ${rating}`, 10, 60);
-        doc.text("Additional Comments:", 10, 70);
-        doc.text(comments, 10, 80);
-        doc.text(`Student Name: ${selectedStudent}`, 10, 15);
-        doc.text(`Generated By: ${tutorName}`, 10, 25);
-        doc.text(`Terms of Service: ${termsOfService}`, 10, 35);
+    doc.setFontSize(12);
+    doc.text(`Student Name: ${selectedStudent}`, left, y);
+    y += 8;
+    doc.text(`Generated By: ${tutorName || "Tutor"}`, left, y);
+    y += 8;
+    doc.text(`Date of Lesson: ${date || "-"}`, left, y);
+    y += 8;
+    doc.text(`Subject Taught: ${subject || "-"}`, left, y);
+    y += 8;
+    doc.text(`Student On Time: ${punctual ? "Yes" : "No"}`, left, y);
+    y += 8;
 
-        doc.save(`lesson-feedback-${date}.pdf`);
-    };
+    doc.text("Setwork Covered:", left, y);
+    y += 6;
+    if (setwork) {
+      const sw = doc.splitTextToSize(setwork, 180);
+      doc.text(sw, left, y);
+      y += Math.max(8, sw.length * 6);
+    } else {
+      doc.text("-", left, y);
+      y += 8;
+    }
 
-    const subjectOptions = [
-    "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
-    "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
-    "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
-    ];
-    return (
-        
-        <div className=" bg-white rounded-xl shadow-lg p-10 max-w-2xl mx-auto">
-            <form className="lesson-feedback-form flex flex-col  gap-5 text-gray-900 max-w-xl items-center" onSubmit={handleSubmit}>
-                <div className="form-card flex flex-col gap-8 w-9/12">
-                    <div className="lesson-feedback-particulars">
-                    <div className="lesson-feedback-date w-2/5" style={{display: "flex", flexDirection: "column"}}>
-                        <label className="feedback-label mb-2">Date of Lesson:</label>
-                        <input type="date" className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full" value={date} onChange={e => setDate(e.target.value)} />
-                    </div>
-                    <div className="lesson-feedback-subject w-2/5" style={{display: "flex", flexDirection: "column"}}>
-                        <label className="feedback-label mb-2">Subject Taught:</label>
-                        <select
-                            id="subject"
-                            name="subject"
-                            value={subject}
-                            onChange={e => setSubject(e.target.value)}
-                            required
-                            className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
-                        >
-                            <option value="" className="" onChange={e => setSubject(e.target.value)}>Select Subject</option>
-                            {subjects.map(sub => (
-                                        <option key={sub.subjectID} value={sub.name}>{sub.name}</option>
-                                    ))}
-                            
-                        </select>
-                    </div>
-                </div>
-                <div className="lesson-feedback-student" style={{display: "flex", flexDirection: "column"}}>
-                    <label className="mb-2">Student Name:</label>
-                    <input
-                        type="text"
-                        list="student-list"
-                        value={selectedStudent}
-                        onChange={e => setSelectedStudent(e.target.value)}
-                        placeholder="Search for a student..."
-                        required
-                        className="feedback-input h-10 w-full p-2 rounded-lg border-2 border-gray-300 shadow-inner"
-                    />
-                    <datalist id="student-list">
-                        {students.map(student => (
-                            <option key={student.studentID} value={student.name} />
-                        ))}
-                    </datalist>
-                </div>
-                <div className="lesson-feedback-punctuality" style={{display: "flex", flexDirection: "column"}}>
-                    <span className="mb-2">Was the student on time for their lesson?</span>
-                    <label className="flex items-center cursor-pointer">
-                    <input
-                        type="checkbox"
-                        checked={punctual}
-                        onChange={e => setPunctual(e.target.checked)}
-                        className="sr-only peer"
-                    />
-                    <span
-                        className="w-6 h-6 rounded border-2 border-gray-300 flex items-center justify-center
-                            peer-checked:bg-blue-500 peer-checked:border-blue-500 transition"
-                    >
-                        {punctual && (
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                        )}
-                    </span>
-                    
-                </label>
-                </div>
-                <div className="lesson-feedback-setwork" style={{display: "flex", flexDirection: "column"}}>
-                    <label className="feedback-label mb-2">What did you cover in the lesson?</label>
-                    <input type="textarea" className="feedback-input h-10 w-150 p-2 rounded-lg border-2 border-gray-300 shadow-inner" placeholder="E.g., Algebra, Geometry, etc." value={setwork} onChange={e => setSetwork(e.target.value)} />
-                </div>
-                <div className="lesson-feedback-rating">
-                    <label className="feedback-label mb-2">
-                        Rate the student's participation during the lesson:
-                    </label>
-                    <div className="rating-bar">
-                        <input
-                            type="range"
-                            min={1}
-                            max={5}
-                            value={rating}
-                            onChange={e => setRating(Number(e.target.value))}
-                            className="rating-slider"
-                        />
-                        <span className="rating-value">{rating}</span>
-                    </div>
-                </div>
-                <div className="lesson-feedback-comments">
-                    <label className="feedback-label mb-2">Additional comments about the lesson:</label>
-                    <textarea className="feedback-textarea p-2 rounded-lg border-2 border-gray-300 shadow-inner" rows="4" placeholder="Enter your comments here..." value={comments} onChange={e => setComments(e.target.value)} />
-                </div>
-                <div className="report-link">
-                        <p>Don't have an account?</p> 
-                        <a href="/reportform">Report</a>
-                    </div>
-                </div>
-                <button type="submit" className="submit-feedback-button">Create PDF</button>
-            </form>
-            
+    doc.text(`Participation Rating: ${rating}/5`, left, y);
+    y += 8;
+
+    doc.text("Additional Comments:", left, y);
+    y += 6;
+    if (comments) {
+      const cm = doc.splitTextToSize(comments, 180);
+      doc.text(cm, left, y);
+      y += Math.max(8, cm.length * 6);
+    } else {
+      doc.text("-", left, y);
+      y += 8;
+    }
+
+    if (termsOfService) {
+      y += 4;
+      doc.setFontSize(10);
+      const tos = doc.splitTextToSize(`Terms of Service: ${termsOfService}`, 180);
+      doc.text(tos, left, y);
+    }
+
+    doc.save(`lesson-feedback-${date || "draft"}.pdf`);
+
+    // Navigate after generating PDF
+    navigate("/dashboard");
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 max-w-3xl mx-auto">
+      <form
+        className="lesson-feedback-form flex flex-col gap-6 text-gray-900"
+        onSubmit={handleSubmit}
+      >
+        {/* Header */}
+        <div>
+          <h2 className="text-2xl font-semibold text-[#2B5561]">Lesson Feedback</h2>
+          <p className="text-gray-600 text-sm">Fill in the details below to generate a PDF report.</p>
         </div>
-    );
+
+        {/* Date + Subject (responsive grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <label className="feedback-label mb-2">Date of Lesson:</label>
+            <input
+              type="date"
+              className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="feedback-label mb-2">Subject Taught:</label>
+            <select
+              id="subject"
+              name="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+              className="feedback-input bg-transparent h-10 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
+            >
+              <option value="">Select Subject</option>
+              {subjects.map((sub) => (
+                <option key={sub.subjectID} value={sub.name}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Student search */}
+        <div className="flex flex-col">
+          <label className="mb-2">Student Name:</label>
+          <input
+            type="text"
+            list="student-list"
+            value={selectedStudent}
+            onChange={(e) => setSelectedStudent(e.target.value)}
+            placeholder="Search for a student..."
+            required
+            className="feedback-input h-10 w-full p-2 rounded-lg border-2 border-gray-300 shadow-inner"
+          />
+          <datalist id="student-list">
+            {students.map((student) => (
+              <option key={student.studentID} value={student.name} />
+            ))}
+          </datalist>
+        </div>
+
+        {/* Punctual toggle */}
+        <div className="flex flex-col">
+          <span className="mb-2">Was the student on time for their lesson?</span>
+          <label className="inline-flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={punctual}
+              onChange={(e) => setPunctual(e.target.checked)}
+              className="sr-only peer"
+            />
+            <span
+              className="w-6 h-6 rounded border-2 border-gray-300 flex items-center justify-center
+                         peer-checked:bg-[#2B5561] peer-checked:border-[#2B5561] transition"
+            >
+              {punctual && (
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-sm text-gray-700">Student was on time</span>
+          </label>
+        </div>
+
+        {/* Setwork */}
+        <div className="flex flex-col">
+          <label className="feedback-label mb-2">What did you cover in the lesson?</label>
+          <textarea
+            className="feedback-textarea p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
+            rows={3}
+            placeholder="E.g., Algebra, Geometry, etc."
+            value={setwork}
+            onChange={(e) => setSetwork(e.target.value)}
+          />
+        </div>
+
+        {/* Rating */}
+        <div className="flex flex-col">
+          <label className="feedback-label mb-2">Rate the student's participation:</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={1}
+              max={5}
+              value={rating}
+              onChange={(e) => setRating(Number(e.target.value))}
+              className="flex-1 accent-[#2B5561]"
+            />
+            <span className="rating-value inline-flex justify-center items-center w-10 h-10 rounded-full bg-[#2B5561] text-white">
+              {rating}
+            </span>
+          </div>
+        </div>
+
+        {/* Comments */}
+        <div className="flex flex-col">
+          <label className="feedback-label mb-2">Additional comments about the lesson:</label>
+          <textarea
+            className="feedback-textarea p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full"
+            rows={4}
+            placeholder="Enter your comments here..."
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+          />
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="report-link text-sm text-gray-600">
+            <p className="inline">Don&apos;t have an account?</p>{" "}
+            <a href="/reportform" className="underline text-[#2B5561]">
+              Report
+            </a>
+          </div>
+          <button
+            type="submit"
+            className="submit-feedback-button w-full sm:w-auto px-5 py-2 rounded bg-[#2B5561] text-white hover:bg-[#2B5561]/85"
+          >
+            Create PDF
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }
 
 export default FeedbackForm;

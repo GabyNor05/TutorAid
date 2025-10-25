@@ -9,7 +9,7 @@ function ProgressNotes({ studentID }) {
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                const data = await api.get(endpoints.progressNotesByStudent(studentID)); // FIX
+                const data = await api.get(endpoints.progressNotesByStudent(studentID));
                 setNotes(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Error fetching progress notes:", err);
@@ -19,24 +19,25 @@ function ProgressNotes({ studentID }) {
     }, [studentID]);
 
     return (
-        <div className="blue-page-background">
-            <div className="pt-2 text-center">
-                <h1 className="blue-page-title">Progress Notes</h1>  
+        <div className="blue-page-background rounded-xl">
+            <div className="pt-2 text-center px-4 sm:px-6">
+                <h1 className="blue-page-title">Progress Notes</h1>
             </div>
-            <div className="heading-row">
-                <div>Name</div>
-                <div>Date</div>
-                <div>Size</div>
-                <div>Actions</div>
-                <div></div>
+
+            {/* Header: hidden on mobile */}
+            <div className="hidden sm:grid grid-cols-12 gap-2 px-4 sm:px-6 mt-2 text-white/90 text-sm">
+                <div className="col-span-6 md:col-span-6">Name</div>
+                <div className="col-span-3 md:col-span-3">Date</div>
+                <div className="col-span-3 md:col-span-3">Size</div>
             </div>
-            <div className="pdf-cards-container">
+
+            <div className="px-4 sm:px-6 pb-4 space-y-3">
                 {notes.map(note => (
                     <PdfCard
                         key={note.noteID}
                         title={note.file_name}
                         date={note.uploaded_at?.slice(0, 10)}
-                        size={note.file_size ? `${(note.file_size / (1024 * 1024)).toFixed(2)} MB` : ""}
+                        size={note.file_size} // pass raw size in bytes
                         filePath={note.file_path}
                     />
                 ))}

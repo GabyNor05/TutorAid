@@ -375,59 +375,61 @@ function Booking() {
 
     return (
         <div className="page-background">
-            <div className="booking-container">
-                <h2 className="booking-form-title">Book a Lesson</h2>
-                <form className="booking-form" onSubmit={handleSubmit}>
-                    <div className="flex flex-col items-start w-[600px]">
-                        <div className="booking-form-group">
+            <div className="booking-container mx-auto w-full max-w-4xl px-4 sm:px-6">
+                <h2 className="booking-form-title text-center sm:text-left">Book a Lesson</h2>
+                <form className="booking-form space-y-4" onSubmit={handleSubmit}>
+                    <div className="flex flex-col items-start w-full">
+                        <div className="booking-form-group w-full">
                         
-                        <div className="booking-top-row">
-                            <div className="flex flex-col justify-center items-start w-1/2">
+                        <div className="booking-top-row grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                            <div className="flex flex-col justify-center items-start w-full">
                                 <label>Subject:</label>
-                            <select
-                                value={selectedSubject}
-                                onChange={async e => {
-                                    const subject = e.target.value;
-                                    setSelectedSubject(subject);
-                                    setSelectedTutor(""); // reset selected tutorID
-                                    setSelectedTutorUserID(null);
-                                    setSelectedTutorInfo(null);
-                                    setSelectedDate(null);
-                                    if (subject) {
-                                        try {
-                                            const data = await api.get(endpoints.tutorsBySubject(subject));
-                                            const list = normalizeTutors(data);
-                                            setTutors(list);
-                                            analytics.event('subject_selected', { subject });
-                                            if (list.length === 0) {
-                                              console.warn("No tutors returned for subject:", subject, data);
+                                <select
+                                    className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                                    value={selectedSubject}
+                                    onChange={async e => {
+                                        const subject = e.target.value;
+                                        setSelectedSubject(subject);
+                                        setSelectedTutor(""); // reset selected tutorID
+                                        setSelectedTutorUserID(null);
+                                        setSelectedTutorInfo(null);
+                                        setSelectedDate(null);
+                                        if (subject) {
+                                            try {
+                                                const data = await api.get(endpoints.tutorsBySubject(subject));
+                                                const list = normalizeTutors(data);
+                                                setTutors(list);
+                                                analytics.event('subject_selected', { subject });
+                                                if (list.length === 0) {
+                                                  console.warn("No tutors returned for subject:", subject, data);
+                                                }
+                                            } catch (err) {
+                                              console.error("tutorsBySubject failed:", err);
+                                              setTutors([]);
                                             }
-                                        } catch (err) {
-                                          console.error("tutorsBySubject failed:", err);
-                                          setTutors([]);
+                                        } else {
+                                            setTutors([]);
                                         }
-                                    } else {
-                                        setTutors([]);
-                                    }
-                                }}
-                                disabled={subjectsLoading}
-                            >
-                                <option value="">Select Subject</option>
-                                {(
-                                  availableSubjects.length
-                                    ? availableSubjects.map(s => s.name)
-                                    : subjectOptions // fallback to your static list if API empty/fails
-                                ).map(subject => (
-                                    <option key={subject} value={subject}>{subject}</option>
-                                ))}
-                            </select>
+                                    }}
+                                    disabled={subjectsLoading}
+                                >
+                                    <option value="">Select Subject</option>
+                                    {(
+                                      availableSubjects.length
+                                        ? availableSubjects.map(s => s.name)
+                                        : subjectOptions
+                                    ).map(subject => (
+                                        <option key={subject} value={subject}>{subject}</option>
+                                    ))}
+                                </select>
                             </div>
                             
 
                             {tutors.length > 0 && (
-                                <div className="flex flex-col justify-center items-start w-1/2">
+                                <div className="flex flex-col justify-center items-start w-full">
                                     <label>Tutor:</label>
                                     <select
+                                        className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                                         value={selectedTutor}
                                         onChange={async e => {
                                             const tutorID = Number(e.target.value);
@@ -462,14 +464,14 @@ function Booking() {
                                         </option>
                                       ))}
                                   </select>
-                              </div>
-                          )}
+                                </div>
+                            )}
+                        </div>
                       </div>
-                  </div>
 
-                    {/* ADD: Tutor info card (responsive) */}
+                    {/* Tutor info card stays responsive */}
                     {selectedTutor && (
-                        <div className="booking-form-group">
+                        <div className="booking-form-group w-full">
                             <div className="w-full rounded-xl bg-white/90 shadow p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start">
                                 <div className="shrink-0">
                                     {loadingTutorInfo ? (
@@ -513,9 +515,10 @@ function Booking() {
                         </div>
                     )}
 
-                    <div className="booking-form-group">
+                    <div className="booking-form-group w-full">
                         <label>Duration:</label>
                         <select
+                            className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                             value={duration}
                             onChange={e => setDuration(e.target.value)}
                         >
@@ -528,23 +531,32 @@ function Booking() {
                         </select>
                     </div>
 
-                    <div className="booking-form-group">
+                    <div className="booking-form-group w-full">
                         <label>Date:</label>
-                        <DatePicker
-                            className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                            selected={selectedDate}
-                            onChange={date => setSelectedDate(date)}
-                            minDate={tomorrow}
-                            inline
-                            showTimeSelect
-                            filterDate={isDateAvailable}
-                            includeTimes={getAvailableTimesForDate(selectedDate, availability)}
-                            disabled={!selectedTutor}
-                        />
+                        <div className="w-full rounded-lg border border-gray-200 p-2 overflow-x-auto">
+                            <DatePicker
+                                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                                selected={selectedDate}
+                                onChange={date => setSelectedDate(date)}
+                                minDate={tomorrow}
+                                inline
+                                showTimeSelect
+                                filterDate={isDateAvailable}
+                                includeTimes={getAvailableTimesForDate(selectedDate, availability)}
+                                disabled={!selectedTutor}
+                            />
+                        </div>
                     </div>
                     </div>
 
-                    <button type="submit" className="login-btn w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70">Book Lesson</button>
+                    <div className="w-full flex justify-center">
+                        <button
+                            type="submit"
+                            className="login-btn w-full sm:w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
+                        >
+                            Book Lesson
+                        </button>
+                    </div>
                 </form>
             </div>
 

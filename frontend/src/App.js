@@ -25,7 +25,8 @@ import RequestForm from './pages/student/requestForm/RequestForm';
 import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
-import Newsletter from './pages/admin/newsletter/Newsletter'
+import Newsletter from './pages/admin/newsletter/Newsletter';
+import Unsubscribe from './pages/newsletter/Unsubscribe';
 
 
 function usePageTracking() {
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/managereports" element={<ManageReports />} />
         <Route path="/" element={<Home />} />
         <Route path="/newsletter" element={<Newsletter />}/>
+        <Route path="/unsubscribe" element={<Unsubscribe />}/>
         
       </Routes>
 

@@ -293,6 +293,7 @@ function Navbar() {
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/addstaff")}><UserPlus size={22} /> Add Staff</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/newsletter")}><Newspaper size={22} /> Newsletter</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userexperiencefeedback")}><ClipboardText size={22} /> User Experience Feedback</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/managereports")}><Megaphone size={22} /> Manage Reports</button>
                       </>
@@ -349,51 +350,71 @@ function Navbar() {
 
       {/* Inbox Modal (responsive) */}
       {inboxOpen && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-stretch md:items-center z-[100] p-0 md:p-4">
-          <div className="bg-white w-5/6 h-5/6 md:h-[80vh] md:max-w-5xl md:rounded-2xl shadow-lg p-0 relative flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b">
-              <h2 className="text-lg sm:text-xl font-bold text-[#2B5561]">
-                Inbox <span className="text-gray-500">({messages.length})</span>
-              </h2>
-              <button
-                className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
-                onClick={() => setInboxOpen(false)}
-                title="Close"
-                aria-label="Close inbox"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Role-based tabs */}
-            <div className="flex gap-2 px-4 sm:px-6 py-2 border-b bg-gray-50 overflow-x-auto">
-              {tabs.map(t => (
+        <div className="fixed inset-0 z-[100]">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setInboxOpen(false)}
+            aria-hidden="true"
+          />
+          {/* Centered container with safe padding on all screens */}
+          <div className="relative z-[101] h-full w-full grid place-items-center p-4 sm:p-6">
+            <div className="bg-white w-full max-w-5xl max-h-[85vh] sm:max-h-[90vh] rounded-2xl shadow-xl flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b">
+                <h2 className="text-lg sm:text-xl font-bold text-[#2B5561]">
+                  Inbox <span className="text-gray-500">({messages.length})</span>
+                </h2>
                 <button
-                  key={t.key}
-                  className={`px-3 py-1 rounded-full font-semibold text- ${activeTab === t.key ? "bg-cyan-100 text-[#2B5561]" : "text-gray-500"}`}
-                  onClick={() => setActiveTab(t.key)}
+                  className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+                  onClick={() => setInboxOpen(false)}
+                  title="Close"
+                  aria-label="Close inbox"
                 >
-                  {t.label}
+                  &times;
                 </button>
-              ))}
-            </div>
+              </div>
 
-            <div className="flex-1 overflow-y-auto bg-white px-2 py-2">
-              {visibleMessages.length === 0 ? (
-                <div className="text-center text-gray-400 mt-10">No messages</div>
-              ) : (
-                visibleMessages.map((msg) => (
-                  <MessageCard
-                    key={msg.messageID}
-                    senderID={msg.senderID}
-                    time={msg.sentAt}
-                    message={msg.body}
-                    unread={!msg.isRead}
-                    online={false}
-                    subject={msg.subject}
-                  />
-                ))
-              )}
+              {/* Role-based tabs (better responsive behavior) */}
+              <div
+                className="flex gap-2 px-3 sm:px-6 py-2 border-b bg-gray-50 overflow-x-auto md:flex-wrap"
+                role="tablist"
+                aria-label="Message filters"
+              >
+                {tabs.map((t) => {
+                  const active = activeTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm md:text-base font-semibold transition
+                        ${active ? "bg-cyan-100 text-[#2B5561]" : "text-gray-600 hover:bg-gray-100"}`}
+                      onClick={() => setActiveTab(t.key)}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex-1 overflow-y-auto bg-white px-2 py-2 sm:px-3">
+                {visibleMessages.length === 0 ? (
+                  <div className="text-center text-gray-400 mt-10">No messages</div>
+                ) : (
+                  visibleMessages.map((msg) => (
+                    <MessageCard
+                      key={msg.messageID}
+                      senderID={msg.senderID}
+                      time={msg.sentAt}
+                      message={msg.body}
+                      unread={!msg.isRead}
+                      online={false}
+                      subject={msg.subject}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
