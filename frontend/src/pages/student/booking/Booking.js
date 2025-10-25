@@ -241,11 +241,42 @@ function Booking() {
     const handleConfirmBooking = async () => {
       if (!pendingBooking) return;
       try {
+        // 1) Create the lesson
         const payload = {
           ...pendingBooking,
           total_fee: calcTotalFee(), // minutes->hours * fee_per_hour
         };
-        await api.post(endpoints.lessons(), payload);
+        const res = await api.post(endpoints.lessons(), payload);
+        const lessonID = res?.lessonID;
+
+        // 2) Send a message to the tutor (non-blocking if it fails)
+        try {
+          const senderUserID = Number(localStorage.getItem("userID")); // current user (student)
+          const receiverUserID = Number(selectedTutorUserID);          // tutor's userID captured on selection
+
+          if (senderUserID && receiverUserID) {
+            const bodyParts = [
+              `Subject: ${pendingBooking.subject}`,
+              `Date: ${pendingBooking.date}`,
+              `Start Time: ${pendingBooking.startTime}`,
+              `Duration: ${pendingBooking.duration} minutes`,
+              selectedTutorInfo?.fee_per_hour != null ? `Total Fee: R ${calcTotalFee().toFixed(2)}` : null,
+              lessonID ? `Lesson ID: ${lessonID}` : null,
+            ].filter(Boolean);
+
+            await api.post(endpoints.messages(), {
+              senderID: senderUserID,
+              receiverID: receiverUserID,
+              type: 'Lesson Request',
+              subject: `${studentData?.name || "A student"} requested a lesson`,
+              body: bodyParts.join("\n"),
+            });
+          }
+        } catch (msgErr) {
+          console.warn("Message send failed (lesson was created):", msgErr);
+        }
+
+        // 3) Close modal and navigate
         setConfirmOpen(false);
         setPendingBooking(null);
         alert("Lesson booked!");

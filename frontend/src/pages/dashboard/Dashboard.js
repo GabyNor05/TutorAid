@@ -17,9 +17,9 @@ function Dashboard() {
     const [selectedTutor, setSelectedTutor] = useState(null);
     const [ratingValue, setRatingValue] = useState("");
     const [ratingComment, setRatingComment] = useState("");
-    const [contactMessage, setContactMessage] = useState(""); // ADD
+    const [contactSubject, setContactSubject] = useState(""); 
+    const [contactBody, setContactBody] = useState(""); 
     const navigate = useNavigate();
-    // const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const userId = localStorage.getItem("userID");
@@ -65,19 +65,21 @@ function Dashboard() {
 
     const handleSendPrivateMessage = async (e) => { // ADD
         e.preventDefault();
-        if (!selectedTutor || !contactMessage.trim()) return;
+        if (!selectedTutor || !contactBody.trim()) return;
         try {
             const userId = localStorage.getItem("userID");
             const res = await api.get(endpoints.studentByUser(userId));
             const studentID = res.studentID;
             await api.post(endpoints.messages(), {
-                subject: "Private Message",
-                message: contactMessage,
+                type: "Private Message",
+                subject: contactSubject,
+                body: contactBody,
                 senderID: studentID,
                 receiverID: selectedTutor,
             });
             setContactModalOpen(false);
-            setContactMessage("");
+            setContactSubject("");
+            setContactBody("");
         } catch (err) {
             console.error("Send message failed:", err);
         }
@@ -264,12 +266,20 @@ function Dashboard() {
     <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
       <h3 className="text-lg font-semibold mb-4">Contact Tutor</h3>
       <form onSubmit={handleSendPrivateMessage}>
+        <input
+          type="text"
+          placeholder="Subject"
+          className="w-full border rounded p-2 mb-2"
+          value={contactSubject}
+          onChange={(e) => setContactSubject(e.target.value)}
+          required
+        />
         <textarea
           placeholder="Message"
           className="w-full border rounded p-2 mb-2"
           rows={4}
-          value={contactMessage}
-          onChange={(e) => setContactMessage(e.target.value)}
+          value={contactBody}
+          onChange={(e) => setContactBody(e.target.value)}
           required
         />
         <div className="flex justify-end gap-2">
