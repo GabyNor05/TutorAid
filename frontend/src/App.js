@@ -26,7 +26,7 @@ import StudentRequests from './pages/admin/studentRequests/StudentRequests';
 import ManageReports from './pages/admin/manageReports/ManageReports';
 import Home from './pages/home/Home';
 import Newsletter from './pages/admin/newsletter/Newsletter';
-import Unsubscribe from './pages/newsletter/Unsubscribe';
+import Unsubscribe from './pages/admin/newsletter/Unsubscribe';
 
 
 function usePageTracking() {
