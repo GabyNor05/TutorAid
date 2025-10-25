@@ -55,12 +55,12 @@ function Booking() {
   const [selectedTutor, setSelectedTutor] = useState("");
   const [availability, setAvailability] = useState([]);
   const [duration, setDuration] = useState("");
-  // ADD: tutor details + confirm modal state
   const [selectedTutorInfo, setSelectedTutorInfo] = useState(null);
   const [loadingTutorInfo, setLoadingTutorInfo] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingBooking, setPendingBooking] = useState(null);
   const [confirmError, setConfirmError] = useState("");
+  const [studentInfo, setStudentInfo] = useState(null); // ADD
 
   const subjectOptions = [
       "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
@@ -242,7 +242,6 @@ function Booking() {
   const handleConfirmBooking = async () => {
     if (!pendingBooking) return;
     try {
-      // Create the lesson
       const payload = {
         ...pendingBooking,
         total_fee: calcTotalFee(),
@@ -250,7 +249,7 @@ function Booking() {
       const res = await api.post(endpoints.lessons(), payload);
       const lessonID = res?.lessonID;
 
-      // Send a message to the tutor via messagesController (no studentData usage)
+      // Send a message to the tutor via messagesController
       try {
         const senderUserID = Number(localStorage.getItem("userID"));
         const receiverUserID = Number(selectedTutorUserID);
@@ -265,35 +264,35 @@ function Booking() {
             lessonID ? `Lesson ID: ${lessonID}` : null,
           ].filter(Boolean);
 
-            await api.post(endpoints.messages(), {
-              senderID: senderUserID,
-              receiverID: receiverUserID,
-              type: 'Lesson Request',
-              subject: `${studentData?.name || "A student"} requested a lesson`,
-              body: bodyParts.join("\n"),
-            });
-          }
-        } catch (msgErr) {
-          console.warn("Message send failed (lesson was created):", msgErr);
+          const studentName = studentInfo?.name || "A student";
+          await api.post(endpoints.messages(), {
+            senderID: senderUserID,
+            receiverID: receiverUserID,
+            type: 'Lesson Request',
+            subject: `${studentName} requested a lesson`,
+            body: bodyParts.join("\n"),
+          });
         }
-
-        // 3) Close modal and navigate
-        setConfirmOpen(false);
-        setPendingBooking(null);
-        alert("Lesson booked!");
-        navigate("/dashboard");
-
-        analytics.event('lesson_booking_confirmed', {
-          subject: pendingBooking.subject,
-          tutor_id: pendingBooking.tutorID,
-          duration_min: pendingBooking.duration,
-          value: Number(calcTotalFee()),
-          currency: 'ZAR',
-        });
-      } catch (err) {
-        setConfirmError(err.message || "Failed to book lesson.");
+      } catch (msgErr) {
+        console.warn("Message send failed (lesson was created):", msgErr);
       }
-    };
+
+      setConfirmOpen(false);
+      setPendingBooking(null);
+      alert("Lesson booked!");
+      navigate("/dashboard");
+
+      analytics.event('lesson_booking_confirmed', {
+        subject: pendingBooking.subject,
+        tutor_id: pendingBooking.tutorID,
+        duration_min: pendingBooking.duration,
+        value: Number(calcTotalFee()),
+        currency: 'ZAR',
+      });
+    } catch (err) {
+      setConfirmError(err.message || "Failed to book lesson.");
+    }
+  };
 
     // Helpers
     const calcTotalFee = () => {
