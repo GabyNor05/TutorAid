@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -49,40 +49,39 @@ function normalizeTutors(data) {
 }
 
 function Booking() {
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [selectedSubject, setSelectedSubject] = useState("");
-    const [tutors, setTutors] = useState([]);
-    const [selectedTutor, setSelectedTutor] = useState("");
-    const [availability, setAvailability] = useState([]);
-    const [duration, setDuration] = useState("");
-    // ADD: tutor details + confirm modal state
-    const [selectedTutorInfo, setSelectedTutorInfo] = useState(null);
-    const [loadingTutorInfo, setLoadingTutorInfo] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [pendingBooking, setPendingBooking] = useState(null);
-    const [confirmError, setConfirmError] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [tutors, setTutors] = useState([]);
+  const [selectedTutor, setSelectedTutor] = useState("");
+  const [availability, setAvailability] = useState([]);
+  const [duration, setDuration] = useState("");
+  // ADD: tutor details + confirm modal state
+  const [selectedTutorInfo, setSelectedTutorInfo] = useState(null);
+  const [loadingTutorInfo, setLoadingTutorInfo] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState(null);
+  const [confirmError, setConfirmError] = useState("");
 
-    const subjectOptions = [
-        "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
-        "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
-        "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
-    ];
-    // const API_URL =  process.env.REACT_APP_API_URL;  // REMOVE
-    const navigate = useNavigate();
+  const subjectOptions = [
+      "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
+      "Math Literacy", "AP Math", "AP English", "AP Biology", "IT", "CAT",
+      "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
+  ];
+  const navigate = useNavigate();
 
-    // Calculate tomorrow's date
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
+  // Calculate tomorrow's date
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Helper: Map JS day to string
-    const dayMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const shortDayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  // Helper: Map JS day to string
+  const dayMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const shortDayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    const isDateAvailable = date => {
-        if (!availability.length) return false;
-        const dayName = dayMap[date.getDay()];
-        return availability.some(slot => slot.day === dayName);
-    };
+  const isDateAvailable = date => {
+      if (!availability.length) return false;
+      const dayName = dayMap[date.getDay()];
+      return availability.some(slot => slot.day === dayName);
+  };
 
     function getAvailableTimesForDate(selectedDate, availability) {
         if (!selectedDate || !availability.length) return [];
@@ -94,62 +93,62 @@ function Booking() {
             const [startHour, startMin] = slot.start.split(":").map(Number);
             const [endHour, endMin] = slot.end.split(":").map(Number);
 
-            let hour = startHour, min = startMin;
-            while (hour < endHour || (hour === endHour && min < endMin)) {
-                const time = new Date(selectedDate);
-                time.setHours(hour, min, 0, 0);
-                times.push(time);
-                min += 30;
-                if (min >= 60) {
-                    min = 0;
-                    hour += 1;
-                }
-            }
-        });
-        return times;
-    }
+          let hour = startHour, min = startMin;
+          while (hour < endHour || (hour === endHour && min < endMin)) {
+              const time = new Date(selectedDate);
+              time.setHours(hour, min, 0, 0);
+              times.push(time);
+              min += 30;
+              if (min >= 60) {
+                  min = 0;
+                  hour += 1;
+              }
+          }
+      });
+      return times;
+  }
 
-    function parseAvailabilityString(availStr) {
-        const slots = [];
-        if (!availStr || typeof availStr !== "string") {
-            return slots;
-        }
-        availStr.split(";").forEach(part => {
-            const colonIndex = part.indexOf(":");
-            if (colonIndex === -1) return;
-            const days = part.slice(0, colonIndex).trim();
-            const times = part.slice(colonIndex + 1).trim();
-            const [start, end] = times.split("-").map(s => s.trim());
-            if (days.includes("-")) {
-                const [startDay, endDay] = days.split("-").map(s => s.trim());
-                const startIdx = shortDayMap.indexOf(startDay);
-                const endIdx = shortDayMap.indexOf(endDay);
-                if (startIdx !== -1 && endIdx !== -1) {
-                    if (startIdx <= endIdx) {
-                        for (let i = startIdx; i <= endIdx; i++) {
-                            slots.push({ day: dayMap[i], start, end });
-                        }
-                    } else {
-                        for (let i = startIdx; i < shortDayMap.length; i++) {
-                            slots.push({ day: dayMap[i], start, end });
-                        }
-                        for (let i = 0; i <= endIdx; i++) {
-                            slots.push({ day: dayMap[i], start, end });
-                        }
-                    }
-                }
-            } else if (days.includes(",")) {
-                days.split(",").forEach(d => {
-                    const idx = shortDayMap.indexOf(d.trim());
-                    if (idx !== -1) slots.push({ day: dayMap[idx], start, end });
-                });
-            } else {
-                const idx = shortDayMap.indexOf(days);
-                if (idx !== -1) slots.push({ day: dayMap[idx], start, end });
-            }
-        });
-        return slots;
-    }
+  function parseAvailabilityString(availStr) {
+      const slots = [];
+      if (!availStr || typeof availStr !== "string") {
+          return slots;
+      }
+      availStr.split(";").forEach(part => {
+          const colonIndex = part.indexOf(":");
+          if (colonIndex === -1) return;
+          const days = part.slice(0, colonIndex).trim();
+          const times = part.slice(colonIndex + 1).trim();
+          const [start, end] = times.split("-").map(s => s.trim());
+          if (days.includes("-")) {
+              const [startDay, endDay] = days.split("-").map(s => s.trim());
+              const startIdx = shortDayMap.indexOf(startDay);
+              const endIdx = shortDayMap.indexOf(endDay);
+              if (startIdx !== -1 && endIdx !== -1) {
+                  if (startIdx <= endIdx) {
+                      for (let i = startIdx; i <= endIdx; i++) {
+                          slots.push({ day: dayMap[i], start, end });
+                      }
+                  } else {
+                      for (let i = startIdx; i < shortDayMap.length; i++) {
+                          slots.push({ day: dayMap[i], start, end });
+                      }
+                      for (let i = 0; i <= endIdx; i++) {
+                          slots.push({ day: dayMap[i], start, end });
+                      }
+                  }
+              }
+          } else if (days.includes(",")) {
+              days.split(",").forEach(d => {
+                  const idx = shortDayMap.indexOf(d.trim());
+                  if (idx !== -1) slots.push({ day: dayMap[idx], start, end });
+              });
+          } else {
+              const idx = shortDayMap.indexOf(days);
+              if (idx !== -1) slots.push({ day: dayMap[idx], start, end });
+          }
+      });
+      return slots;
+  }
 
     useEffect(() => {
         if (selectedDate && availability.length) {
@@ -162,107 +161,109 @@ function Booking() {
         }
     }, [selectedDate, availability]);
 
-    // ADD: fetch tutor profile (user + tutor) for card
-    async function fetchTutorDetails(tutorUserID) {
-        if (!tutorUserID) {
-            setSelectedTutorInfo(null);
-            return;
-        }
-        setLoadingTutorInfo(true);
-        try {
-            const [userRes, tutorRes] = await Promise.all([
-                api.get(endpoints.userById(tutorUserID)),
-                api.get(endpoints.tutorByUser(tutorUserID))
-            ]);
-            const fee = tutorRes?.fee_per_hour ?? tutorRes?.feePerHour ?? null;
-            const bio = tutorRes?.bio || tutorRes?.about || "";
-            setSelectedTutorInfo({
-                userID: tutorUserID,
-                name: userRes?.name || "Tutor",
-                image: userRes?.image || "",
-                email: userRes?.email || "",
-                fee_per_hour: fee,
-                bio,
-                subjects: tutorRes?.subjects || [],
-            });
-        } catch (e) {
-            setSelectedTutorInfo({
-                userID: tutorUserID,
-                name: "Tutor",
-                image: "",
-                email: "",
-                fee_per_hour: null,
-                bio: "",
-                subjects: [],
-            });
-        } finally {
-            setLoadingTutorInfo(false);
-        }
-    }
+  // ADD: fetch tutor profile (user + tutor) for card
+  async function fetchTutorDetails(tutorUserID) {
+      if (!tutorUserID) {
+          setSelectedTutorInfo(null);
+          return;
+      }
+      setLoadingTutorInfo(true);
+      try {
+          const [userRes, tutorRes] = await Promise.all([
+              api.get(endpoints.userById(tutorUserID)),
+              api.get(endpoints.tutorByUser(tutorUserID))
+          ]);
+          const fee = tutorRes?.fee_per_hour ?? tutorRes?.feePerHour ?? null;
+          const bio = tutorRes?.bio || tutorRes?.about || "";
+          setSelectedTutorInfo({
+              userID: tutorUserID,
+              name: userRes?.name || "Tutor",
+              image: userRes?.image || "",
+              email: userRes?.email || "",
+              fee_per_hour: fee,
+              bio,
+              subjects: tutorRes?.subjects || [],
+          });
+      } catch (e) {
+          setSelectedTutorInfo({
+              userID: tutorUserID,
+              name: "Tutor",
+              image: "",
+              email: "",
+              fee_per_hour: null,
+              bio: "",
+              subjects: [],
+          });
+      } finally {
+          setLoadingTutorInfo(false);
+      }
+  }
 
-    // unchanged: opens modal only (no API call here)
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setConfirmError("");
-      if (!selectedTutor || !selectedDate || !duration || !selectedSubject) {
-        alert("Please fill all fields.");
+  // unchanged: opens modal only (no API call here)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setConfirmError("");
+    if (!selectedTutor || !selectedDate || !duration || !selectedSubject) {
+      alert("Please fill all fields.");
+      return;
+    }
+    const userID = localStorage.getItem("userID");
+    try {
+      const studentData = await api.get(endpoints.studentByUser(userID)); // already used
+      if (!studentData?.studentID) {
+        alert("Student profile not found.");
         return;
       }
-      const userID = localStorage.getItem("userID");
+      setStudentInfo(studentData); // ADD: store fetched student
+
+      const startTime = selectedDate.toTimeString().slice(0, 8); // HH:MM:SS
+      const lessonPayload = {
+        tutorID: Number(selectedTutor),
+        studentID: studentData.studentID, // keep using fetched ID
+        subject: selectedSubject,
+        date: selectedDate.toISOString().slice(0, 10),
+        startTime,
+        duration: parseInt(duration, 10),
+      };
+      setPendingBooking(lessonPayload);
+      setConfirmOpen(true);
+      analytics.event('lesson_booking_started', {
+        subject: selectedSubject,
+        tutor_id: Number(selectedTutor),
+        duration_min: parseInt(duration || '0', 10),
+        has_availability: availability.length > 0,
+      });
+    } catch (err) {
+      alert(err.message || "Booking failed");
+    }
+  };
+
+  // Confirm: include total_fee and create the lesson (no message API call)
+  const handleConfirmBooking = async () => {
+    if (!pendingBooking) return;
+    try {
+      // Create the lesson
+      const payload = {
+        ...pendingBooking,
+        total_fee: calcTotalFee(),
+      };
+      const res = await api.post(endpoints.lessons(), payload);
+      const lessonID = res?.lessonID;
+
+      // Send a message to the tutor via messagesController (no studentData usage)
       try {
-        const studentData = await api.get(endpoints.studentByUser(userID));
-        if (!studentData?.studentID) {
-          alert("Student profile not found.");
-          return;
-        }
-        const startTime = selectedDate.toTimeString().slice(0, 8); // HH:MM:SS
-        const lessonPayload = {
-          tutorID: Number(selectedTutor),
-          studentID: studentData.studentID,
-          subject: selectedSubject,
-          date: selectedDate.toISOString().slice(0, 10),
-          startTime,
-          duration: parseInt(duration, 10),
-        };
-        setPendingBooking(lessonPayload);
-        setConfirmOpen(true);
-        analytics.event('lesson_booking_started', {
-          subject: selectedSubject,
-          tutor_id: Number(selectedTutor),
-          duration_min: parseInt(duration || '0', 10),
-          has_availability: availability.length > 0,
-        });
-      } catch (err) {
-        alert(err.message || "Booking failed");
-      }
-    };
+        const senderUserID = Number(localStorage.getItem("userID"));
+        const receiverUserID = Number(selectedTutorUserID);
 
-    // Confirm: include total_fee and create the lesson (no message API call)
-    const handleConfirmBooking = async () => {
-      if (!pendingBooking) return;
-      try {
-        // 1) Create the lesson
-        const payload = {
-          ...pendingBooking,
-          total_fee: calcTotalFee(), // minutes->hours * fee_per_hour
-        };
-        const res = await api.post(endpoints.lessons(), payload);
-        const lessonID = res?.lessonID;
-
-        // 2) Send a message to the tutor (non-blocking if it fails)
-        try {
-          const senderUserID = Number(localStorage.getItem("userID")); // current user (student)
-          const receiverUserID = Number(selectedTutorUserID);          // tutor's userID captured on selection
-
-          if (senderUserID && receiverUserID) {
-            const bodyParts = [
-              `Subject: ${pendingBooking.subject}`,
-              `Date: ${pendingBooking.date}`,
-              `Start Time: ${pendingBooking.startTime}`,
-              `Duration: ${pendingBooking.duration} minutes`,
-              selectedTutorInfo?.fee_per_hour != null ? `Total Fee: R ${calcTotalFee().toFixed(2)}` : null,
-              lessonID ? `Lesson ID: ${lessonID}` : null,
-            ].filter(Boolean);
+        if (senderUserID && receiverUserID) {
+          const bodyParts = [
+            `Subject: ${pendingBooking.subject}`,
+            `Date: ${pendingBooking.date}`,
+            `Start Time: ${pendingBooking.startTime}`,
+            `Duration: ${pendingBooking.duration} minutes`,
+            selectedTutorInfo?.fee_per_hour != null ? `Total Fee: R ${calcTotalFee().toFixed(2)}` : null,
+            lessonID ? `Lesson ID: ${lessonID}` : null,
+          ].filter(Boolean);
 
             await api.post(endpoints.messages(), {
               senderID: senderUserID,
@@ -318,41 +319,41 @@ function Booking() {
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [subjectsLoading, setSubjectsLoading] = useState(false);
 
-    // Fetch all tutors and subjects once to build the available subjects list
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            setSubjectsLoading(true);
-            try {
-                const [tuts, subs] = await Promise.all([
-                    api.get(endpoints.tutors()),
-                    api.get(endpoints.subjects()),
-                ]);
-                if (cancelled) return;
-                const tArr = Array.isArray(tuts) ? tuts : [];
-                const sArr = Array.isArray(subs) ? subs : [];
-                setAllTutors(tArr);
-                setAllSubjects(sArr);
-                setAvailableSubjects(getAvailableSubjects(tArr, sArr));
-            } catch {
-                setAllTutors([]);
-                setAllSubjects([]);
-                setAvailableSubjects([]);
-            } finally {
-                if (!cancelled) setSubjectsLoading(false);
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+  // Fetch all tutors and subjects once to build the available subjects list
+  useEffect(() => {
+      let cancelled = false;
+      (async () => {
+          setSubjectsLoading(true);
+          try {
+              const [tuts, subs] = await Promise.all([
+                  api.get(endpoints.tutors()),
+                  api.get(endpoints.subjects()),
+              ]);
+              if (cancelled) return;
+              const tArr = Array.isArray(tuts) ? tuts : [];
+              const sArr = Array.isArray(subs) ? subs : [];
+              setAllTutors(tArr);
+              setAllSubjects(sArr);
+              setAvailableSubjects(getAvailableSubjects(tArr, sArr));
+          } catch {
+              setAllTutors([]);
+              setAllSubjects([]);
+              setAvailableSubjects([]);
+          } finally {
+              if (!cancelled) setSubjectsLoading(false);
+          }
+      })();
+      return () => {
+          cancelled = true;
+      };
+  }, []);
 
-    // If either list updates, recompute
-    useEffect(() => {
-        setAvailableSubjects(getAvailableSubjects(allTutors, allSubjects));
-    }, [allTutors, allSubjects]);
+  // If either list updates, recompute
+  useEffect(() => {
+      setAvailableSubjects(getAvailableSubjects(allTutors, allSubjects));
+  }, [allTutors, allSubjects]);
 
-    const [selectedTutorUserID, setSelectedTutorUserID] = useState(null);
+  const [selectedTutorUserID, setSelectedTutorUserID] = useState(null);
 
     return (
         <div className="page-background">
@@ -421,32 +422,32 @@ function Booking() {
                                             setAvailability([]);
                                             setSelectedTutorInfo(null);
 
-                                            if (tutorID) {
-                                              try {
-                                                const data = await api.get(endpoints.tutorAvailability(tutorID));
-                                                const availStr = data?.availability || data?.[0]?.availability || "";
-                                                const parsed = parseAvailabilityString(availStr);
-                                                setAvailability(parsed);
-                                              } catch {
-                                                setAvailability([]);
-                                              }
+                                          if (tutorID) {
+                                            try {
+                                              const data = await api.get(endpoints.tutorAvailability(tutorID));
+                                              const availStr = data?.availability || data?.[0]?.availability || "";
+                                              const parsed = parseAvailabilityString(availStr);
+                                              setAvailability(parsed);
+                                            } catch {
+                                              setAvailability([]);
                                             }
-                                            if (userID) fetchTutorDetails(userID);
+                                          }
+                                          if (userID) fetchTutorDetails(userID);
 
-                                            analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: tutorID });
-                                        }}
-                                    >
-                                        <option value="">Select Tutor</option>
-                                        {tutors.map((tutor) => (
-                                          <option key={tutor.tutorID} value={String(tutor.tutorID)}>
-                                            {tutor.name}
-                                          </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                                          analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: tutorID });
+                                      }}
+                                  >
+                                      <option value="">Select Tutor</option>
+                                      {tutors.map((tutor) => (
+                                        <option key={tutor.tutorID} value={String(tutor.tutorID)}>
+                                          {tutor.name}
+                                        </option>
+                                      ))}
+                                  </select>
+                              </div>
+                          )}
+                      </div>
+                  </div>
 
                     {/* ADD: Tutor info card (responsive) */}
                     {selectedTutor && (
