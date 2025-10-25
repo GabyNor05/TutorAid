@@ -16,6 +16,7 @@ import {
   ChatText,
   Megaphone,
   UserList,
+  Newspaper,
   SignOut                    
 } from "@phosphor-icons/react";
 import Logo from "../reusableAssets/logo.png";
