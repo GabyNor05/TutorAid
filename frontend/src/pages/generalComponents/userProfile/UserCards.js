@@ -13,7 +13,12 @@ function UserCard({
   address,
   role,
   onSave,
-  onDelete
+  onDelete,
+  // ADD missing props
+  funFact,
+  school,
+  city,
+  province,
 }) {
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({
@@ -24,7 +29,12 @@ function UserCard({
     subjects,
     qualifications,
     availability,
-    address
+    address,
+    // INIT missing fields so edit mode works without warnings
+    school,
+    city,
+    province,
+    funFact,
   });
 
   const fileInputRef = useRef();
@@ -150,22 +160,22 @@ function UserCard({
                   value={editData.address || ""}
                   onChange={handleChange}
                   placeholder="Address"
-                className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
-              />
-              <input
-                name="city"
-                value={editData.city || ""}
-                onChange={handleChange}
-                placeholder="City"
-                className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
-              />
-              <input
-                name="province"
-                value={editData.province || ""}
-                onChange={handleChange}
-                placeholder="Province"
-                className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
-              />
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
+                />
+                <input
+                  name="city"
+                  value={editData.city || ""}
+                  onChange={handleChange}
+                  placeholder="City"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
+                />
+                <input
+                  name="province"
+                  value={editData.province || ""}
+                  onChange={handleChange}
+                  placeholder="Province"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
+                />
               </>
             )}
 
@@ -201,7 +211,6 @@ function UserCard({
                 <p className="text-gray-800 break-words"><strong>Availability: </strong>{availability}</p>
               </div>
             )}
-
             {role === "Student" && (
               <>
                 <p className="text-gray-800 break-words mt-2"><strong>School: </strong>{school}</p>

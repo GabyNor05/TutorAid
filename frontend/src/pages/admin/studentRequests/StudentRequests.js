@@ -47,16 +47,18 @@ function StudentRequests() {
       try {
         // GET all requests
         const res = await api.get(endpoints.studentRequests());
-        setRequests(res);
+        setRequests(Array.isArray(res) ? res : []);
 
         // Fetch user avatars for all studentIDs
-        const studentIDs = res.map(r => r.studentID);
+        const studentIDs = (Array.isArray(res) ? res : []).map(r => r.studentID).filter(Boolean);
         if (studentIDs.length) {
           const avatarRes = await api.post(`/api/users/user-avatars`, { studentIDs });
-          setUserImages(avatarRes);
+          setUserImages(avatarRes || {});
         }
       } catch (err) {
         console.error("Error fetching requests or images:", err);
+        setRequests([]);
+        setUserImages({});
       }
     };
     fetchRequests();
@@ -102,10 +104,7 @@ function StudentRequests() {
               : req
           )
         );
-        setTimeout(() => {
-          setPostponeModalOpen(false);
-          setPostponeMessage("");
-        }, 1200);
+        setTimeout(() => { setPostponeModalOpen(false); setPostponeMessage(""); }, 1200);
       } else {
         setPostponeMessage(r.message || "Failed to update status.");
       }
@@ -132,10 +131,8 @@ function StudentRequests() {
     setLoadingNotes(true);
     setProgressNotes([]);
     try {
-      const notes = await api.get(
-        endpoints.progressNotesLessonNotes(selectedRequest.studentID)
-      );
-      setProgressNotes(notes);
+      const notes = await api.get(endpoints.progressNotesLessonNotes(selectedRequest.studentID));
+      setProgressNotes(Array.isArray(notes) ? notes : []);
       setProgressNotesModalOpen(true);
     } catch {
       setProgressNotes([]);
@@ -160,10 +157,7 @@ function StudentRequests() {
               : req
           )
         );
-        setTimeout(() => {
-          setRejectModalOpen(false);
-          setRejectMessage("");
-        }, 1200);
+        setTimeout(() => { setRejectModalOpen(false); setRejectMessage(""); }, 1200);
       } else {
         setRejectMessage(r.message || "Failed to update status.");
       }
@@ -176,11 +170,60 @@ function StudentRequests() {
   const handlePublishNote = async (noteID) => {
     try {
       await api.post(endpoints.progressNotesPublish(), { noteID });
-      setProgressNotes(prev =>
-        prev.map(n => (n.noteID === noteID ? { ...n, published: true } : n))
-      );
+      setProgressNotes(prev => prev.map(n => (n.noteID === noteID ? { ...n, published: true } : n)));
     } catch {
       alert("Failed to publish note.");
+    }
+  };
+
+  const onRespondSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const toUserID =
+        userImages[selectedRequest.studentID]?.userID ?? selectedRequest.studentID;
+
+      await api.post(`/api/studentRequests/respond`, {
+        toUserID,
+        subject: responseSubject,
+        message: responseMessage,
+        studentRequestID: selectedRequest.studentRequestID
+      });
+      setResponseStatus("Response sent!");
+      setRequests(prev =>
+        prev.map(r =>
+          r.studentRequestID === selectedRequest.studentRequestID
+            ? { ...r, status: "Completed" }
+            : r
+        )
+      );
+      setTimeout(() => {
+        setRespondModalOpen(false);
+        setResponseStatus("");
+        setResponseSubject("");
+        setResponseMessage("");
+      }, 1200);
+    } catch {
+      setResponseStatus("Failed to send response.");
+    }
+  };
+
+  const revokeAppeal = async () => {
+    try {
+      await api.post(`/api/studentRequests/revoke-appeal`, {
+        studentRequestID: selectedRequest.studentRequestID,
+        studentID: selectedRequest.studentID
+      });
+      setAppealActionMessage("Block has been revoked and student is unblocked.");
+      setRequests(prev =>
+        prev.map(r =>
+          r.studentRequestID === selectedRequest.studentRequestID
+            ? { ...r, status: "Completed" }
+            : r
+        )
+      );
+      setTimeout(() => { setAppealModalOpen(false); setAppealActionMessage(""); }, 1200);
+    } catch {
+      setAppealActionMessage("Failed to revoke block.");
     }
   };
 
@@ -495,10 +538,8 @@ function StudentRequests() {
             onSubmit={async e => {
               e.preventDefault();
               try {
-                // Prefer userID from avatar mapping; fallback to studentID if backend supports it
                 const toUserID =
-                  userImages[selectedRequest.studentID]?.userID ??
-                  selectedRequest.studentID;
+                  userImages[selectedRequest.studentID]?.userID ?? selectedRequest.studentID;
 
                 await api.post(`/api/studentRequests/respond`, {
                   toUserID,
@@ -651,10 +692,7 @@ function StudentRequests() {
                           : r
                       )
                     );
-                    setTimeout(() => {
-                      setAppealModalOpen(false);
-                      setAppealActionMessage("");
-                    }, 1200);
+                    setTimeout(() => { setAppealModalOpen(false); setAppealActionMessage(""); }, 1200);
                   } catch {
                     setAppealActionMessage("Failed to revoke block.");
                   }

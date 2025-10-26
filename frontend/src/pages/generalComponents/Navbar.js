@@ -24,7 +24,8 @@ import Inbox from "./Inbox";
 import { api, endpoints } from "../../api/client";
 
 function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false); 
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [showMenu, setShowMenu] = useState(false); 
   const [role, setRole] = useState(null);
   const [user, setUser] = useState(null); 
   const [messages, setMessages] = useState([]);
@@ -59,8 +60,8 @@ function Navbar() {
   }, [userId, inboxOpen]);
 
   const handleNav = (path) => {
-    setShowMenu(false);       
-    setMobileOpen(false);     
+    setShowMenu(false); // keep calls valid
+    setMobileOpen(false);
     navigate(path);
   };
 
