@@ -45,12 +45,12 @@ function StudentRequests() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        // GET all requests
         const res = await api.get(endpoints.studentRequests());
         setRequests(Array.isArray(res) ? res : []);
 
-        // Fetch user avatars for all studentIDs
-        const studentIDs = (Array.isArray(res) ? res : []).map(r => r.studentID).filter(Boolean);
+        const studentIDs = (Array.isArray(res) ? res : [])
+          .map(r => r.studentID)
+          .filter(Boolean);
         if (studentIDs.length) {
           const avatarRes = await api.post(`/api/users/user-avatars`, { studentIDs });
           setUserImages(avatarRes || {});
@@ -112,18 +112,6 @@ function StudentRequests() {
       setPostponeMessage("Error updating status.");
     }
     setAdminPassword("");
-  };
-
-  // Fetch progress notes for a specific request
-  const fetchProgressNotes = async (requestID) => {
-    setLoadingNotes(true);
-    try {
-      const res = await axios.get(`${API_URL}/api/progressNotes/${requestID}`);
-      setProgressNotes(res.data);
-    } catch (err) {
-      console.error("Error fetching progress notes:", err);
-    }
-    setLoadingNotes(false);
   };
 
   const handleShowProgressNotes = async () => {
