@@ -108,7 +108,7 @@ async function updateTutorByUserID(req, res) {
 }
 
 // Get a tutor by tutorID (returns tutorID, userID, and basic user fields)
-exports.getById = async (req, res) => {
+async function getById(req, res) {
   try {
     const { id } = req.params;
     const [[row]] = await pool.query(
@@ -125,7 +125,7 @@ exports.getById = async (req, res) => {
     console.error('[tutors:getById] error:', err);
     res.status(500).json({ error: 'Failed to fetch tutor' });
   }
-};
+}
 
 module.exports = {
   getAllTutors,
@@ -133,4 +133,5 @@ module.exports = {
   getTutorAvailability,
   getTutorByUserID,
   updateTutorByUserID,
+  getById, // ADD: export the handler
 };
