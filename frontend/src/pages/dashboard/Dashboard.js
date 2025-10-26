@@ -67,14 +67,12 @@ function Dashboard() {
     // Helper to resolve tutor.userID from tutorID
     const resolveTutorUserID = async (tutorID) => {
         try {
-            // Ensure your client has endpoints.tutorById; fallback to `${endpoints.tutors()}/${id}`
-            const tutor =
-                (endpoints.tutorById ? await api.get(endpoints.tutorById(tutorID)) : await api.get(`${endpoints.tutors()}/${tutorID}`));
+            const tutor = await api.get(endpoints.tutorById(tutorID));
             const uid = tutor?.userID ? Number(tutor.userID) : null;
             setSelectedTutorUserID(uid);
             return uid;
         } catch (e) {
-            console.error("Failed to resolve tutor userID:", e);
+            console.warn("Could not fetch /api/tutors/:id", e?.message || e);
             setSelectedTutorUserID(null);
             return null;
         }
@@ -279,7 +277,7 @@ function Dashboard() {
                         {acceptedLessons.length === 0 ? (
                             <p className="text-white/90">No upcoming lessons scheduled.</p>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 pb-6">
+                            <div className="flex flex-col gap-4 sm:gap-6 pb-6">
                                 {acceptedLessons.map(lesson => (
                                     <LessonCards
                                         key={lesson.lessonID}

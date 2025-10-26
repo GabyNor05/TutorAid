@@ -43,38 +43,53 @@ export const api = {
 };
 
 export const endpoints = {
-  tutors: () => '/api/tutors',
-  subjects: () => '/api/subjects',
+  
+  //Identifiers
   subjectById: (id) => `/api/subjects/${id}`,
   users: () => '/api/users',
   userById: (id) => `/api/users/${id}`,
+
+  // Authentication
   login: () => '/api/users/login',
   sendOtp: () => '/api/users/send-otp',
   verifyOtp: () => '/api/users/verify-otp',
   assignRole: (id) => `/api/users/${id}/assign-role`,
+
+  // Tutor endpoints
+  tutors: () => '/api/tutors',
+  subjects: () => '/api/subjects',
+  ratings: () => '/api/ratings',
+  tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
+  tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
+  feedback: () => '/api/feedback',
+
+  // Student endpoints
   students: () => '/api/students',
   studentByUser: (id) => `/api/students/by-user/${id}`,
-  tutorByUser: (id) => `/api/tutors/by-user/${id}`,
-  lessons: () => '/api/lessons',
-  lessonReports: () => '/api/lessonReports',
-  lessonReportEscalate: (studentID) => `/api/lessonReports/escalate/${studentID}`,
-  progressNotes: () => '/api/progressNotes',
   progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
   progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}/lesson-notes`,
   progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
+  tutorByUser: (id) => `/api/tutors/by-user/${id}`,
+  tutorById: (id) => `/api/tutors/${id}`,
+  lessons: () => '/api/lessons',
+
+  //Admin endpoints
+  lessonReports: () => '/api/lessonReports',
+  studentRequests: () => '/api/studentRequests',
+  lessonReportEscalate: (studentID) => `/api/lessonReports/escalate/${studentID}`,
+  progressNotes: () => '/api/progressNotes',
   progressNotesUpload: () => '/api/progressNotes/upload',
   progressNotesPublish: () => '/api/progressNotes/publish',
 
   // Back-compat alias (if other code uses 'upload')
   upload: () => '/api/progressNotes/upload',
 
-  feedback: () => '/api/feedback',
+  // Messaging endpoints
   messages: () => '/api/messages',
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
-  ratings: () => '/api/ratings',
-  tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
-  tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
-  studentRequests: () => '/api/studentRequests',
+  
+
+  //Newsletter endpoints (Admin)
   newsletterSubscribe: () => '/api/newsletter/subscribe',
   newsletterSubscribers: () => '/api/newsletter/subscribers',
   newsletterUnsubscribe: () => '/api/newsletter/unsubscribe',

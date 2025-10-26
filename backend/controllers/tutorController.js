@@ -107,6 +107,26 @@ async function updateTutorByUserID(req, res) {
   }
 }
 
+// Get a tutor by tutorID (returns tutorID, userID, and basic user fields)
+exports.getById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [[row]] = await pool.query(
+      `SELECT t.tutorID, t.userID, u.name, u.email, u.image, t.fee_per_hour
+       FROM tutors t
+       JOIN users u ON u.userID = t.userID
+       WHERE t.tutorID = ?
+       LIMIT 1`,
+      [id]
+    );
+    if (!row) return res.status(404).json({ error: 'Tutor not found' });
+    res.json(row);
+  } catch (err) {
+    console.error('[tutors:getById] error:', err);
+    res.status(500).json({ error: 'Failed to fetch tutor' });
+  }
+};
+
 module.exports = {
   getAllTutors,
   getTutorsBySubject,

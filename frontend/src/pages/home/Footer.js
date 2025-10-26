@@ -39,15 +39,15 @@ function Footer() {
 
   return (
     <footer style={{ backgroundImage: `url(${BlueWallpaper})` }} className="bg-cyan-900 mt-12 sm:mt-16 relative text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 justify-center items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-4 gap-8 sm:gap-10 justify-center items-start">
         {/* Brand & Newsletter */}
-        <div>
+        <div className="w-1/3">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Tutor Aid</h2>
           <p className="text-sm text-white mb-4">
             Empowering students through quality tutoring and personal growth across South Africa.
           </p>
           <form
-            className="w-full max-w-sm sm:max-w-md lg:max-w-none flex flex-col justify-center item-center gap-2 sm:flex-row"
+            className="w-full max-w-sm sm:max-w-md lg:max-w-none flex flex-col justify-center items-start gap-2 sm:flex-row"
             noValidate
             onSubmit={onSubscribe}
           >
@@ -71,7 +71,7 @@ function Footer() {
             <button
               type="submit"
               disabled={submitting}
-              className="bg-gradient-to-l from-[#E9AD53] to-[#866026]  w-full sm:w-1/3 mt-0 sm:mt-0 sm:ml-2 transition h-12"
+              className="bg-gradient-to-l from-[#E9AD53] to-[#866026]  w-full sm:w-1/3 mt-0 sm:mt-0 sm:ml-2 transition h-10"
             >
               {submitting ? 'Subscribing…' : 'Subscribe'}
             </button>
@@ -82,7 +82,7 @@ function Footer() {
         </div>
         <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 justify-center">
           {/* Quick Navigation */}
-        <div className="flex flex-col justify-center items-center text-center sm:items-start sm:text-left">
+        <div className="flex flex-col justify-center items-center text-center sm:items-start sm:text-left w-">
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Quick Navigation</h3>
           <ul className="space-y-2 text-sm">
             <li><a href="/" className="hover:text-yellow-500">Home</a></li>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { DotsThreeVertical, X} from "@phosphor-icons/react";
+// import axios from "axios"; // REMOVE
+import { DotsThreeVertical, X } from "@phosphor-icons/react";
+import { api, endpoints } from "../../../api/client"; // ADD
 
 function StudentRequests() {
   const [requests, setRequests] = useState([]);
@@ -24,7 +25,7 @@ function StudentRequests() {
   // Add state for the Appeal Block modal
   const [appealModalOpen, setAppealModalOpen] = useState(false);
   const [appealActionMessage, setAppealActionMessage] = useState("");
-  const API_URL =  process.env.REACT_APP_API_URL;  
+  // const API_URL =  process.env.REACT_APP_API_URL;  
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -44,14 +45,15 @@ function StudentRequests() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/studentRequests`);
-        setRequests(res.data);
+        // GET all requests
+        const res = await api.get(endpoints.studentRequests());
+        setRequests(res);
 
-        // Fetch user images for all studentIDs
-        const studentIDs = res.data.map(r => r.studentID);
+        // Fetch user avatars for all studentIDs
+        const studentIDs = res.map(r => r.studentID);
         if (studentIDs.length) {
-          const avatarRes = await axios.post(`${API_URL}/api/users/user-avatars`, { studentIDs });
-          setUserImages(avatarRes.data);
+          const avatarRes = await api.post(`/api/users/user-avatars`, { studentIDs });
+          setUserImages(avatarRes);
         }
       } catch (err) {
         console.error("Error fetching requests or images:", err);
@@ -87,18 +89,17 @@ function StudentRequests() {
   const handlePostpone = async () => {
     if (!selectedRequest) return;
     try {
-      const res = await axios.post(`${API_URL}/api/studentRequests/postpone`, {
+      const r = await api.post(`/api/studentRequests/postpone`, {
         studentRequestID: selectedRequest.studentRequestID,
         adminPassword
       });
-      if (res.data.success) {
+      if (r.success) {
         setPostponeMessage("Request status updated to Postponed!");
-        // Update local state
         setRequests(prev =>
-          prev.map(r =>
-            r.studentRequestID === selectedRequest.studentRequestID
-              ? { ...r, status: "Postponed" }
-              : r
+          prev.map(req =>
+            req.studentRequestID === selectedRequest.studentRequestID
+              ? { ...req, status: "Postponed" }
+              : req
           )
         );
         setTimeout(() => {
@@ -106,9 +107,9 @@ function StudentRequests() {
           setPostponeMessage("");
         }, 1200);
       } else {
-        setPostponeMessage(res.data.message || "Failed to update status.");
+        setPostponeMessage(r.message || "Failed to update status.");
       }
-    } catch (err) {
+    } catch {
       setPostponeMessage("Error updating status.");
     }
     setAdminPassword("");
@@ -131,12 +132,12 @@ function StudentRequests() {
     setLoadingNotes(true);
     setProgressNotes([]);
     try {
-      const res = await axios.get(
-        `${API_URL}/api/progressNotes/student/${selectedRequest.studentID}/lesson-notes`
+      const notes = await api.get(
+        endpoints.progressNotesLessonNotes(selectedRequest.studentID)
       );
-      setProgressNotes(res.data);
+      setProgressNotes(notes);
       setProgressNotesModalOpen(true);
-    } catch (err) {
+    } catch {
       setProgressNotes([]);
     }
     setLoadingNotes(false);
@@ -146,17 +147,17 @@ function StudentRequests() {
   const handleReject = async () => {
     if (!selectedRequest) return;
     try {
-      const res = await axios.post(`${API_URL}/api/studentRequests/reject`, {
+      const r = await api.post(`/api/studentRequests/reject`, {
         studentRequestID: selectedRequest.studentRequestID,
         adminPassword
       });
-      if (res.data.success) {
+      if (r.success) {
         setRejectMessage("Request status updated to Rejected!");
         setRequests(prev =>
-          prev.map(r =>
-            r.studentRequestID === selectedRequest.studentRequestID
-              ? { ...r, status: "Rejected" }
-              : r
+          prev.map(req =>
+            req.studentRequestID === selectedRequest.studentRequestID
+              ? { ...req, status: "Rejected" }
+              : req
           )
         );
         setTimeout(() => {
@@ -164,9 +165,9 @@ function StudentRequests() {
           setRejectMessage("");
         }, 1200);
       } else {
-        setRejectMessage(res.data.message || "Failed to update status.");
+        setRejectMessage(r.message || "Failed to update status.");
       }
-    } catch (err) {
+    } catch {
       setRejectMessage("Error updating status.");
     }
     setAdminPassword("");
@@ -174,17 +175,11 @@ function StudentRequests() {
 
   const handlePublishNote = async (noteID) => {
     try {
-      await axios.post(`${API_URL}/api/progressNotes/publish`, {
-        noteID: noteID
-      });
+      await api.post(endpoints.progressNotesPublish(), { noteID });
       setProgressNotes(prev =>
-        prev.map(n =>
-          n.noteID === noteID
-            ? { ...n, published: true }
-            : n
-        )
+        prev.map(n => (n.noteID === noteID ? { ...n, published: true } : n))
       );
-    } catch (err) {
+    } catch {
       alert("Failed to publish note.");
     }
   };
@@ -369,15 +364,14 @@ function StudentRequests() {
               <button
                 className="mt-6 w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                 onClick={async () => {
-                  // Store in NewSubjectRequests table (implement backend endpoint)
                   try {
-                    await axios.post("${API_URL}/api/newSubjectRequests", {
+                    await api.post(`/api/newSubjectRequests`, {
                       subjectName: selectedRequest.newSubjectName,
                       subjectDescription: selectedRequest.newSubjectDescription,
                       dateRequested: selectedRequest.createdAt,
                     });
                     alert("New subject request stored!");
-                  } catch (err) {
+                  } catch {
                     alert("Failed to store new subject request.");
                   }
                 }}
@@ -501,8 +495,13 @@ function StudentRequests() {
             onSubmit={async e => {
               e.preventDefault();
               try {
-                await axios.post("${API_URL}/api/studentRequests/respond", {
-                  toUserID: selectedRequest.studentID,
+                // Prefer userID from avatar mapping; fallback to studentID if backend supports it
+                const toUserID =
+                  userImages[selectedRequest.studentID]?.userID ??
+                  selectedRequest.studentID;
+
+                await api.post(`/api/studentRequests/respond`, {
+                  toUserID,
                   subject: responseSubject,
                   message: responseMessage,
                   studentRequestID: selectedRequest.studentRequestID
@@ -521,7 +520,7 @@ function StudentRequests() {
                   setResponseSubject("");
                   setResponseMessage("");
                 }, 1200);
-              } catch (err) {
+              } catch {
                 setResponseStatus("Failed to send response.");
               }
             }}
@@ -639,9 +638,8 @@ function StudentRequests() {
               <button
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                 onClick={async () => {
-                  // Revoke: set student status to Blocked and mark request as Completed/Revoked
                   try {
-                    await axios.post("${API_URL}/api/studentRequests/revoke-appeal", {
+                    await api.post(`/api/studentRequests/revoke-appeal`, {
                       studentRequestID: selectedRequest.studentRequestID,
                       studentID: selectedRequest.studentID
                     });
@@ -657,7 +655,7 @@ function StudentRequests() {
                       setAppealModalOpen(false);
                       setAppealActionMessage("");
                     }, 1200);
-                  } catch (err) {
+                  } catch {
                     setAppealActionMessage("Failed to revoke block.");
                   }
                 }}
@@ -681,5 +679,4 @@ function StudentRequests() {
     </div>
   );
 }
-
 export default StudentRequests;

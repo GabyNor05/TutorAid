@@ -8,9 +8,9 @@ router.get('/by-subject/:subject', tutorController.getTutorsBySubject);
 router.get('/by-user/:userID', tutorController.getTutorByUserID);
 router.put('/by-user/:userID', tutorController.updateTutorByUserID);
 router.get('/:tutorID/availability', tutorController.getTutorAvailability);
+router.get('/:id', tutorController.getById); // ADD
 
 // REMOVE undefined generic routes to prevent "argument handler must be a function"
-// router.get('/:id', tutorController.getTutorById);
 // router.post('/', tutorController.createTutor);
 // router.put('/:id', tutorController.updateTutor);
 // router.delete('/:id', tutorController.deleteTutor);

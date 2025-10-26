@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  List as ListIcon,            // alias to avoid duplicate identifier
+  List as ListIcon,
   EnvelopeSimple,
   X,
   House,
@@ -17,15 +17,14 @@ import {
   Megaphone,
   UserList,
   Newspaper,
-  SignOut                    
+  SignOut
 } from "@phosphor-icons/react";
 import Logo from "../reusableAssets/logo.png";
-import MessageCard from "./MessageCard";
+import Inbox from "./Inbox";
 import { api, endpoints } from "../../api/client";
 
 function Navbar() {
-  const [showMenu, setShowMenu] = useState(false);      // optional: can be removed
-  const [mobileOpen, setMobileOpen] = useState(false);  // shared drawer for all
+  const [mobileOpen, setMobileOpen] = useState(false); 
   const [role, setRole] = useState(null);
   const [user, setUser] = useState(null); 
   const [messages, setMessages] = useState([]);
@@ -60,8 +59,8 @@ function Navbar() {
   }, [userId, inboxOpen]);
 
   const handleNav = (path) => {
-    setShowMenu(false);       // keep in sync
-    setMobileOpen(false);     // keep in sync
+    setShowMenu(false);       
+    setMobileOpen(false);     
     navigate(path);
   };
 
@@ -349,77 +348,16 @@ function Navbar() {
         </button>
       )}
 
-      {/* Inbox Modal (responsive) */}
-      {inboxOpen && (
-        <div className="fixed inset-0 z-[100]">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setInboxOpen(false)}
-            aria-hidden="true"
-          />
-          {/* Centered container with safe padding on all screens */}
-          <div className="relative z-[101] h-full w-full grid place-items-center p-4 sm:p-6">
-            <div className="bg-white w-full max-w-5xl max-h-[85vh] sm:max-h-[90vh] rounded-2xl shadow-xl flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b">
-                <h2 className="text-lg sm:text-xl font-bold text-[#2B5561]">
-                  Inbox <span className="text-gray-500">({messages.length})</span>
-                </h2>
-                <button
-                  className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
-                  onClick={() => setInboxOpen(false)}
-                  title="Close"
-                  aria-label="Close inbox"
-                >
-                  &times;
-                </button>
-              </div>
-
-              {/* Role-based tabs (better responsive behavior) */}
-              <div
-                className="flex gap-2 px-3 sm:px-6 py-2 border-b bg-gray-50 overflow-x-auto md:flex-wrap"
-                role="tablist"
-                aria-label="Message filters"
-              >
-                {tabs.map((t) => {
-                  const active = activeTab === t.key;
-                  return (
-                    <button
-                      key={t.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm md:text-base font-semibold transition
-                        ${active ? "bg-cyan-100 text-[#2B5561]" : "text-gray-600 hover:bg-gray-100"}`}
-                      onClick={() => setActiveTab(t.key)}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex-1 overflow-y-auto bg-white px-2 py-2 sm:px-3">
-                {visibleMessages.length === 0 ? (
-                  <div className="text-center text-gray-400 mt-10">No messages</div>
-                ) : (
-                  visibleMessages.map((msg) => (
-                    <MessageCard
-                      key={msg.messageID}
-                      senderID={msg.senderID}
-                      time={msg.sentAt}
-                      message={msg.body}
-                      unread={!msg.isRead}
-                      online={false}
-                      subject={msg.subject}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Inbox moved to component */}
+      <Inbox
+        open={inboxOpen}
+        onClose={() => setInboxOpen(false)}
+        tabs={tabs}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        messages={messages}
+        visibleMessages={visibleMessages}
+      />
     </header>
   );
 }
