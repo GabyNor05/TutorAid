@@ -39,7 +39,7 @@ function Footer() {
 
   return (
     <footer style={{ backgroundImage: `url(${BlueWallpaper})` }} className="bg-cyan-900 mt-12 sm:mt-16 relative text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-4 gap-8 sm:gap-10 justify-center items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 flex flex-col sm:flex-row gap-8 sm:gap-10 justify-center items-start">
         {/* Brand & Newsletter */}
         <div className="w-1/3">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Tutor Aid</h2>
@@ -47,7 +47,7 @@ function Footer() {
             Empowering students through quality tutoring and personal growth across South Africa.
           </p>
           <form
-            className="w-full max-w-sm sm:max-w-md lg:max-w-none flex flex-col justify-center items-start gap-2 sm:flex-row"
+            className="w-full max-w-sm sm:max-w-md lg:max-w-none flex flex-col justify-center items-start gap-2 "
             noValidate
             onSubmit={onSubscribe}
           >
@@ -55,17 +55,17 @@ function Footer() {
               placeholder="Enter name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-transparent placeholder-white/80 h-10"
+              className="w-full sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2  bg-transparent placeholder-white/80 h-10"
               required
             />
-            <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-0">
+            <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-0 sm:w-2/3">
               <input
               type="email"
               placeholder="Enter email"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full sm:w-2/3 sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-transparent placeholder-white/80 h-10"
+              className="w-full sm:w-2/3 sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2  bg-transparent placeholder-white/80 h-10"
               required
             />
             <button

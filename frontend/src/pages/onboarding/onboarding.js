@@ -8,35 +8,17 @@ import { api, endpoints } from '../../api/client';
 function Onboarding() {
   const navigate = useNavigate();
 
-  // role + user
-  const [role, setRole] = useState(""); // "Student" | "Tutor" | ""
   const [userID, setUserID] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Student fields
+  // Student fields only
   const [school, setSchool] = useState("");
   const [grade, setGrade] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [province, setProvince] = useState("");
   const [status, setStatus] = useState("Active");
-
-  // Tutor fields
-  const [bio, setBio] = useState("");
-  const [subjects, setSubjects] = useState("");        // comma-separated (backend expects string)
-  const [qualifications, setQualifications] = useState("");
-  const [availability, setAvailability] = useState("");
-  // Replace the simple availability string for tutors with a structured state
-  const [avail, setAvail] = useState({
-    monFri: { enabled: false, start: "", end: "" },
-    satSun: { enabled: false, start: "", end: "" },
-  });
-
-  // ADD: subjects table data + selection
-  const [allSubjects, setAllSubjects] = useState([]);          // [{ subjectID, name }]
-  const [subjectsLoading, setSubjectsLoading] = useState(false);
-  const [selectedSubjects, setSelectedSubjects] = useState([]); // ['Math', 'English', ...]
 
   useEffect(() => {
     const id = localStorage.getItem("userID");
@@ -45,75 +27,21 @@ function Onboarding() {
 
     (async () => {
       try {
-        // get user and role
-        const u = await api.get(endpoints.userById(id));
-        if (u?.role) setRole(u.role);
-
-        if (u?.role === 'Student') {
-          const s = await api.get(endpoints.studentByUser(id)).catch(() => null);
-          if (s) {
-            setSchool(s.school || '');
-            setGrade(s.grade || '');
-            setAddress(s.address || '');
-            setCity(s.city || '');
-            setProvince(s.province || '');
-            setStatus(s.status || 'Active');
-          }
-        } else if (u?.role === 'Tutor') {
-          const t = await api.get(endpoints.tutorByUser(id)).catch(() => null);
-          if (t) {
-            setBio(t.bio || '');
-            setSubjects(t.subjects || '');
-            // hydrate selection from stored comma-separated list
-            const parsed = String(t.subjects || '')
-              .split(',')
-              .map(s => s.trim())
-              .filter(Boolean);
-            setSelectedSubjects(parsed);
-
-            setQualifications(t.qualifications || '');
-            // Try to hydrate availability into the structured state if it follows "Mon-Fri: HH:MM-HH:MM; Sat-Sun: HH:MM-HH:MM"
-            setAvailability(t.availability || '');
-            const mf = /Mon-Fri:\s*([0-9:]{4,5})-([0-9:]{4,5})/i.exec(t.availability || '');
-            const ss = /Sat-Sun:\s*([0-9:]{4,5})-([0-9:]{4,5})/i.exec(t.availability || '');
-            setAvail({
-              monFri: { enabled: !!mf, start: mf?.[1] || '', end: mf?.[2] || '' },
-              satSun: { enabled: !!ss, start: ss?.[1] || '', end: ss?.[2] || '' },
-            });
-          }
+        // Prefill if student row exists
+        const s = await api.get(endpoints.studentByUser(id)).catch(() => null);
+        if (s) {
+          setSchool(s.school || '');
+          setGrade(s.grade || '');
+          setAddress(s.address || '');
+          setCity(s.city || '');
+          setProvince(s.province || '');
+          setStatus(s.status || 'Active');
         }
       } catch {
-        // ignore; allow manual selection below
+        // ignore
       }
     })();
   }, [navigate]);
-
-  // ADD: load subjects from Subjects table
-  useEffect(() => {
-    let ignore = false;
-    (async () => {
-      setSubjectsLoading(true);
-      try {
-        const rows = await api.get(endpoints.subjects());
-        if (!ignore) setAllSubjects(Array.isArray(rows) ? rows : []);
-      } catch {
-        if (!ignore) setAllSubjects([]);
-      } finally {
-        if (!ignore) setSubjectsLoading(false);
-      }
-    })();
-    return () => { ignore = true; };
-  }, []);
-
-  // ADD: toggle subject selection and keep subjects string in sync
-  const toggleSubject = (name) => {
-    setSelectedSubjects(prev => {
-      const has = prev.includes(name);
-      const next = has ? prev.filter(s => s !== name) : [...prev, name];
-      setSubjects(next.join(', ')); // backend expects comma-separated
-      return next;
-    });
-  };
 
   const validateStudent = () => {
     const e = {};
@@ -125,14 +53,6 @@ function Onboarding() {
     return e;
   };
 
-  const validateTutor = () => {
-    const e = {};
-    if (!bio) e.bio = "Bio is required";
-    if (!subjects) e.subjects = "Subjects are required";
-    if (!qualifications) e.qualifications = "Qualifications are required";
-    return e;
-  };
-
   const submitStudent = async () => {
     const v = validateStudent();
     setErrors(v);
@@ -141,45 +61,10 @@ function Onboarding() {
     setLoading(true);
     try {
       await api.put(endpoints.studentByUser(userID), { school, grade, address, city, province, status });
-      await api.put(endpoints.assignRole(userID), { role: 'Student' });
-      navigate('/onboarding2');
-    } catch (err) {
-      setErrors({ api: err.message || 'Onboarding failed. Please try again.' });
-    } finally { setLoading(false); }
-  };
-
-  const submitTutor = async () => {
-    const v = validateTutor();
-    setErrors(v);
-    if (Object.keys(v).length) return;
-    if (!userID) return;
-    setLoading(true);
-    try {
-      // Build availability string
-      let availabilityStr = '';
-      if (avail.monFri.enabled && avail.monFri.start && avail.monFri.end) {
-        availabilityStr += `Mon-Fri: ${avail.monFri.start}-${avail.monFri.end}; `;
+      // Ensure role is Student
+      if (endpoints.assignRole) {
+        await api.put(endpoints.assignRole(userID), { role: 'Student' }).catch(() => {});
       }
-      if (avail.satSun.enabled && avail.satSun.start && avail.satSun.end) {
-        availabilityStr += `Sat-Sun: ${avail.satSun.start}-${avail.satSun.end}`;
-      }
-      const payload = {
-        bio,
-        subjects,                    // comma-separated string
-        qualifications,
-        availability: availabilityStr.trim(),
-      };
-
-      // 1) Save tutor profile via tutors API (UPSERT)
-      await api.put(endpoints.tutorByUser(userID), payload);
-
-      // 2) If role is not yet Tutor, set it (assignRole ONLY sets role)
-      if (role !== 'Tutor') {
-        await api.put(endpoints.assignRole(userID), { role: 'Tutor' });
-        // update local role state so UI reflects it
-        setRole('Tutor');
-      }
-
       navigate('/onboarding2');
     } catch (err) {
       setErrors({ api: err.message || 'Onboarding failed. Please try again.' });
@@ -195,216 +80,81 @@ function Onboarding() {
         </div>
 
         {/* Form */}
-        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto flex flex-col justify-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">
-            {role === 'Student' ? 'Tell us about yourself' : 'Tell us about your tutoring'}
+            Tell us about yourself
           </h2>
 
-          {role === 'Student' ? (
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-4 w-full">
-              <div className="flex flex-row item-start gap-2">
-                <label>School</label>
-                <input
-                  type="text" id="school" name="school" value={school}
-                  onChange={(e) => setSchool(e.target.value)}
-                  className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                />
-              </div>
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4 w-full">
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">School</label>
+              <input
+                type="text" id="school" name="school" value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+              />
               {errors.school && <span className="text-red-600 text-xs">{errors.school}</span>}
+            </div>
 
-              <div className="flex flex-row item-start gap-2">
-                <label>Grade</label>
-                <input
-                  type="text" id="grade" name="grade" value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                />
-              </div>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Grade</label>
+              <input
+                type="text" id="grade" name="grade" value={grade}
+                onChange={(e) => setGrade(e.target.value)}
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+              />
               {errors.grade && <span className="text-red-600 text-xs">{errors.grade}</span>}
+            </div>
 
-              <div className="flex flex-row item-start gap-2">
-                <label>Address</label>
-                <input
-                  type="text" id="address" name="address" value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                />
-              </div>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+              <input
+                type="text" id="address" name="address" value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+              />
               {errors.address && <span className="text-red-600 text-xs">{errors.address}</span>}
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-row item-start gap-2">
-                  <label>City</label>
-                  <input
-                    type="text" id="city" name="city" value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                  />
-                </div>
-                <div className="flex flex-row item-start gap-2">
-                  <label>Province</label>
-                  <select
-                    id="province" name="province" value={province}
-                    onChange={(e) => setProvince(e.target.value)}
-                    className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                  >
-                    <option value="">Select Province</option>
-                    <option value="Eastern Cape">Eastern Cape</option>
-                    <option value="Free State">Free State</option>
-                    <option value="Gauteng">Gauteng</option>
-                    <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-                    <option value="Limpopo">Limpopo</option>
-                    <option value="Mpumalanga">Mpumalanga</option>
-                    <option value="North West">North West</option>
-                    <option value="Northern Cape">Northern Cape</option>
-                    <option value="Western Cape">Western Cape</option>
-                  </select>
-                </div>
-              </div>
-
-              {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
-
-              <button
-                className="w-full h-11 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold transition disabled:opacity-60"
-                type="button" disabled={loading} onClick={submitStudent}
-              >
-                {loading ? 'Saving…' : 'Next'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-4 w-full">
-              <div className="flex flex-col item-start gap-2">
-                <label>Bio</label>
-                <textarea
-                  id="bio" name="bio" rows={3} value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="bg-transparent p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                />
-              </div>
-              {errors.bio && <span className="text-red-600 text-xs">{errors.bio}</span>}
-
-              {/* REPLACED: Subjects input -> multi-select from Subjects table */}
-              <div className="flex flex-col item-start gap-2">
-                <label>Subjects</label>
-                <div className="bg-transparent rounded-lg border-2 border-gray-300 shadow-inner w-full p-2 max-h-48 overflow-y-auto">
-                  {subjectsLoading ? (
-                    <div className="text-sm text-gray-500">Loading subjects…</div>
-                  ) : allSubjects.length === 0 ? (
-                    <div className="text-sm text-gray-500">No subjects available.</div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {allSubjects.map((s) => (
-                        <label
-                          key={s.subjectID || s.name}
-                          className="flex items-center gap-2 text-sm text-gray-800"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedSubjects.includes(s.name)}
-                            onChange={() => toggleSubject(s.name)}
-                          />
-                          <span>{s.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {/* keep string for API payload */}
-                <input type="hidden" name="subjects" value={subjects} />
-              </div>
-              {errors.subjects && <span className="text-red-600 text-xs">{errors.subjects}</span>}
-
-              <div className="flex flex-col item-start gap-2">
-                <label>Qualifications</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
                 <input
-                  type="text" id="qualifications" name="qualifications" value={qualifications}
-                  onChange={(e) => setQualifications(e.target.value)}
-                  className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                  type="text" id="city" name="city" value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                 />
               </div>
-              {errors.qualifications && <span className="text-red-600 text-xs">{errors.qualifications}</span>}
-
-              {/* Availability (AddStaff-style) */}
-              <div className="space-y-3">
-                <label className="block">Availability</label>
-
-                <div className="border rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <span>Mon–Fri</span>
-                    <input
-                      type="checkbox"
-                      checked={avail.monFri.enabled}
-                      onChange={() => setAvail(p => ({ ...p, monFri: { ...p.monFri, enabled: !p.monFri.enabled } }))}
-                    />
-                  </div>
-                  {avail.monFri.enabled && (
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <label className="text-sm">
-                        Start
-                        <input
-                          type="time" className="block w-full border rounded p-2"
-                          value={avail.monFri.start}
-                          onChange={e => setAvail(p => ({ ...p, monFri: { ...p.monFri, start: e.target.value } }))}
-                          required
-                        />
-                      </label>
-                      <label className="text-sm">
-                        End
-                        <input
-                          type="time" className="block w-full border rounded p-2"
-                          value={avail.monFri.end}
-                          onChange={e => setAvail(p => ({ ...p, monFri: { ...p.monFri, end: e.target.value } }))}
-                          required
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                <div className="border rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <span>Sat–Sun</span>
-                    <input
-                      type="checkbox"
-                      checked={avail.satSun.enabled}
-                      onChange={() => setAvail(p => ({ ...p, satSun: { ...p.satSun, enabled: !p.satSun.enabled } }))}
-                    />
-                  </div>
-                  {avail.satSun.enabled && (
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <label className="text-sm">
-                        Start
-                        <input
-                          type="time" className="block w-full border rounded p-2"
-                          value={avail.satSun.start}
-                          onChange={e => setAvail(p => ({ ...p, satSun: { ...p.satSun, start: e.target.value } }))}
-                          required
-                        />
-                      </label>
-                      <label className="text-sm">
-                        End
-                        <input
-                          type="time" className="block w-full border rounded p-2"
-                          value={avail.satSun.end}
-                          onChange={e => setAvail(p => ({ ...p, satSun: { ...p.satSun, end: e.target.value } }))}
-                          required
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Province</label>
+                <select
+                  id="province" name="province" value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                >
+                  <option value="">Select Province</option>
+                  <option value="Eastern Cape">Eastern Cape</option>
+                  <option value="Free State">Free State</option>
+                  <option value="Gauteng">Gauteng</option>
+                  <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                  <option value="Limpopo">Limpopo</option>
+                  <option value="Mpumalanga">Mpumalanga</option>
+                  <option value="North West">North West</option>
+                  <option value="Northern Cape">Northern Cape</option>
+                  <option value="Western Cape">Western Cape</option>
+                </select>
               </div>
+            </div>
 
-              {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
+            {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
 
-              <button
-                className="w-full h-11 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold transition disabled:opacity-60"
-                type="button" disabled={loading} onClick={submitTutor}
-              >
-                {loading ? 'Saving…' : 'Next'}
-              </button>
-            </form>
-          )}
+            <button
+              className="w-full h-11 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold transition disabled:opacity-60"
+              type="button" disabled={loading} onClick={submitStudent}
+            >
+              {loading ? 'Saving…' : 'Next'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

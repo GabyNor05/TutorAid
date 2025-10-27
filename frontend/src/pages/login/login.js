@@ -58,7 +58,8 @@ function Login() {
           setErrors({ general: "Login failed" });
         }
       } catch (err) {
-        setErrors({ general: err.message || "Login failed" });
+        const msg = String(err.message || "");
+        setErrors({ general: msg.startsWith("Network") ? "Cannot reach server. Please try again later." : msg });
       }
     }
   };

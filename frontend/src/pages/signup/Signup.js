@@ -52,21 +52,46 @@ function Signup() {
 
     try {
       setSubmitting(true);
-      // Create user WITHOUT assigning role yet
       const res = await api.post(endpoints.users(), {
         name: username,
         email,
         password,
-        role: "Student" // leave empty; backend createUser will only add role-specific rows when role is set
+        role: "Student"
       });
-      const userID = res.userID || res?.user?.userID || res?.id; // handle shapes
+      const userID = res.userID || res?.user?.userID || res?.id;
       if (!userID) throw new Error("Signup failed (no userID).");
 
       localStorage.setItem("userID", userID);
       setCreatedUserId(userID);
-      // setShowRoleModal(true); // commented out
-      navigate('/onboarding'); // go straight to onboarding
 
+      // Send welcome message: Admin -> new user
+      try {
+        let adminID = null;
+        // Prefer admin group user if available
+        try {
+          const group = await api.get(endpoints.adminGroupUser());
+          if (group?.userID) adminID = Number(group.userID);
+        } catch {}
+        // Fallback to first Admin user
+        if (!adminID) {
+          const admins = await api.get(endpoints.usersByRole("Admin"));
+          const first = (Array.isArray(admins) ? admins : []).find(a => a?.userID);
+          if (first?.userID) adminID = Number(first.userID);
+        }
+        if (adminID) {
+          await api.post(endpoints.messages(), {
+            type: "System",
+            subject: "Welcome to Tutor Aid",
+            body: `Hi ${username || "there"}, welcome to Tutor Aid! We're glad you're here.`,
+            senderID: adminID,           // Admin sends
+            receiverID: Number(userID),  // New user receives
+          });
+        }
+      } catch {
+        // Do not block signup if welcome message fails
+      }
+
+      navigate('/onboarding');
       analytics.event('sign_up', { method: 'password' });
     } catch (error) {
       setErrors({ api: error.message || "Signup failed. Please try again." });
@@ -75,20 +100,6 @@ function Signup() {
     }
   };
 
-  const assignRole = async (role) => {
-    if (!createdUserId) return;
-    try {
-      await api.put(endpoints.assignRole(createdUserId), { role });
-      // Navigate based on selection
-      if (role === 'Student') navigate('/onboarding');
-      else navigate('/onboarding');
-
-      analytics.setUser(createdUserId, { role });
-      analytics.event('role_selected', { role });
-    } catch (e) {
-      setPopupMessage("Failed to assign role. Please try again.");
-    }
-  };
 
   return (
     <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
@@ -168,31 +179,6 @@ function Signup() {
       </div>
 
       
-{/*
-  // Role selection modal disabled
-  {showRoleModal && (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <h3 className="text-xl font-bold text-[#2B5561] mb-2">Choose your role</h3>
-        <p className="text-sm text-gray-600 mb-6">Tell us how you want to use Tutor Aid.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            className="h-11 rounded-md bg-[#2B5561] hover:bg-[#2B5561]/80 text-white font-semibold"
-            onClick={() => assignRole('Student')}
-          >
-            I’m a Student
-          </button>
-          <button
-            className="h-11 rounded-md bg-white border border-[#2B5561] text-[#2B5561] hover:bg-[#2B5561]/10 font-semibold"
-            onClick={() => assignRole('Tutor')}
-          >
-            I’m a Tutor
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-*/}
     </div>
   );
 }
