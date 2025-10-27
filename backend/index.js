@@ -1,42 +1,40 @@
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
 const dns = require('dns');
-const path = require('path'); // ADD
+const path = require('path');
 
-dns.setDefaultResultOrder('ipv4first'); // prefer IPv4 to avoid IPv6 ETIMEDOUT
+dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
-// CORS config
+// CORS allowlist (env)
 const allowAll = String(process.env.ALLOW_ALL_CORS || '').toLowerCase() === 'true';
 const allowed = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
 
-// Use cors() to handle all requests including preflight
-const corsMW = cors({
-  origin(origin, cb) {
-    if (allowAll) return cb(null, true);
-    if (!origin) return cb(null, true);              // same-origin or non-browser
-    if (allowed.length === 0) return cb(null, true); // allow all if not configured
-    if (allowed.includes(origin)) return cb(null, true);
-    if (/\.vercel\.app$/.test(origin)) return cb(null, true); // allow Vercel previews
-    return cb(new Error(`Not allowed by CORS: ${origin}`));
-  },
-  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization','Accept'],
-  credentials: false,
-  optionsSuccessStatus: 204,
-  maxAge: 86400,
+// Force CORS headers for every request + handle OPTIONS
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const isAllowed =
+    allowAll ||
+    !allowed.length ||
+    (origin && (allowed.includes(origin) || /\.vercel\.app$/.test(origin)));
+
+  if (isAllowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Vary', 'Origin');
+  }
+  // Echo requested headers so preflight always passes
+  const reqHeaders = req.headers['access-control-request-headers'];
+  res.setHeader('Access-Control-Allow-Headers', reqHeaders || 'Content-Type,Authorization,Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
 });
-
-// ADD: Express 5-safe preflight (use RegExp, not string patterns)
-app.options(/.*/, corsMW, (req, res) => res.sendStatus(204));
-
-app.use(corsMW);
 
 // Parsers
 app.use(express.json({ limit: '10mb' }));
