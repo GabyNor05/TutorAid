@@ -33,8 +33,8 @@ const corsMW = cors({
   maxAge: 86400,
 });
 
-// ADD: Express 5-safe preflight handler (sets headers before 204)
-app.options('/:path(*)', corsMW, (req, res) => res.sendStatus(204));
+// ADD: Express 5-safe preflight (use RegExp, not string patterns)
+app.options(/.*/, corsMW, (req, res) => res.sendStatus(204));
 
 app.use(corsMW);
 
