@@ -24,7 +24,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options('/(.*)', cors(corsOptions)); // enable preflight across-the-board
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // Optional health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
