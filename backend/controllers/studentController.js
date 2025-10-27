@@ -1,5 +1,6 @@
+const pool = require('../config/db');
+
 exports.getAllStudents = async (req, res) => {
-    const pool = require('../config/db');
     try {
         const [rows] = await pool.query(`
             SELECT s.*, u.name, u.image
@@ -13,7 +14,6 @@ exports.getAllStudents = async (req, res) => {
 };
 
 exports.getStudentByUserID = async (req, res) => {
-    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -34,7 +34,6 @@ exports.getStudentByUserID = async (req, res) => {
 };
 
 exports.getAllStatuses = async (req, res) => {
-    const pool = require('../config/db');
     try {
         const [rows] = await pool.query('SELECT DISTINCT status FROM Students');
         const statuses = rows.map(row => row.status).filter(Boolean);
@@ -45,7 +44,6 @@ exports.getAllStatuses = async (req, res) => {
 };
 
 exports.createStudentRequest = async (req, res) => {
-    const pool = require('../config/db');
     const { userID, status } = req.body;
     try {
         await pool.query(
@@ -61,7 +59,6 @@ exports.createStudentRequest = async (req, res) => {
 };
 
 exports.getStudentIDByUserID = async (req, res) => {
-    const pool = require('../config/db');
     const { userID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -79,7 +76,6 @@ exports.getStudentIDByUserID = async (req, res) => {
 };
 
 exports.saveStudentProfile = async (req, res) => {
-  const pool = require('../config/db');
   const { userID } = req.params;
   const { grade = '', school = '', address = '', city = '', province = '', status = 'Active' } = req.body;
 
@@ -108,5 +104,20 @@ exports.saveStudentProfile = async (req, res) => {
   } catch (err) {
     console.error('saveStudentProfile error:', err);
     res.status(500).json({ error: 'Failed to save student profile' });
+  }
+};
+
+exports.getByUser = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [[row]] = await pool.query(
+      'SELECT studentID, userID FROM students WHERE userID = ? LIMIT 1',
+      [userID]
+    );
+    if (!row) return res.status(404).json({ error: 'Student not found' });
+    res.json(row);
+  } catch (err) {
+    console.error('[students:getByUser] error:', err);
+    res.status(500).json({ error: 'Failed to fetch student' });
   }
 };

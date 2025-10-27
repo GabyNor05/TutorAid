@@ -83,12 +83,10 @@ function Dashboard() {
         if (!selectedTutor || !contactBody.trim()) return;
         try {
             const userId = localStorage.getItem("userID");
-            // Get the Student row to obtain the student's userID (sender)
-            const studentRow = await api.get(endpoints.studentByUser(userId));
-            const senderUserID = Number(studentRow?.userID || 0); // MUST be Users.userID
+            const senderUserID = Number(userId || 0); // simplify: Users.userID from localStorage
             if (!senderUserID) throw new Error("Could not resolve sender userID");
 
-            // Ensure we have tutor's userID (receiver)
+            // Resolve tutor's Users.userID (receiver)
             const tutorRow = await api.get(endpoints.tutorById(selectedTutor));
             let receiverUserID = Number(tutorRow?.userID || 0);
             if (!receiverUserID) throw new Error("Could not resolve tutor userID");
@@ -106,7 +104,7 @@ function Dashboard() {
             setContactBody("");
         } catch (err) {
             console.error("Send message failed:", err);
-            // optional: surface a toast
+
         }
     };
 

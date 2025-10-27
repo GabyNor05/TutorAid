@@ -60,6 +60,7 @@ export const endpoints = {
   subjects: () => '/api/subjects',
   ratings: () => '/api/ratings',
   tutorByUser: (id) => `/api/tutors/by-user/${id}`,
+  tutorById: (id) => `/api/tutors/${encodeURIComponent(id)}`,
   updateTutorByUserID: (userID) => `/api/tutors/by-user/${userID}`,
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
@@ -67,7 +68,7 @@ export const endpoints = {
 
   // Student endpoints
   students: () => '/api/students',
-  studentByUser: (id) => `/api/students/by-user/${id}`,
+  studentByUser: (userID) => `/api/students/by-user/${encodeURIComponent(userID)}`,
   progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
   progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}/lesson-notes`,
   progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,

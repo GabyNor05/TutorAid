@@ -23,9 +23,11 @@ function RequestForm() {
       try {
         if (!userID) return;
         const data = await api.get(endpoints.studentByUser(userID));
-        const row = Array.isArray(data) ? data[0] : data;
-        if (row?.studentID) setStudentID(row.studentID);
+        const id = data?.studentID ?? (Array.isArray(data) ? data[0]?.studentID : null);
+        if (id) setStudentID(id);
+        else console.warn('studentID not found for user', userID);
       } catch (err) {
+        // Handle 404 vs 500 gracefully; keep form usable
         console.error("Error fetching studentID:", err);
       }
     }
@@ -168,7 +170,7 @@ function RequestForm() {
   return (
     <div className="page-background">
       <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-4 sm:py-6">
-        <h2 className="text-2xl sm:text-3xl font-semibold text-white text-center sm:text-left">
+        <h2 className="page-title text-2xl sm:text-3xl font-semibold text-white text-center sm:text-left">
           Feedback Requests
         </h2>
 
