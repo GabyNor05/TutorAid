@@ -1,17 +1,55 @@
 const pool = require('../config/db');
 
 // List tutors (minimal fields)
-async function getAllTutors(_req, res) {
+async function getAllTutors(req, res) {
   try {
+    // Primary query: join users for display fields
     const [rows] = await pool.query(
-      `SELECT t.tutorID, t.userID, t.subjects, t.availability, t.fee_per_hour, u.name, u.image
+      `SELECT 
+         t.tutorID,
+         t.userID,
+         u.name,
+         u.email,
+         u.image,
+         t.fee_per_hour
        FROM tutors t
-       JOIN users u ON t.userID = u.userID`
+       JOIN users u ON u.userID = t.userID
+       ORDER BY u.name ASC`
     );
-    res.json(rows);
+    return res.json(rows);
   } catch (err) {
-    console.error('getAllTutors error:', err);
-    res.status(500).json({ error: 'Failed to fetch tutors' });
+    console.error('[tutors:getAllTutors] primary query failed:', err?.code, err?.message);
+
+    // Fallback: fetch separately and join in JS (handles missing columns or schema drift)
+    try {
+      const [tutors] = await pool.query(
+        `SELECT tutorID, userID, COALESCE(fee_per_hour, 0) AS fee_per_hour FROM tutors`
+      );
+      const userIDs = tutors.map(t => t.userID).filter(Boolean);
+      let usersById = {};
+      if (userIDs.length) {
+        const [users] = await pool.query(
+          `SELECT userID, name, email, image FROM users WHERE userID IN (?)`,
+          [userIDs]
+        );
+        usersById = Object.fromEntries(users.map(u => [u.userID, u]));
+      }
+      const merged = tutors.map(t => {
+        const u = usersById[t.userID] || {};
+        return {
+          tutorID: t.tutorID,
+          userID: t.userID,
+          name: u.name || null,
+          email: u.email || null,
+          image: u.image || null,
+          fee_per_hour: t.fee_per_hour ?? null,
+        };
+      });
+      return res.json(merged);
+    } catch (err2) {
+      console.error('[tutors:getAllTutors] fallback failed:', err2?.code, err2?.message);
+      return res.status(500).json({ error: 'Failed to fetch tutors' });
+    }
   }
 }
 
@@ -107,7 +145,7 @@ async function updateTutorByUserID(req, res) {
   }
 }
 
-// Get a tutor by tutorID (returns tutorID, userID, and basic user fields)
+// Optional: keep a simple byId used elsewhere
 async function getById(req, res) {
   try {
     const { id } = req.params;
