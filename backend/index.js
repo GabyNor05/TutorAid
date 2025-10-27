@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const dns = require('dns');
+const path = require('path'); // ADD
 
 dns.setDefaultResultOrder('ipv4first'); // prefer IPv4 to avoid IPv6 ETIMEDOUT
 
@@ -31,6 +32,9 @@ const corsMW = cors({
   optionsSuccessStatus: 204,
   maxAge: 86400,
 });
+
+// ADD: Express 5-safe preflight handler (sets headers before 204)
+app.options('/:path(*)', corsMW, (req, res) => res.sendStatus(204));
 
 app.use(corsMW);
 
