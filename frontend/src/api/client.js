@@ -1,37 +1,38 @@
-const API_URL =
-  (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : undefined) ||
+const API_BASE =
+  (typeof window !== "undefined" && window.__API_BASE__) ||
   process.env.REACT_APP_API_URL ||
-  'http://localhost:5000';
+  (typeof importMeta !== "undefined" && importMeta.env && importMeta.env.VITE_API_URL) || // safe for Vite builds
+  "";
 
-// Normalize base (remove trailing slash)
-const BASE = API_URL.replace(/\/+$/, '');
+function buildUrl(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  if (!API_BASE) return path; // dev proxy
+  const base = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
 
-async function request(method, url, data, options = {}) {
-  const headers = new Headers(options.headers || {});
-  let body;
-
-  const isForm = typeof FormData !== 'undefined' && data instanceof FormData;
-  if (!isForm) {
-    headers.set('Content-Type', 'application/json');
-    if (data !== undefined) body = JSON.stringify(data);
-  } else {
-    body = data;
-  }
-
-  const res = await fetch(`${BASE}${url}`, {
+async function request(method, path, body, extra = {}) {
+  const url = buildUrl(path);
+  const isForm = body instanceof FormData;
+  const headers = isForm ? {} : { "Content-Type": "application/json" };
+  const res = await fetch(url, {
     method,
-    headers,
-    body,
-    credentials: options.credentials || 'omit',
+    headers: { ...headers, ...(extra.headers || {}) },
+    body: body == null ? undefined : isForm ? body : JSON.stringify(body),
+    mode: "cors",
+    credentials: "omit",
+    signal: extra.signal,
+  }).catch((e) => {
+    throw new Error(`Network error: ${e.message || e}`);
   });
-
   if (!res.ok) {
-    let detail = '';
-    try { detail = await res.text(); } catch {}
-    throw new Error(`HTTP ${res.status}${detail ? ` - ${detail}` : ''}`);
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
   }
-  const ct = res.headers.get('content-type') || '';
-  return ct.includes('application/json') ? res.json() : res.text();
+  const ct = res.headers.get("content-type") || "";
+  return ct.includes("application/json") ? res.json() : res.text();
 }
 
 // Convenience helpers

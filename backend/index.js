@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 
-// CORS config
+const allowAll = String(process.env.ALLOW_ALL_CORS || '').toLowerCase() === 'true';
 const allowed = new Set([
   process.env.FRONTEND_URL,                 // e.g. https://your-site.vercel.app
   'http://localhost:3000',
@@ -16,23 +16,24 @@ const allowed = new Set([
 
 const corsOptions = {
   origin(origin, cb) {
-    // Allow same-origin or non-browser (e.g., curl)
+    if (allowAll) return cb(null, true);
     if (!origin) return cb(null, true);
     if (allowed.has(origin)) return cb(null, true);
     // Allow any vercel preview/prod for this app
     if (/\.vercel\.app$/.test(origin)) return cb(null, true);
     return cb(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: true, // allow cookies if you ever need them
+  credentials: false, // allow cookies if you ever need them
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
   maxAge: 86400,
 };
 
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') return cors(corsOptions)(req, res, () => res.sendStatus(204));
+  next();
+});
 app.use(cors(corsOptions));
-
-// FIX: use a RegExp for Express 5 preflight, not a string
-app.options(/.*/, cors(corsOptions)); // handles all OPTIONS preflights
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -73,7 +74,7 @@ const messagesRoutes = require('./routes/messagesRoutes');
 app.use('/api/messages', messagesRoutes);
 
 // Health/debug
-app.get('/api/health', (req, res) => res.send('ok'));
+app.get('/api/health', (req, res) => res.json({ ok: true, origin: req.headers.origin || null }));
 
 app.get('/api/db-health', async (req, res) => {
   try {
