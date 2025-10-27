@@ -4,6 +4,9 @@ const API_BASE =
   (typeof importMeta !== "undefined" && importMeta.env && importMeta.env.VITE_API_URL) || // safe for Vite builds
   "";
 
+// ADD: alias for backward compatibility (fixes "Export 'API_URL' is not defined")
+export const API_URL = API_BASE;
+
 function buildUrl(path) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
