@@ -2,112 +2,63 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
+const dns = require('dns');
+
+dns.setDefaultResultOrder('ipv4first'); // prefer IPv4 to avoid IPv6 ETIMEDOUT
 
 const app = express();
 
+// CORS config
 const allowAll = String(process.env.ALLOW_ALL_CORS || '').toLowerCase() === 'true';
-const allowed = new Set([
-  process.env.FRONTEND_URL,                 // e.g. https://your-site.vercel.app
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://gabydv.xyz',
-].filter(Boolean));
+const allowed = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
 
 const corsOptions = {
   origin(origin, cb) {
     if (allowAll) return cb(null, true);
-    if (!origin) return cb(null, true);
-    if (allowed.has(origin)) return cb(null, true);
-    // Allow any vercel preview/prod for this app
-    if (/\.vercel\.app$/.test(origin)) return cb(null, true);
-    return cb(new Error(`CORS blocked for origin: ${origin}`));
+    if (!origin) return cb(null, true); // same-origin or non-browser
+    if (allowed.length === 0) return cb(null, true); // allow all if not configured
+    return allowed.includes(origin) ? cb(null, true) : cb(new Error(`Not allowed by CORS: ${origin}`));
   },
-  credentials: false, // allow cookies if you ever need them
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-  maxAge: 86400,
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','Accept'],
+  exposedHeaders: [],
+  credentials: false,
+  optionsSuccessStatus: 204,
 };
 
+// Express 5-safe preflight and headers
 app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') return cors(corsOptions)(req, res, () => res.sendStatus(204));
+  const origin = req.headers.origin || '*';
+  if (allowAll || (allowed.length > 0 && allowed.includes(origin))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+  }
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 app.use(cors(corsOptions));
 
-app.use(express.json());
+// Parsers
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
+try { app.use('/api/users', require('./routes/userRoutes')); } catch {}
+try { app.use('/api/tutors', require('./routes/tutorRoutes')); } catch {}
+try { app.use('/api/lessons', require('./routes/lessonRoutes')); } catch {}
+try { app.use('/api/newsletter', require('./routes/newsletterRoutes')); } catch {}
+try { app.use('/api/students', require('./routes/studentRoutes')); } catch {}
+try { app.use('/api/subjects', require('./routes/subjectsRoutes')); } catch {}
 
-const tutorRoutes = require('./routes/tutorRoutes');
-app.use('/api/tutors', tutorRoutes);
+// Health
+app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-const lessonRoutes = require('./routes/lessonRoutes');
-app.use('/api/lessons', lessonRoutes);
-
-const studentRoutes = require('./routes/studentRoutes');
-app.use('/api/students', studentRoutes);
-
-const lessonReportRoutes = require('./routes/lessonReportRoutes');
-app.use('/api/lessonReports', lessonReportRoutes);
-
-const progressNotesRoutes = require('./routes/progressNotesRoutes');
-app.use('/api/progressNotes', progressNotesRoutes);
-app.use('/api/progressnotes', progressNotesRoutes); // lowercase alias
-
-const subjectRoutes = require('./routes/subjectRoutes');
-app.use('/api/subjects', subjectRoutes);
-
-const studentRequestsRoutes = require('./routes/studentRequestsRoutes');
-app.use('/api/studentRequests', studentRequestsRoutes);
-
-const newSubjectRequestsRoutes = require('./routes/newSubjectRequestsRoutes');
-app.use('/api/newSubjectRequests', newSubjectRequestsRoutes);
-
-const ratingRoutes = require('./routes/ratingRoutes');
-app.use('/api/ratings', ratingRoutes);
-
-const messagesRoutes = require('./routes/messagesRoutes');
-app.use('/api/messages', messagesRoutes);
-
-// Health/debug
-app.get('/api/health', (req, res) => res.json({ ok: true, origin: req.headers.origin || null }));
-
-app.get('/api/db-health', async (req, res) => {
-  try {
-    const pool = require('./config/db');
-    const [rows] = await pool.query('SELECT 1 AS ok');
-    res.json({ ok: true, rows });
-  } catch (e) {
-    console.error('DB health error:', e);
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-app.get('/api/db-inspect', async (req, res) => {
-  try {
-    const pool = require('./config/db');
-    const [[{ db }]] = await pool.query('SELECT DATABASE() AS db');
-    const [tables] = await pool.query('SHOW TABLES');
-    res.json({ db, tables });
-  } catch (e) {
-    console.error('DB inspect error:', e);
-    res.status(500).json({ error: e.message, code: e.code, sqlMessage: e.sqlMessage });
-  }
-});
-
-// Static PDFs
-app.get('/uploads/progressnotes/:filename', (req, res) => {
-  const filePath = path.join(__dirname, 'uploads/progressnotes', req.params.filename);
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'inline');
-  res.sendFile(filePath);
-});
-
-const newsletterRoutes = require('./routes/newsletterRoutes');
-app.use('/api/newsletter', newsletterRoutes);
+// 404
+app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
 module.exports = app;
