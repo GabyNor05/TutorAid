@@ -107,8 +107,6 @@ export const endpoints = {
   
 };
 
-export { API_URL };
-
 export const subjectsApi = {
   list: () => api.get(endpoints.subjects()),
   get: (id) => api.get(endpoints.subjectById(id)),
