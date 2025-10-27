@@ -1,7 +1,6 @@
 const API_BASE =
   (typeof window !== "undefined" && window.__API_BASE__) ||
   process.env.REACT_APP_API_URL ||
-  (typeof importMeta !== "undefined" && importMeta.env && importMeta.env.VITE_API_URL) || // safe for Vite builds
   "";
 
 // ADD: alias for backward compatibility (fixes "Export 'API_URL' is not defined")
