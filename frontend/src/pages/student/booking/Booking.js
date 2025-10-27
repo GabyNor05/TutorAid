@@ -70,6 +70,30 @@ function Booking() {
   ];
   const navigate = useNavigate();
 
+  // Detect desktop to switch DatePicker between inline (desktop) and popover (mobile)
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return true;
+    return window.matchMedia("(min-width: 768px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const handler = (e) => setIsDesktop(e.matches);
+    try {
+      mq.addEventListener("change", handler);
+    } catch {
+      mq.addListener(handler);
+    }
+    return () => {
+      try {
+        mq.removeEventListener("change", handler);
+      } catch {
+        mq.removeListener(handler);
+      }
+    };
+  }, []);
+
   // Calculate tomorrow's date
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -382,196 +406,218 @@ function Booking() {
   }, [pendingBooking]);
 
   return (
-    <div className="page-background">
-      {/* Page container with safe padding and wider max width on large screens */}
-      <div className="booking-container mx-auto w-full max-w-5xl xl:max-w-6xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <h2 className="booking-form-title text-center sm:text-left text-2xl sm:text-3xl">
-          Book a Lesson
-        </h2>
+    <div className="page-background min-h-[100dvh] flex items-center justify-center px-4 py-6">
+      {/* Card container: narrow on mobile, taller on md+ (mirrors Login) */}
+      <div className="w-full max-w-md md:max-w-5xl md:h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
+        {/* Left panel: heading + brief info (hidden if you prefer single-pane) */}
+        <div className="hidden md:block bg-white h-full">
+          <div className="h-full min-h-0 p-6 md:p-8 overflow-y-auto flex flex-col justify-center">
+            <h2 className="text-3xl font-semibold text-[#2B5561]">Book a Lesson</h2>
+            <p className="mt-3 text-gray-600">
+              Choose your subject, tutor, date and time. We’ll confirm the details before booking.
+            </p>
+          </div>
+        </div>
 
-        <form className="booking-form mt-4 space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
-          {/* Row: Subject / Tutor */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-            <div className="flex flex-col w-full">
-              <label className="mb-1 text-sm text-gray-800">Subject:</label>
-              <select
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                value={selectedSubject}
-                onChange={async e => {
-                  const subject = e.target.value;
-                  setSelectedSubject(subject);
-                  setSelectedTutor("");
-                  setSelectedTutorUserID(null);
-                  setSelectedTutorInfo(null);
-                  setSelectedDate(null);
-                  if (subject) {
-                    try {
-                      const data = await api.get(endpoints.tutorsBySubject(subject));
-                      const list = normalizeTutors(data);
-                      setTutors(list);
-                      analytics.event('subject_selected', { subject });
-                      if (list.length === 0) {
-                        console.warn("No tutors returned for subject:", subject, data);
-                      }
-                    } catch (err) {
-                      console.error("tutorsBySubject failed:", err);
-                      setTutors([]);
-                    }
-                  } else {
-                    setTutors([]);
-                  }
-                }}
-                disabled={subjectsLoading}
-              >
-                <option value="">Select Subject</option>
-                {(
-                  availableSubjects.length
-                    ? availableSubjects.map(s => s.name)
-                    : subjectOptions
-                ).map(subject => (
-                  <option key={subject} value={subject}>{subject}</option>
-                ))}
-              </select>
-            </div>
-
-            {tutors.length > 0 && (
+        {/* Right panel: the form */}
+        <div className="h-full min-h-0 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col justify-center">
+          <form className="space-y-5 sm:space-y-6 flex flex-col items-stretch w-full" onSubmit={handleSubmit}>
+            {/* Subject / Tutor */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               <div className="flex flex-col w-full">
-                <label className="mb-1 text-sm text-gray-800">Tutor:</label>
+                <label className="mb-1 text-sm text-gray-800">Subject</label>
                 <select
                   className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                  value={selectedTutor}
+                  value={selectedSubject}
                   onChange={async e => {
-                    const tutorID = Number(e.target.value);
-                    const tObj = tutors.find(t => Number(t.tutorID) === tutorID);
-                    const userID = tObj?.userID ?? null;
-
-                    setSelectedTutor(String(tutorID));
-                    setSelectedTutorUserID(userID);
-                    setSelectedDate(null);
-                    setAvailability([]);
+                    const subject = e.target.value;
+                    setSelectedSubject(subject);
+                    setSelectedTutor("");
+                    setSelectedTutorUserID(null);
                     setSelectedTutorInfo(null);
-
-                    if (tutorID) {
+                    setSelectedDate(null);
+                    if (subject) {
                       try {
-                        const data = await api.get(endpoints.tutorAvailability(tutorID));
-                        const availStr = data?.availability || data?.[0]?.availability || "";
-                        const parsed = parseAvailabilityString(availStr);
-                        setAvailability(parsed);
-                      } catch {
-                        setAvailability([]);
+                        const data = await api.get(endpoints.tutorsBySubject(subject));
+                        const list = normalizeTutors(data);
+                        setTutors(list);
+                        analytics.event('subject_selected', { subject });
+                        if (list.length === 0) {
+                          console.warn("No tutors returned for subject:", subject, data);
+                        }
+                      } catch (err) {
+                        console.error("tutorsBySubject failed:", err);
+                        setTutors([]);
                       }
+                    } else {
+                      setTutors([]);
                     }
-                    if (userID) fetchTutorDetails(userID);
-
-                    analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: tutorID });
                   }}
+                  disabled={subjectsLoading}
                 >
-                  <option value="">Select Tutor</option>
-                  {tutors.map((tutor) => (
-                    <option key={tutor.tutorID} value={String(tutor.tutorID)}>
-                      {tutor.name}
-                    </option>
+                  <option value="">Select Subject</option>
+                  {(availableSubjects.length ? availableSubjects.map(s => s.name) : subjectOptions).map(subject => (
+                    <option key={subject} value={subject}>{subject}</option>
                   ))}
                 </select>
               </div>
-            )}
-          </div>
 
-          {/* Tutor info card (stacks on mobile, side-by-side on larger screens) */}
-          {selectedTutor && (
-            <div className="w-full">
-              <div className="w-full rounded-xl bg-white/90 shadow p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
-                <div className="shrink-0 self-center sm:self-start">
-                  {loadingTutorInfo ? (
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 animate-pulse" />
-                  ) : selectedTutorInfo?.image ? (
-                    <img
-                      src={selectedTutorInfo.image}
-                      alt={selectedTutorInfo.name}
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-xl">
-                      {(selectedTutorInfo?.name?.[0] || "T").toUpperCase()}
-                    </div>
-                  )}
+              {tutors.length > 0 && (
+                <div className="flex flex-col w-full">
+                  <label className="mb-1 text-sm text-gray-800">Tutor</label>
+                  <select
+                    className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                    value={selectedTutor}
+                    onChange={async e => {
+                      const tutorID = Number(e.target.value);
+                      const tObj = tutors.find(t => Number(t.tutorID) === tutorID);
+                      const userID = tObj?.userID ?? null;
+
+                      setSelectedTutor(String(tutorID));
+                      setSelectedTutorUserID(userID);
+                      setSelectedDate(null);
+                      setAvailability([]);
+                      setSelectedTutorInfo(null);
+
+                      if (tutorID) {
+                        try {
+                          const data = await api.get(endpoints.tutorAvailability(tutorID));
+                          const availStr = data?.availability || data?.[0]?.availability || "";
+                          const parsed = parseAvailabilityString(availStr);
+                          setAvailability(parsed);
+                        } catch {
+                          setAvailability([]);
+                        }
+                      }
+                      if (userID) fetchTutorDetails(userID);
+
+                      analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: tutorID });
+                    }}
+                  >
+                    <option value="">Select Tutor</option>
+                    {tutors.map((tutor) => (
+                      <option key={tutor.tutorID} value={String(tutor.tutorID)}>
+                        {tutor.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                    <h3 className="text-lg sm:text-xl font-semibold text-[#2B5561] truncate">
-                      {selectedTutorInfo?.name || "Tutor"}
-                    </h3>
-                    <div className="text-sm text-gray-700">
-                      Fee per hour: {selectedTutorInfo?.fee_per_hour != null ? `R ${Number(selectedTutorInfo.fee_per_hour).toFixed(2)}` : "N/A"}
-                    </div>
+              )}
+            </div>
+
+            {/* Tutor info card */}
+            {selectedTutor && (
+              <div className="w-full">
+                <div className="w-full rounded-xl bg-white/90 border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
+                  <div className="shrink-0 self-center sm:self-start">
+                    {loadingTutorInfo ? (
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 animate-pulse" />
+                    ) : selectedTutorInfo?.image ? (
+                      <img
+                        src={selectedTutorInfo.image}
+                        alt={selectedTutorInfo.name}
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-xl">
+                        {(selectedTutorInfo?.name?.[0] || "T").toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  {selectedTutorInfo?.email && (
-                    <div className="text-sm text-gray-600 truncate">{selectedTutorInfo.email}</div>
-                  )}
-                  {selectedTutorInfo?.bio && (
-                    <p className="mt-1 text-sm text-gray-700 line-clamp-3">{selectedTutorInfo.bio}</p>
-                  )}
-                  {Array.isArray(selectedTutorInfo?.subjects) && selectedTutorInfo.subjects.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedTutorInfo.subjects.map((s, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded-full border text-xs text-gray-700">{s}</span>
-                      ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                      <h3 className="text-lg sm:text-xl font-semibold text-[#2B5561] truncate">
+                        {selectedTutorInfo?.name || "Tutor"}
+                      </h3>
+                      <div className="text-sm text-gray-700">
+                        Fee per hour: {selectedTutorInfo?.fee_per_hour != null ? `R ${Number(selectedTutorInfo.fee_per_hour).toFixed(2)}` : "N/A"}
+                      </div>
                     </div>
-                  )}
+                    {selectedTutorInfo?.email && (
+                      <div className="text-sm text-gray-600 truncate">{selectedTutorInfo.email}</div>
+                    )}
+                    {selectedTutorInfo?.bio && (
+                      <p className="mt-1 text-sm text-gray-700 line-clamp-3">{selectedTutorInfo.bio}</p>
+                    )}
+                    {Array.isArray(selectedTutorInfo?.subjects) && selectedTutorInfo.subjects.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedTutorInfo.subjects.map((s, i) => (
+                          <span key={i} className="px-2 py-0.5 rounded-full border text-xs text-gray-700">{s}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Duration / Date responsive layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col w-full">
-              <label className="mb-1 text-sm text-gray-800">Duration:</label>
-              <select
-                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                value={duration}
-                onChange={e => setDuration(e.target.value)}
-              >
-                <option value="">Select Duration</option>
-                <option value="60">1 hour</option>
-                <option value="90">1.5 hours</option>
-                <option value="120">2 hours</option>
-                <option value="150">2.5 hours</option>
-                <option value="180">3 hours</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col w-full">
-              <label className="mb-1 text-sm text-gray-800">Date:</label>
-              <div className="w-full rounded-lg border border-gray-200 p-2 overflow-x-auto">
-                <DatePicker
+            {/* Duration / Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col w-full">
+                <label className="mb-1 text-sm text-gray-800">Duration</label>
+                <select
                   className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                  selected={selectedDate}
-                  onChange={date => setSelectedDate(date)}
-                  minDate={tomorrow}
-                  inline
-                  showTimeSelect
-                  filterDate={isDateAvailable}
-                  includeTimes={getAvailableTimesForDate(selectedDate, availability)}
-                  disabled={!selectedTutor}
-                />
+                  value={duration}
+                  onChange={e => setDuration(e.target.value)}
+                >
+                  <option value="">Select Duration</option>
+                  <option value="60">1 hour</option>
+                  <option value="90">1.5 hours</option>
+                  <option value="120">2 hours</option>
+                  <option value="150">2.5 hours</option>
+                  <option value="180">3 hours</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col w-full">
+                <label className="mb-1 text-sm text-gray-800">Date</label>
+                {/* Desktop: inline calendar, Mobile: input with popover */}
+                {isDesktop ? (
+                  <div className="w-full rounded-lg border border-gray-200 p-2 overflow-x-auto">
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={date => setSelectedDate(date)}
+                      minDate={tomorrow}
+                      inline
+                      showTimeSelect
+                      filterDate={isDateAvailable}
+                      includeTimes={getAvailableTimesForDate(selectedDate, availability)}
+                      disabled={!selectedTutor}
+                      timeIntervals={30}
+                    />
+                  </div>
+                ) : (
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={date => setSelectedDate(date)}
+                    minDate={tomorrow}
+                    placeholderText="Pick a date and time"
+                    className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                    showTimeSelect
+                    filterDate={isDateAvailable}
+                    includeTimes={getAvailableTimesForDate(selectedDate, availability)}
+                    disabled={!selectedTutor}
+                    timeIntervals={30}
+                    dateFormat="yyyy-MM-dd h:mm aa"
+                  />
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Submit */}
-          <div className="w-full flex justify-center">
-            <button
-              type="submit"
-              className="login-btn w-full sm:w-3/4 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
-            >
-              Book Lesson
-            </button>
-          </div>
-        </form>
+            {/* Submit */}
+            <div className="w-full">
+              <button
+                type="submit"
+                className="login-btn w-full h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
+              >
+                Book Lesson
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      {/* Confirmation Modal (centered, padded, responsive) */}
+      {/* Confirmation Modal (unchanged) */}
       {confirmOpen && pendingBooking && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 sm:px-6">
           <div className="bg-white w-full max-w-lg rounded-xl shadow p-4 sm:p-6">

@@ -89,19 +89,16 @@ function Dashboard() {
             if (!senderUserID) throw new Error("Could not resolve sender userID");
 
             // Ensure we have tutor's userID (receiver)
-            let receiverUserID = Number(selectedTutorUserID || 0);
-            if (!receiverUserID) {
-                const uid = await resolveTutorUserID(selectedTutor);
-                receiverUserID = Number(uid || 0);
-            }
+            const tutorRow = await api.get(endpoints.tutorById(selectedTutor));
+            let receiverUserID = Number(tutorRow?.userID || 0);
             if (!receiverUserID) throw new Error("Could not resolve tutor userID");
 
             await api.post(endpoints.messages(), {
                 type: "Private Message",
                 subject: contactSubject,
                 body: contactBody,
-                senderID: senderUserID,     // Users.userID
-                receiverID: receiverUserID, // Users.userID
+                senderID: senderUserID,     // Users.userID student
+                receiverID: receiverUserID, // Users.userID tutor
             });
 
             setContactModalOpen(false);

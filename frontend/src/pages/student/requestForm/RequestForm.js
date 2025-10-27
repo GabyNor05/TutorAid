@@ -12,6 +12,7 @@ function RequestForm() {
   const [query, setQuery] = useState("");
   const [studentID, setStudentID] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [adminUsers, setAdminUsers] = useState([]); // ADD: admins to message
 
   const navigate = useNavigate();
   const userID = localStorage.getItem("userID");
@@ -44,6 +45,88 @@ function RequestForm() {
     fetchSubjects();
   }, []);
 
+  // Fetch admins (role=Admin)
+  useEffect(() => {
+    async function fetchAdmins() {
+      try {
+        const url =
+          (endpoints && endpoints.adminUsers && endpoints.adminUsers()) ||
+          (endpoints && endpoints.usersByRole && endpoints.usersByRole("Admin")) ||
+          "/api/users/role/Admin";
+        const list = await api.get(url);
+        const arr = Array.isArray(list) ? list : [];
+        // Expect objects with userID; map if backend returns minimal
+        setAdminUsers(arr.filter(a => a?.userID).map(a => ({ userID: Number(a.userID), name: a.name })));
+      } catch (e) {
+        console.warn("Failed to fetch admin users:", e);
+        setAdminUsers([]);
+      }
+    }
+    fetchAdmins();
+  }, []);
+
+  // Helper: compose message for admins
+  const buildAdminMessage = () => {
+    const prettyType = String(requestType || "").replaceAll("_", " ");
+    const subject = `[${prettyType || "Student Request"}] Student #${studentID}`;
+    const details = [
+      requestType === "Progress_Note" ? `Lesson Date: ${lessonDate}` : null,
+      requestType === "Progress_Note" ? `SubjectID: ${subjectID}` : null,
+      requestType === "New_Subject" ? `New Subject: ${newSubjectName}` : null,
+      requestType === "New_Subject" ? `Description: ${newSubjectDescription}` : null,
+      requestType === "General_Query" ? `Query: ${query}` : null,
+    ].filter(Boolean).join("\n");
+
+    return {
+      type: "Student_Request",
+      subject,
+      body: `A new ${prettyType || "request"} has been submitted by Student #${studentID}.\n\n${details}`,
+    };
+  };
+
+  // Send message to admins: prefer Admin Group user to avoid inbox flood
+  const notifyAdmins = async () => {
+    const senderID = Number(userID);
+    if (!senderID) return;
+
+    const payload = buildAdminMessage();
+
+    try {
+      // Try Admin Group receiver
+      const group = await api.get(endpoints.adminGroupUser());
+      const groupUserID = Number(group?.userID);
+      if (groupUserID) {
+        await api.post(endpoints.messages(), {
+          senderID,
+          receiverID: groupUserID,
+          ...payload,
+        });
+        return; // done, single message
+      }
+    } catch {
+      // ignore and fallback
+    }
+
+    // Fallback: role lookup (still single pick, not fan-out)
+    try {
+      const admins = await api.get(endpoints.usersByRole("Admin"));
+      const firstAdmin = (Array.isArray(admins) ? admins : []).find(a => a?.userID);
+      if (firstAdmin?.userID) {
+        await api.post(endpoints.messages(), {
+          senderID,
+          receiverID: Number(firstAdmin.userID),
+          ...payload,
+        });
+        return;
+      }
+    } catch {
+      // ignore and fallback
+    }
+
+    // Last resort: no group and no admins found — skip to avoid errors
+    console.warn("No admin group or admin user found; skipping admin notification.");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -56,22 +139,22 @@ function RequestForm() {
       return;
     }
 
-    // Map payload by request type (matches backend: Progress_Note, New_Subject, General_Query)
     const payload = {
       studentID: Number(studentID),
       requestType,
       lessonDate: requestType === "Progress_Note" ? lessonDate || null : null,
-      subjectID:
-        requestType === "Progress_Note" ? (subjectID ? Number(subjectID) : null) : null,
+      subjectID: requestType === "Progress_Note" ? (subjectID ? Number(subjectID) : null) : null,
       newSubjectName: requestType === "New_Subject" ? newSubjectName || null : null,
-      newSubjectDescription:
-        requestType === "New_Subject" ? newSubjectDescription || null : null,
+      newSubjectDescription: requestType === "New_Subject" ? newSubjectDescription || null : null,
       query: requestType === "General_Query" ? query || null : null,
     };
 
     setSubmitting(true);
     try {
       await api.post(endpoints.studentRequests(), payload);
+      // Notify admins after request creation
+      await notifyAdmins();
+
       alert("Request submitted!");
       navigate("/dashboard");
     } catch (err) {

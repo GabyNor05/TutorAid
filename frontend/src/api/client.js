@@ -59,6 +59,8 @@ export const endpoints = {
   tutors: () => '/api/tutors',
   subjects: () => '/api/subjects',
   ratings: () => '/api/ratings',
+  tutorByUser: (id) => `/api/tutors/by-user/${id}`,
+  updateTutorByUserID: (userID) => `/api/tutors/by-user/${userID}`,
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
   feedback: () => '/api/feedback',
@@ -69,8 +71,7 @@ export const endpoints = {
   progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
   progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}/lesson-notes`,
   progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
-  tutorByUser: (id) => `/api/tutors/by-user/${id}`,
-  tutorById: (id) => `/api/tutors/${id}`,
+
   lessons: () => '/api/lessons',
 
   //Admin endpoints
@@ -80,12 +81,14 @@ export const endpoints = {
   progressNotes: () => '/api/progressNotes',
   progressNotesUpload: () => '/api/progressNotes/upload',
   progressNotesPublish: () => '/api/progressNotes/publish',
+  usersByRole: (role) => `/api/users/role/${encodeURIComponent(role)}`,
+  adminGroupUser: () => `/api/users/admin-group`, // returns { userID, name, ... }
 
   // Back-compat alias (if other code uses 'upload')
   upload: () => '/api/progressNotes/upload',
 
   // Messaging endpoints
-  messages: () => '/api/messages',
+  messages: () => `/api/messages`,
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
   
 
@@ -96,6 +99,7 @@ export const endpoints = {
   newsletterTemplates: () => '/api/newsletter/templates',
   newsletterTemplateById: (id) => `/api/newsletter/templates/${id}`,
   newsletterSend: () => '/api/newsletter/send',
+  
 };
 
 export { API_URL };

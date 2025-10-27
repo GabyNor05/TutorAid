@@ -68,7 +68,7 @@ function Login() {
       <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5 h-full min-h-0">
-          <img src={loginImage} alt="Login" className="h-full w-full object-cover" />
+          <img src={loginImage} alt="Login" className="h-full w-full object-fit" />
         </div>
 
         {/* Form */}
