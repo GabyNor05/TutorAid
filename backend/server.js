@@ -23,12 +23,17 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions));
-app.options('/(.*)', cors(corsOptions)); // enable preflight across-the-board
+// Preflight handler without path pattern (Express 5 safe)
+const corsMW = cors(corsOptions);
 app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  if (req.method === 'OPTIONS') {
+    return corsMW(req, res, () => res.sendStatus(204));
+  }
   next();
 });
+
+// CORS for all other requests
+app.use(corsMW);
 
 // Optional health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
