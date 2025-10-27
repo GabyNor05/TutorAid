@@ -15,9 +15,22 @@ const allowed = (process.env.ALLOWED_ORIGINS || '')
   .map(s => s.trim())
   .filter(Boolean);
 
-// Force CORS headers for every request + handle OPTIONS
+// Force CORS headers + handle OPTIONS (Express 5 safe)
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
+  const reqHeaders = req.headers['access-control-request-headers'];
+
+  // Always answer preflight with CORS headers
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', reqHeaders || 'Content-Type,Authorization,Accept');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    return res.status(204).end();
+  }
+
+  // For actual requests, apply allowlist if configured
   const isAllowed =
     allowAll ||
     !allowed.length ||
@@ -27,12 +40,6 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Vary', 'Origin');
   }
-  // Echo requested headers so preflight always passes
-  const reqHeaders = req.headers['access-control-request-headers'];
-  res.setHeader('Access-Control-Allow-Headers', reqHeaders || 'Content-Type,Authorization,Accept');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
   next();
 });
 
