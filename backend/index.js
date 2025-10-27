@@ -8,18 +8,22 @@ dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
-// Unconditional CORS headers + preflight (definitive, Express 5–safe)
+// Unconditional CORS for every request + OPTIONS (no wildcards in route paths)
 app.use((req, res, next) => {
   const origin = req.headers.origin || '*';
-  const reqHeaders = req.headers['access-control-request-headers'];
+  const reqHeaders = req.headers['access-control-request-headers'] || '*';
 
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', reqHeaders || 'Content-Type,Authorization,Accept');
+  res.setHeader('Access-Control-Allow-Headers', reqHeaders);
+  res.setHeader('Access-Control-Allow-Credentials', 'false');
   res.setHeader('Access-Control-Max-Age', '86400');
 
-  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method === 'OPTIONS') {
+    // Return 200 to avoid upstream/proxy stripping headers on 204
+    return res.status(200).end();
+  }
   next();
 });
 
