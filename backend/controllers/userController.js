@@ -198,6 +198,59 @@ exports.loginUser = async (req, res) => {
   }
 };
 
+exports.login = async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const password = String(req.body?.password || '');
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const [[user]] = await pool.query(
+      'SELECT userID, email, password, role, name FROM users WHERE LOWER(email) = ? LIMIT 1',
+      [email]
+    );
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const hash = user.password || '';
+    let ok = false;
+    if (hash && hash.startsWith('$2')) {
+      ok = await bcrypt.compare(password, hash);
+    } else {
+      // fallback for plaintext dev data
+      ok = password === hash;
+    }
+    if (!ok) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Attach student info if applicable
+    let student = null;
+    if (user.role === 'Student') {
+      const [[row]] = await pool.query(
+        'SELECT studentID, status FROM students WHERE userID = ? LIMIT 1',
+        [user.userID]
+      );
+      if (row) student = row;
+    }
+
+    // Success payload (kept minimal for your Login.js)
+    res.json({
+      userID: user.userID,
+      role: user.role,
+      name: user.name,
+      student, // may be null
+    });
+  } catch (err) {
+    console.error('[users/login] error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+};
+
 // ---------------- OTP ----------------
 
 exports.sendOtp = async (req, res) => {

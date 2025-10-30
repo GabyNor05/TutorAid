@@ -31,6 +31,7 @@ function Home() {
   const [err, setErr] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
+  const [loadingTutorDetails, setLoadingTutorDetails] = useState(false); // ADD
 
   useEffect(() => {
     const load = async () => {
@@ -53,6 +54,7 @@ function Home() {
     load();
   }, []);
 
+  // Build tutor subject set (may be empty if API doesn't include subjects)
   const tutorsArr = Array.isArray(tutors) ? tutors : [];
   const subjectsArr = Array.isArray(subjects) ? subjects : [];
 
@@ -65,6 +67,24 @@ function Home() {
     }
   });
   const filteredSubjects = subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
+  const subjectsToShow = filteredSubjects.length ? filteredSubjects : subjectsArr; // FALLBACK
+
+  const openTutorModal = async (tutor) => {
+    setSelectedTutor(tutor);
+    setModalOpen(true);
+    // Fetch full details and merge (if list is minimal)
+    try {
+      setLoadingTutorDetails(true);
+      const full = await api.get(endpoints.tutorById(tutor.tutorID));
+      if (full && full.tutorID === tutor.tutorID) {
+        setSelectedTutor(prev => ({ ...prev, ...full }));
+      }
+    } catch (e) {
+      console.warn('Failed to load tutor details:', e);
+    } finally {
+      setLoadingTutorDetails(false);
+    }
+  };
 
   if (loading) return <div className="p-6">Loading…</div>;
   if (err) return <div className="p-6 text-red-600">Error: {err}</div>;
@@ -80,9 +100,9 @@ function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-8 mb-5 text-center">Available Subjects</h2>
           <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-center">
-            {filteredSubjects.map(subject => (
+            {subjectsToShow.map(subject => (
               <span
-                key={subject.subjectID}
+                key={subject.subjectID || subject.name}
                 className="tag bg-cyan-800 text-white px-3 py-1 rounded-lg font-medium text-sm sm:text-base"
               >
                 {subject.name}
@@ -95,13 +115,12 @@ function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-12 mb-5 text-center">Available Tutors</h2>
 
-          {/* Grid on ≥sm, horizontal scroll on xs */}
           <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {tutorsArr.map(tutor => (
               <TutorCards
                 key={tutor.tutorID}
                 tutor={tutor}
-                onClick={() => { setSelectedTutor(tutor); setModalOpen(true); }}
+                onClick={() => openTutorModal(tutor)}
               />
             ))}
           </div>
@@ -111,7 +130,7 @@ function Home() {
               <div key={tutor.tutorID} className="snap-center">
                 <TutorCards
                   tutor={tutor}
-                  onClick={() => { setSelectedTutor(tutor); setModalOpen(true); }}
+                  onClick={() => openTutorModal(tutor)}
                 />
               </div>
             ))}
@@ -157,12 +176,13 @@ function Home() {
             {/* Details */}
             <div className="flex-1 p-6 md:p-8">
               <h2 className="text-xl md:text-2xl font-bold mb-4">{selectedTutor.name}</h2>
+              {loadingTutorDetails && <div className="text-sm text-gray-500 mb-2">Loading details…</div>}
               <dl className="space-y-2 text-sm md:text-base">
-                <div><span className="font-semibold">Subjects:</span> {selectedTutor.subjects}</div>
-                <div><span className="font-semibold">Fee per hour:</span> R{selectedTutor.fee_per_hour}</div>
-                <div><span className="font-semibold">Experience:</span> {selectedTutor.experience}</div>
-                <div><span className="font-semibold">Qualifications:</span> {selectedTutor.qualifications}</div>
-                <div><span className="font-semibold">Bio:</span> {selectedTutor.bio}</div>
+                <div><span className="font-semibold">Subjects:</span> {selectedTutor.subjects || '—'}</div>
+                <div><span className="font-semibold">Fee per hour:</span> {selectedTutor.fee_per_hour != null ? `R${selectedTutor.fee_per_hour}` : '—'}</div>
+                <div><span className="font-semibold">Experience:</span> {selectedTutor.experience || '—'}</div>
+                <div><span className="font-semibold">Qualifications:</span> {selectedTutor.qualifications || '—'}</div>
+                <div><span className="font-semibold">Bio:</span> {selectedTutor.bio || '—'}</div>
               </dl>
               {selectedTutor.bio && (
                 <p className="text-gray-600 mt-4">{selectedTutor.bio}</p>

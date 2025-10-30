@@ -44,7 +44,7 @@ function Login() {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const res = await api.post(endpoints.login(), { email, password });
+        const res = await api.post(endpoints.login(), { email: email.trim(), password });
         if (res.student && res.student.status === "Blocked") {
           setBlockedModalOpen(true);
           setStudentID(res.student.studentID);
@@ -59,7 +59,9 @@ function Login() {
         }
       } catch (err) {
         const msg = String(err.message || "");
-        setErrors({ general: msg.startsWith("Network") ? "Cannot reach server. Please try again later." : msg });
+        setErrors({ general: msg.startsWith("HTTP 401") ? "Invalid email or password" :
+                         msg.startsWith("Network") ? "Cannot reach server. Please try again later." :
+                         msg.replace(/^HTTP \d+\s-\s/, '') || "Login failed" });
       }
     }
   };

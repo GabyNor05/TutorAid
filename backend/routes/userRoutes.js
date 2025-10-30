@@ -22,6 +22,7 @@ router.get('/:id', userController.getUser);
 router.put('/:id', upload.single('image'), userController.updateUser); // ENABLE file upload
 router.put('/:id/assign-role', userController.assignRole);
 router.delete('/:id', userController.deleteUser);
+router.post('/login', userController.login); // ADD
 
 module.exports = router;
 

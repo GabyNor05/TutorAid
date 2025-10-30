@@ -1,4 +1,3 @@
-
 const STAR_ICON = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
     fill="currentColor" className="w-4 h-4 text-yellow-400">
@@ -7,6 +6,11 @@ const STAR_ICON = () => (
 );
 
 function TutorCards({ tutor, onClick }) {
+  const rating = tutor?.rating != null ? tutor.rating : '—';
+  const count = tutor?.num_ratings != null ? tutor.num_ratings : '0';
+  const fee = tutor?.fee_per_hour != null ? tutor.fee_per_hour : '—';
+  const exp = tutor?.experience || '—';
+
   return (
     <button
       type="button"
@@ -21,15 +25,15 @@ function TutorCards({ tutor, onClick }) {
       />
       <div className="flex flex-col p-3 gap-1">
         <h3 className="text-base sm:text-lg font-medium line-clamp-1">{tutor.name}</h3>
-        <p className="text-xs text-gray-500 line-clamp-1">{tutor.experience} Experience</p>
+        <p className="text-xs text-gray-500 line-clamp-1">{exp} Experience</p>
         <div className="flex flex-row justify-between items-center mt-auto">
           <div className="flex items-center mt-1 space-x-1">
             <STAR_ICON />
             <span className="text-xs text-gray-700">
-              {tutor.rating} ({tutor.num_ratings})
+              {rating} ({count})
             </span>
           </div>
-          <span className="text-xs text-gray-700">R{tutor.fee_per_hour} / hr</span>
+          <span className="text-xs text-gray-700">R{fee} / hr</span>
         </div>
       </div>
     </button>
