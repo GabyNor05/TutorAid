@@ -9,6 +9,37 @@ import FAQSection from './FAQSection';
 import Footer from './Footer';
 import { useSEO } from '../../lib/seo';
 
+// ADD: helpers to normalize and extract subjects from tutors
+function normalizeSubjectName(s) {
+  if (!s) return '';
+  const t = String(s).trim();
+  const lower = t.toLowerCase();
+  if (lower === 'afrikans') return 'Afrikaans';
+  return t;
+}
+function extractSubjectsFromTutors(tutors) {
+  const out = new Map(); // key: lower-case -> display value
+  (Array.isArray(tutors) ? tutors : []).forEach(t => {
+    const subj = t?.subjects;
+    if (!subj) return;
+    const arr = Array.isArray(subj) ? subj : String(subj).split(',');
+    arr.forEach(x => {
+      const n = normalizeSubjectName(x);
+      if (!n) return;
+      const key = n.toLowerCase();
+      if (!out.has(key)) out.set(key, n);
+    });
+  });
+  return Array.from(out.values()).sort((a, b) => a.localeCompare(b));
+}
+function subjectMatches(tutor, subject) {
+  if (!tutor || !subject) return false;
+  const target = normalizeSubjectName(subject).toLowerCase();
+  const subj = tutor.subjects;
+  const arr = Array.isArray(subj) ? subj : String(subj || '').split(',');
+  return arr.some(x => normalizeSubjectName(x).toLowerCase() === target);
+}
+
 function Home() {
   useSEO({
     title: 'Tutor Aid',
@@ -26,12 +57,16 @@ function Home() {
 
   const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [subjects, setSubjects] = useState([]); // kept but no longer used for display
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
   const [loadingTutorDetails, setLoadingTutorDetails] = useState(false);
+
+  // ADD: derived subjects and selected subject filter
+  const [subjectsFromTutors, setSubjectsFromTutors] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -40,13 +75,17 @@ function Home() {
           api.get(endpoints.tutors()),
           api.get(endpoints.subjects()),
         ]);
-        setTutors(Array.isArray(tutorsJson) ? tutorsJson : []);
+        const tArr = Array.isArray(tutorsJson) ? tutorsJson : [];
+        setTutors(tArr);
         setSubjects(Array.isArray(subjectsJson) ? subjectsJson : []);
+        // compute subjects only from tutors
+        setSubjectsFromTutors(extractSubjectsFromTutors(tArr));
       } catch (e) {
         console.error('Home load error:', e);
         setErr(e.message || 'Failed to load');
         setTutors([]);
         setSubjects([]);
+        setSubjectsFromTutors([]);
       } finally {
         setLoading(false);
       }
@@ -54,27 +93,26 @@ function Home() {
     load();
   }, []);
 
+  // Recompute subjects when tutors change (e.g., future updates)
+  useEffect(() => {
+    setSubjectsFromTutors(extractSubjectsFromTutors(tutors));
+  }, [tutors]);
+
   const formatSubjects = (subs) => {
     if (Array.isArray(subs)) return subs.filter(Boolean).join(', ');
     if (typeof subs === 'string') return subs;
     return '—';
   };
 
-  // Build tutor subject set (may be empty if API doesn't include subjects)
+  // ADD: filter tutors by selected subject (client-side)
   const tutorsArr = Array.isArray(tutors) ? tutors : [];
-  const subjectsArr = Array.isArray(subjects) ? subjects : [];
+  const displayedTutors = selectedSubject
+    ? tutorsArr.filter(t => subjectMatches(t, selectedSubject))
+    : tutorsArr;
 
-  const tutorSubjectsSet = new Set();
-  tutorsArr.forEach(t => {
-    if (typeof t?.subjects === 'string') {
-      t.subjects.split(',').forEach(s => s && tutorSubjectsSet.add(s.trim()));
-    } else if (Array.isArray(t?.subjects)) {
-      t.subjects.forEach(s => s && tutorSubjectsSet.add(s.trim()));
-    }
-  });
-  
-  const filteredSubjects = subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
-  const subjectsToShow = filteredSubjects.length ? filteredSubjects : subjectsArr; // FALLBACK
+  const onSubjectClick = (subject) => {
+    setSelectedSubject(prev => (prev === subject ? '' : subject)); // toggle
+  };
 
   const openTutorModal = async (tutor) => {
     setSelectedTutor(tutor);
@@ -82,23 +120,16 @@ function Home() {
     try {
       setLoadingTutorDetails(true);
 
-      // 1) Prefer full tutor profile by userID (returns bio, subjects, qualifications, experience, fee_per_hour)
+      // Prefer full tutor profile by userID; fallback by tutorID
       let full = null;
       try {
         full = await api.get(endpoints.tutorByUser(tutor.userID));
-      } catch (e) {
-        // ignore 404/Network and try fallback
-      }
-
-      // 2) Fallback to tutor by tutorID (minimal fields)
+      } catch {}
       if (!full) {
         try {
           full = await api.get(endpoints.tutorById(tutor.tutorID));
-        } catch (e2) {
-          full = null;
-        }
+        } catch {}
       }
-
       if (full) {
         setSelectedTutor(prev => ({
           ...prev,
@@ -127,23 +158,49 @@ function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-8 mb-5 text-center">Available Subjects</h2>
           <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-center">
-            {subjectsToShow.map(subject => (
-              <span
-                key={subject.subjectID || subject.name}
-                className="tag bg-cyan-800 text-white px-3 py-1 rounded-lg font-medium text-sm sm:text-base"
+            {/* Clear filter pill (only when a subject is selected) */}
+            {selectedSubject && (
+              <button
+                type="button"
+                onClick={() => setSelectedSubject('')}
+                className="tag bg-gray-200 text-gray-700 px-3 py-1 rounded-lg font-medium text-sm sm:text-base"
+                aria-label="Clear subject filter"
               >
-                {subject.name}
-              </span>
+                Show all
+              </button>
+            )}
+            {/* Render only subjects derived from tutors */}
+            {subjectsFromTutors.map(subject => (
+              <button
+                key={subject}
+                type="button"
+                onClick={() => onSubjectClick(subject)}
+                className={`tag px-3 py-1 rounded-lg font-medium text-sm sm:text-base transition
+                  ${selectedSubject === subject
+                    ? 'bg-cyan-900 text-white'
+                    : 'bg-cyan-800 text-white hover:bg-cyan-700'}`}
+                aria-pressed={selectedSubject === subject}
+              >
+                {subject}
+              </button>
             ))}
           </div>
         </section>
 
         {/* Tutors */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-12 mb-5 text-center">Available Tutors</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-800 mt-12 mb-5 text-center">
+            {selectedSubject ? `Tutors for ${selectedSubject}` : 'Available Tutors'}
+          </h2>
+
+          {selectedSubject && displayedTutors.length === 0 && (
+            <div className="text-center text-gray-600 mb-4">
+              No tutors found for {selectedSubject}. Try another subject.
+            </div>
+          )}
 
           <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {tutorsArr.map(tutor => (
+            {displayedTutors.map(tutor => (
               <TutorCards
                 key={tutor.tutorID}
                 tutor={tutor}
@@ -153,7 +210,7 @@ function Home() {
           </div>
 
           <div className="sm:hidden flex gap-3 overflow-x-auto py-2 snap-x snap-mandatory">
-            {tutorsArr.map(tutor => (
+            {displayedTutors.map(tutor => (
               <div key={tutor.tutorID} className="snap-center">
                 <TutorCards
                   tutor={tutor}

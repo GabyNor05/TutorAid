@@ -169,7 +169,7 @@ function RequestForm() {
 
   return (
     <div className="page-background">
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-4 sm:py-6">
+      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-4 sm:py-6 flex flex-col">
         <h2 className="page-title text-2xl sm:text-3xl font-semibold text-white text-center sm:text-left">
           Feedback Requests
         </h2>

@@ -11,7 +11,12 @@ async function getAllTutors(req, res) {
          u.name,
          u.email,
          u.image,
-         t.fee_per_hour
+         t.fee_per_hour,
+         t.experience,
+         t.qualifications,
+         t.subjects,
+          t.availability,
+          t.bio
        FROM tutors t
        JOIN users u ON u.userID = t.userID
        ORDER BY u.name ASC`
@@ -59,7 +64,7 @@ async function getTutorsBySubject(req, res) {
   try {
     const token = String(subject || '').replace(/\s+/g, '');
     const [rows] = await pool.query(
-      `SELECT t.tutorID, t.userID, u.name, u.image
+      `SELECT t.tutorID, t.userID, t.subjects, t.availability, t.bio, t.fee_per_hour, t.experience, t.qualifications, u.name, u.image
        FROM tutors t
        JOIN users u ON t.userID = u.userID
        WHERE CONCAT(',', REPLACE(REPLACE(IFNULL(t.subjects,''), ', ', ','), ' ', ''), ',')
@@ -75,11 +80,12 @@ async function getTutorsBySubject(req, res) {
 
 // Availability by tutorID
 async function getTutorAvailability(req, res) {
-  const { tutorID } = req.params;
+  // match routes/tutorRoutes.js -> '/:id/availability'
+  const { id } = req.params;
   try {
     const [rows] = await pool.query(
       `SELECT availability FROM tutors WHERE tutorID = ?`,
-      [tutorID]
+      [id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Tutor not found' });
     res.json({ availability: rows[0].availability || '' });

@@ -11,7 +11,7 @@ const HeroSection = () => {
     <section className="hero">
       <div
         style={{ backgroundImage: `url(${BlueWallpaper})` }}
-        className="hero-content min-h-[70vh] md:min-h-[80vh] flex flex-1 flex-col md:flex-row items-center justify-center gap-10 text-white relative bg-cover bg-center"
+        className="hero-content min-h-[70vh] md:h-full flex flex-1 flex-col md:flex-row items-center justify-center gap-10 text-white relative bg-cover bg-center"
       >
         {/* Text */}
         <div className="m-auto h-full flex items-center px-6 sm:px-10 lg:px-16 justify-center">
@@ -54,7 +54,7 @@ const HeroSection = () => {
         </div>
 
         {/* Image (hide on small screens) */}
-        <div className="relative h-full sm:h-72 md:h-full w-full md:w-1/2 ml-auto hidden md:block mask-luminance mask-l-from-white mask-l-from-50% mask-l-to-black">
+        <div className="relative top-0 bottom-0h-full w-full md:w-1/2 ml-auto hidden md:block mask-luminance mask-l-from-white mask-l-from-50% mask-l-to-black">
           <img
             src={TutoringImage}
             alt="Tutoring"

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./booking.css";
-import { api, endpoints } from "../../../api/client";
+import { api, endpoints, fetchTutorDetailsFlexible, fetchTutorAvailabilityFlexible } from "../../../api/client";
 import { analytics } from '../../../lib/analytics';
 
 // Reusable helper
@@ -42,9 +42,9 @@ function normalizeTutors(data) {
       const userID =
         t.userID ?? t.user_id ?? t.user?.userID ?? t.user?.id ?? null;
       const name = t.name ?? t.fullName ?? t.userName ?? t.user?.name ?? "Tutor";
-      return { tutorID, userID, name };
+      // IMPORTANT: keep all fields from backend (subjects, fee_per_hour, bio, etc.)
+      return { ...t, tutorID, userID, name };
     })
-    // Accept if we have a name and at least one identifier
     .filter((x) => x.name && (x.tutorID || x.userID));
 }
 
@@ -80,6 +80,17 @@ function subjectMatches(tutor, subject) {
   return arr.some(x => normalizeSubjectName(x).toLowerCase() === target);
 }
 
+// ADD: tiny helper to format times for the buttons
+function fmtTime(d) {
+  if (!(d instanceof Date)) return '';
+  const h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hh = ((h + 11) % 12) + 1;
+  const mm = String(m).padStart(2, '0');
+  return `${hh}:${mm} ${ampm}`;
+}
+
 function Booking() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState("");
@@ -101,30 +112,6 @@ function Booking() {
       "History", "Geography", "EMS", "Business Studies", "Accounting", "Homework"
   ];
   const navigate = useNavigate();
-
-  // Detect desktop to switch DatePicker between inline (desktop) and popover (mobile)
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return true;
-    return window.matchMedia("(min-width: 768px)").matches;
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const handler = (e) => setIsDesktop(e.matches);
-    try {
-      mq.addEventListener("change", handler);
-    } catch {
-      mq.addListener(handler);
-    }
-    return () => {
-      try {
-        mq.removeEventListener("change", handler);
-      } catch {
-        mq.removeListener(handler);
-      }
-    };
-  }, []);
 
   // Calculate tomorrow's date
   const tomorrow = new Date();
@@ -218,42 +205,26 @@ function Booking() {
         }
     }, [selectedDate, availability]);
 
+  // REPLACE your fetchTutorDetails with a call to the flexible getter
   // ADD: fetch tutor profile (user + tutor) for card
-  async function fetchTutorDetails(tutorUserID) {
-      if (!tutorUserID) {
-          setSelectedTutorInfo(null);
-          return;
-      }
-      setLoadingTutorInfo(true);
-      try {
-          const [userRes, tutorRes] = await Promise.all([
-              api.get(endpoints.userById(tutorUserID)),
-              api.get(endpoints.tutorByUser(tutorUserID))
-          ]);
-          const fee = tutorRes?.fee_per_hour ?? tutorRes?.feePerHour ?? null;
-          const bio = tutorRes?.bio || tutorRes?.about || "";
-          setSelectedTutorInfo({
-              userID: tutorUserID,
-              name: userRes?.name || "Tutor",
-              image: userRes?.image || "",
-              email: userRes?.email || "",
-              fee_per_hour: fee,
-              bio,
-              subjects: tutorRes?.subjects || [],
-          });
-      } catch (e) {
-          setSelectedTutorInfo({
-              userID: tutorUserID,
-              name: "Tutor",
-              image: "",
-              email: "",
-              fee_per_hour: null,
-              bio: "",
-              subjects: [],
-          });
-      } finally {
-          setLoadingTutorInfo(false);
-      }
+  async function fetchTutorDetails({ tutorUserID, tutorID }) {
+    setLoadingTutorInfo(true);
+    try {
+      const info = await fetchTutorDetailsFlexible({ userID: tutorUserID, tutorID });
+      setSelectedTutorInfo(info);
+    } catch {
+      setSelectedTutorInfo({
+        userID: tutorUserID ?? null,
+        name: "Tutor",
+        image: "",
+        email: "",
+        fee_per_hour: null,
+        bio: "",
+        subjects: [],
+      });
+    } finally {
+      setLoadingTutorInfo(false);
+    }
   }
 
   // unchanged: opens modal only (no API call here)
@@ -426,28 +397,20 @@ function Booking() {
   }, [pendingBooking]);
 
   return (
-    <div className="page-background min-h-[100dvh] flex items-center justify-center px-4 py-6">
-      {/* Card container: narrow on mobile, taller on md+ (mirrors Login) */}
-      <div className="w-full max-w-md md:max-w-5xl md:h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
-        {/* Left panel: heading + brief info (hidden if you prefer single-pane) */}
-        <div className="hidden md:block bg-white h-full">
-          <div className="h-full min-h-0 p-6 md:p-8 overflow-y-auto flex flex-col justify-center">
+    // Container: keep full device height, top-aligned
+    <div className="page-background min-h-[100dvh] sm:min-h-screen w-full flex justify-center px-4 py-6 md:py-10">
+      {/* Card: auto height (grows with form) */}
+      <div className="w-full max-w-3xl lg:max-w-4xl bg-white rounded-2xl shadow-md flex flex-col h-auto">
+        <div className="p-4 sm:p-6 md:p-8">
+          <form className="space-y-5 sm:space-y-6 w-full" onSubmit={handleSubmit}>
             <h2 className="text-3xl font-semibold text-[#2B5561]">Book a Lesson</h2>
-            <p className="mt-3 text-gray-600">
-              Choose your subject, tutor, date and time. We’ll confirm the details before booking.
-            </p>
-          </div>
-        </div>
 
-        {/* Right panel: the form */}
-        <div className="h-full min-h-0 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col justify-center">
-          <form className="space-y-5 sm:space-y-6 flex flex-col items-stretch w-full" onSubmit={handleSubmit}>
             {/* Subject / Tutor */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               <div className="flex flex-col w-full">
                 <label className="mb-1 text-sm text-gray-800">Subject</label>
                 <select
-                  className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                  className="w-full h-11 px-3 rounded-lg bg-transparent border-2 border-gray-300 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                   value={selectedSubject}
                   onChange={async e => {
                     const subject = e.target.value;
@@ -502,7 +465,7 @@ function Booking() {
                 <div className="flex flex-col w-full">
                   <label className="mb-1 text-sm text-gray-800">Tutor</label>
                   <select
-                    className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                    className="w-full h-11 px-3 rounded-lg bg-transparent border-2 border-gray-300 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                     value={selectedTutor}
                     onChange={async e => {
                       const tutorID = Number(e.target.value);
@@ -515,17 +478,44 @@ function Booking() {
                       setAvailability([]);
                       setSelectedTutorInfo(null);
 
+                      // Availability (flexible)
                       if (tutorID) {
                         try {
-                          const data = await api.get(endpoints.tutorAvailability(tutorID));
-                          const availStr = data?.availability || data?.[0]?.availability || "";
+                          const availStr = await fetchTutorAvailabilityFlexible(tutorID);
                           const parsed = parseAvailabilityString(availStr);
                           setAvailability(parsed);
                         } catch {
                           setAvailability([]);
                         }
                       }
-                      if (userID) fetchTutorDetails(userID);
+
+                      // Build tutor info directly from tutorsBySubject row (preferred)
+                      if (tObj) {
+                        const subjects = Array.isArray(tObj.subjects)
+                          ? tObj.subjects
+                          : typeof tObj.subjects === 'string'
+                          ? tObj.subjects.split(/[,\|;]+/).map(s => s.trim()).filter(Boolean)
+                          : [];
+
+                        const infoFromList = {
+                          userID: userID ?? null,
+                          name: tObj.name ?? 'Tutor',
+                          image: tObj.image ?? '',
+                          email: tObj.email ?? '',
+                          fee_per_hour: tObj.fee_per_hour ?? tObj.feePerHour ?? null,
+                          bio: tObj.bio ?? tObj.about ?? '',
+                          subjects,
+                        };
+                        setSelectedTutorInfo(infoFromList);
+
+                        // If critical fields are still missing, fallback to flexible fetch
+                        if (infoFromList.fee_per_hour == null && (userID || tutorID)) {
+                          fetchTutorDetails({ tutorUserID: userID, tutorID });
+                        }
+                      } else if (userID || tutorID) {
+                        // Final fallback
+                        fetchTutorDetails({ tutorUserID: userID, tutorID });
+                      }
 
                       analytics.event('tutor_selected', { subject: selectedSubject, tutor_id: tutorID });
                     }}
@@ -592,7 +582,7 @@ function Booking() {
               <div className="flex flex-col w-full">
                 <label className="mb-1 text-sm text-gray-800">Duration</label>
                 <select
-                  className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                  className="w-full h-11 px-3 rounded-lg bg-transparent border-2 border-gray-300 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                   value={duration}
                   onChange={e => setDuration(e.target.value)}
                 >
@@ -607,44 +597,66 @@ function Booking() {
 
               <div className="flex flex-col w-full">
                 <label className="mb-1 text-sm text-gray-800">Date</label>
-                {/* Desktop: inline calendar, Mobile: input with popover */}
-                {isDesktop ? (
-                  <div className="w-full rounded-lg border border-gray-200 p-2 overflow-x-auto">
-                    <DatePicker
-                      selected={selectedDate}
-                      onChange={date => setSelectedDate(date)}
-                      minDate={tomorrow}
-                      inline
-                      showTimeSelect
-                      filterDate={isDateAvailable}
-                      includeTimes={getAvailableTimesForDate(selectedDate, availability)}
-                      disabled={!selectedTutor}
-                      timeIntervals={30}
-                    />
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date) => {
+                    if (!date) return setSelectedDate(null);
+                    const d = new Date(date);
+                    d.setHours(0, 0, 0, 0);
+                    setSelectedDate(d);
+                  }}
+                  placeholderText="Pick a date"
+                  className="w-full h-11 px-3 rounded-lg bg-transparent border-2 border-gray-300 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                  minDate={tomorrow}
+                  showPopperArrow
+                  disabled={!selectedTutor}
+                  filterDate={isDateAvailable}
+                  dateFormat="yyyy-MM-dd"
+                />
+
+                {/* Time slots: 2 rows, scrollable horizontally */}
+                {selectedDate && (
+                  <div className="mt-2">
+                    <div className="mb-1 text-sm text-gray-800">Time</div>
+                    {/* 4 columns per row, vertical scroll when overflowing */}
+                    <div className="max-h-20 overflow-y-auto overflow-x-hidden pr-1">
+                      <div className="grid grid-cols-4 gap-2">
+                        {getAvailableTimesForDate(selectedDate, availability).map((t) => {
+                          const isActive =
+                            selectedDate &&
+                            t.getHours() === selectedDate.getHours() &&
+                            t.getMinutes() === selectedDate.getMinutes();
+                          return (
+                            <button
+                              key={t.toISOString()}
+                              type="button"
+                              onClick={() => setSelectedDate(new Date(t))}
+                              className={`w-full px-2 py-1.5 rounded border text-sm text-center transition
+                                ${isActive ? 'bg-[#2B5561] text-white border-[#2B5561]'
+                                           : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                              aria-pressed={isActive}
+                            >
+                              {fmtTime(t)}
+                            </button>
+                          );
+                        })}
+                        {getAvailableTimesForDate(selectedDate, availability).length === 0 && (
+                          <div className="col-span-full text-sm text-gray-500">
+                            No times available for this day. Pick another date.
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <DatePicker
-                    selected={selectedDate}
-                    onChange={date => setSelectedDate(date)}
-                    minDate={tomorrow}
-                    placeholderText="Pick a date and time"
-                    className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                    showTimeSelect
-                    filterDate={isDateAvailable}
-                    includeTimes={getAvailableTimesForDate(selectedDate, availability)}
-                    disabled={!selectedTutor}
-                    timeIntervals={30}
-                    dateFormat="yyyy-MM-dd h:mm aa"
-                  />
                 )}
               </div>
             </div>
 
             {/* Submit */}
-            <div className="w-full">
+            <div className="w-full flex justify-center mt-4">
               <button
                 type="submit"
-                className="login-btn w-full h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
+                className="login-btn w-1/2 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
               >
                 Book Lesson
               </button>
