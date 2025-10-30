@@ -72,6 +72,7 @@ function Home() {
       t.subjects.forEach(s => s && tutorSubjectsSet.add(s.trim()));
     }
   });
+  
   const filteredSubjects = subjectsArr.filter(s => s?.name && tutorSubjectsSet.has(s.name));
   const subjectsToShow = filteredSubjects.length ? filteredSubjects : subjectsArr; // FALLBACK
 

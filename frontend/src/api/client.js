@@ -1,7 +1,7 @@
 const API_BASE =
   (typeof window !== "undefined" && window.__API_BASE__) ||
   process.env.REACT_APP_API_URL ||
-  "";
+  "http://192.168.1.54:5000"; // Default API URL
 
 // ADD: alias for backward compatibility (fixes "Export 'API_URL' is not defined")
 export const API_URL = API_BASE;

@@ -48,6 +48,38 @@ function normalizeTutors(data) {
     .filter((x) => x.name && (x.tutorID || x.userID));
 }
 
+// ADD: subject normalization and extraction helpers
+function normalizeSubjectName(s) {
+  if (!s) return "";
+  const t = String(s).trim();
+  const lower = t.toLowerCase();
+  // common corrections
+  if (lower === "afrikans") return "Afrikaans";
+  return t;
+}
+function extractSubjectsFromTutors(tutors) {
+  const out = new Map(); // key: lower-case name -> display name
+  (Array.isArray(tutors) ? tutors : []).forEach(t => {
+    const subj = t?.subjects;
+    if (!subj) return;
+    const arr = Array.isArray(subj) ? subj : String(subj).split(",");
+    arr.forEach(x => {
+      const n = normalizeSubjectName(x);
+      if (!n) return;
+      const key = n.toLowerCase();
+      if (!out.has(key)) out.set(key, n);
+    });
+  });
+  return Array.from(out.values()).sort((a, b) => a.localeCompare(b));
+}
+function subjectMatches(tutor, subject) {
+  if (!tutor || !subject) return false;
+  const target = normalizeSubjectName(subject).toLowerCase();
+  const subj = tutor.subjects;
+  const arr = Array.isArray(subj) ? subj : String(subj || "").split(",");
+  return arr.some(x => normalizeSubjectName(x).toLowerCase() === target);
+}
+
 function Booking() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState("");
@@ -357,43 +389,31 @@ function Booking() {
     };
 
     const [allTutors, setAllTutors] = useState([]);
-    const [allSubjects, setAllSubjects] = useState([]);
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [subjectsLoading, setSubjectsLoading] = useState(false);
 
-  // Fetch all tutors and subjects once to build the available subjects list
+  // Fetch all tutors once, then compute available subjects from their subjects field
   useEffect(() => {
-      let cancelled = false;
-      (async () => {
-          setSubjectsLoading(true);
-          try {
-              const [tuts, subs] = await Promise.all([
-                  api.get(endpoints.tutors()),
-                  api.get(endpoints.subjects()),
-              ]);
-              if (cancelled) return;
-              const tArr = Array.isArray(tuts) ? tuts : [];
-              const sArr = Array.isArray(subs) ? subs : [];
-              setAllTutors(tArr);
-              setAllSubjects(sArr);
-              setAvailableSubjects(getAvailableSubjects(tArr, sArr));
-          } catch {
-              setAllTutors([]);
-              setAllSubjects([]);
-              setAvailableSubjects([]);
-          } finally {
-              if (!cancelled) setSubjectsLoading(false);
-          }
-      })();
-      return () => {
-          cancelled = true;
-      };
-  }, []);
-
-  // If either list updates, recompute
-  useEffect(() => {
-      setAvailableSubjects(getAvailableSubjects(allTutors, allSubjects));
-  }, [allTutors, allSubjects]);
+  let cancelled = false;
+  (async () => {
+    setSubjectsLoading(true);
+    try {
+      const tuts = await api.get(endpoints.tutors());
+      if (cancelled) return;
+      const tArr = Array.isArray(tuts) ? tuts : [];
+      setAllTutors(tArr);
+      setAvailableSubjects(extractSubjectsFromTutors(tArr));
+    } catch {
+      if (!cancelled) {
+        setAllTutors([]);
+        setAvailableSubjects([]);
+      }
+    } finally {
+      if (!cancelled) setSubjectsLoading(false);
+    }
+  })();
+  return () => { cancelled = true; };
+}, []);
 
   const [selectedTutorUserID, setSelectedTutorUserID] = useState(null);
 
@@ -436,27 +456,43 @@ function Booking() {
                     setSelectedTutorUserID(null);
                     setSelectedTutorInfo(null);
                     setSelectedDate(null);
-                    if (subject) {
-                      try {
-                        const data = await api.get(endpoints.tutorsBySubject(subject));
-                        const list = normalizeTutors(data);
-                        setTutors(list);
-                        analytics.event('subject_selected', { subject });
-                        if (list.length === 0) {
-                          console.warn("No tutors returned for subject:", subject, data);
-                        }
-                      } catch (err) {
-                        console.error("tutorsBySubject failed:", err);
-                        setTutors([]);
-                      }
-                    } else {
+                    setAvailability([]);
+
+                    if (!subject) {
                       setTutors([]);
+                      return;
+                    }
+
+                    // Try backend endpoint first (if it exists), else fallback to client filter
+                    try {
+                      const data = await api.get(endpoints.tutorsBySubject(subject));
+                      let list = normalizeTutors(data);
+                      if (!Array.isArray(list) || list.length === 0) {
+                        // Fallback: filter allTutors by subject token
+                        const fromAll = (allTutors || []).filter(t => subjectMatches(t, subject));
+                        list = fromAll.map(t => ({
+                          tutorID: t.tutorID ?? t.id,
+                          userID: t.userID ?? t.user_id ?? null,
+                          name: t.name ?? "Tutor",
+                        })).filter(x => x.name && (x.tutorID || x.userID));
+                      }
+                      setTutors(list);
+                      analytics.event('subject_selected', { subject, tutors_count: list.length });
+                    } catch (err) {
+                      const fromAll = (allTutors || []).filter(t => subjectMatches(t, subject));
+                      const list = fromAll.map(t => ({
+                        tutorID: t.tutorID ?? t.id,
+                        userID: t.userID ?? t.user_id ?? null,
+                        name: t.name ?? "Tutor",
+                      })).filter(x => x.name && (x.tutorID || x.userID));
+                      setTutors(list);
+                      console.warn("tutorsBySubject failed, used client filter:", err);
                     }
                   }}
                   disabled={subjectsLoading}
                 >
                   <option value="">Select Subject</option>
-                  {(availableSubjects.length ? availableSubjects.map(s => s.name) : subjectOptions).map(subject => (
+                  {(availableSubjects.length ? availableSubjects : subjectOptions).map(subject => (
                     <option key={subject} value={subject}>{subject}</option>
                   ))}
                 </select>
