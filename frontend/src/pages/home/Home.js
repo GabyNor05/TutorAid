@@ -31,7 +31,7 @@ function Home() {
   const [err, setErr] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
-  const [loadingTutorDetails, setLoadingTutorDetails] = useState(false); // ADD
+  const [loadingTutorDetails, setLoadingTutorDetails] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -54,6 +54,12 @@ function Home() {
     load();
   }, []);
 
+  const formatSubjects = (subs) => {
+    if (Array.isArray(subs)) return subs.filter(Boolean).join(', ');
+    if (typeof subs === 'string') return subs;
+    return '—';
+  };
+
   // Build tutor subject set (may be empty if API doesn't include subjects)
   const tutorsArr = Array.isArray(tutors) ? tutors : [];
   const subjectsArr = Array.isArray(subjects) ? subjects : [];
@@ -72,12 +78,32 @@ function Home() {
   const openTutorModal = async (tutor) => {
     setSelectedTutor(tutor);
     setModalOpen(true);
-    // Fetch full details and merge (if list is minimal)
     try {
       setLoadingTutorDetails(true);
-      const full = await api.get(endpoints.tutorById(tutor.tutorID));
-      if (full && full.tutorID === tutor.tutorID) {
-        setSelectedTutor(prev => ({ ...prev, ...full }));
+
+      // 1) Prefer full tutor profile by userID (returns bio, subjects, qualifications, experience, fee_per_hour)
+      let full = null;
+      try {
+        full = await api.get(endpoints.tutorByUser(tutor.userID));
+      } catch (e) {
+        // ignore 404/Network and try fallback
+      }
+
+      // 2) Fallback to tutor by tutorID (minimal fields)
+      if (!full) {
+        try {
+          full = await api.get(endpoints.tutorById(tutor.tutorID));
+        } catch (e2) {
+          full = null;
+        }
+      }
+
+      if (full) {
+        setSelectedTutor(prev => ({
+          ...prev,
+          ...full,
+          subjects: formatSubjects(full.subjects),
+        }));
       }
     } catch (e) {
       console.warn('Failed to load tutor details:', e);
