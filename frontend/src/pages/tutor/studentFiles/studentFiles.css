@@ -1,108 +1,434 @@
 /*  */
+/* Container */
 .student-files-container{
-    display: flex;
-    flex-direction: column;
-
-    height: auto;
-    justify-content: space-between;
-    margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px;
+  gap: 16px;
 }
 
+/* Make children shrink to fit the grid tracks */
+.student-file-card,
+.card-content,
+.student-card-grid,
+.view-file-link {
+  min-width: 0; /* IMPORTANT: prevents content from forcing 1-per-row */
+}
+
+/* Grid: 2 cols on most phones (falls back to 1 on ultra-narrow) */
 .student-files-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 per row */
+  gap: 10px;
+  padding: 8px;
 }
 
-/* Student File Card */
-.student-file-card {
-    width: 230px;
-    height: 330px;
-    box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
-    border-radius: 20px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: #fff;
+/* Very narrow phones: 1 col */
+@media (max-width: 360px) {
+  .student-files-grid { grid-template-columns: 1fr; }
 }
 
-.card-image {
+/* Mobile compaction so 2 cards fit comfortably */
+@media (max-width: 640px) {
+  /* Default mobile tweaks */
+  .student-files-container { padding: 8px; }
+
+  /* Very narrow phones: 1 col to avoid horizontal scroll */
+  @media (max-width: 419.98px) {
+    .student-files-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 4px;
+    }
+    .student-file-card {
+      width: 100%;
+      height: 70px;            /* keep height */
+      display: grid;
+      grid-template-columns: 70px 1fr; /* thumb + content */
+      align-items: center;
+    }
+  }
+
+  /* Phones ≥402px: 2 columns, each card 150x95 */
+  @media (min-width: 402px) and (max-width: 640px) {
+    .student-files-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 150px); /* two fixed-width cards */
+      grid-auto-rows: 95px;                    /* fixed card height */
+      gap: 8px;
+      padding: 4px;
+      justify-content: space-between;          /* spread to edges */
+    }
+    .student-file-card {
+      width: 150px;
+      height: 95px;
+      display: grid;
+      grid-template-columns: 95px 1fr;         /* 70px thumb + content */
+      align-items: center;
+    }
+  }
+
+  /* Ensure inner elements don’t force extra width */
+  .student-file-card,
+  .card-content,
+  .student-card-grid,
+  .view-file-link { min-width: 0; }
+
+  /* Thumbnail: fixed 70x70, no aspect-ratio on mobile */
+  .card-image {
+    width: 70px;
+    height: 70px;
+    aspect-ratio: auto;
     position: relative;
-    height: 60%;
     background-color: #E0E0E0;
-}
-
-.card-image img {
-    width: 100%;
-    height: 100%;
+  }
+  .card-image img {
+    width: 70px;
+    height: 70px;
     object-fit: cover;
     display: block;
-}
+  }
 
-.status-label {
+  /* Status pill: small, top-left to avoid covering content */
+  .status-label {
     position: absolute;
-    bottom: 10px;
-    left: 10px;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
-    font-weight: 600;
-    color: white;
-}
+    top: 4px;
+    left: 4px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+  }
 
-.status-label.active {
-    background-color: #399d23a1;
-}
-.status-label.inactive {
-    background-color: #f1b356ca;
-}
-.status-label.blocked {
-    background-color: #b22222b5;
-    color: #333;
-}
-
-.card-content {
-    padding: 15px;
+  /* Text/content: tight spacing to fit 70px height */
+  .card-content {
+    padding: 6px 8px;
+    gap: 4px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 40%;
-}
-
-.card-content h3 {
+    justify-content: center;
+  }
+  .card-content h3 {
+    font-size: 13px;
+    line-height: 1.1;
     margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-}
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Optional: show only one supporting line; hide extra to keep height */
+  .card-content p {
+    font-size: 11px;
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.card-content p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #555;
-}
+  /* Right-side grid: single column to avoid stretching */
+  .student-card-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
 
-.student-card-grid {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: top;
-    gap: 10px;
-}
-
-.view-file-link a{
-    color: var(--System-Blue);
+  .view-file-link a {
+    font-size: 11px;
+    padding: 0;
     text-decoration: underline;
-    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Keep button tiny so card stays 70px tall */
+  .card-actions { margin-top: 0; }
+  .upload-file-btn {
+    padding: 4px 6px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
 }
 
+/* Tablets: 3 cols */
+@media (min-width: 768px) {
+  .student-files-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 12px;
+  }
+}
 
+/* Desktop: 4 cols and larger typography */
+@media (min-width: 1024px) {
+  .student-files-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 16px;
+  }
+
+  .student-file-card { border-radius: 16px; }
+  .card-image { aspect-ratio: 4 / 3; }
+  .card-content { padding: 12px 14px 14px; gap: 10px; }
+  .card-content h3 { font-size: 18px; }
+  .card-content p { font-size: 15px; }
+  .upload-file-btn { padding: 8px 12px; font-size: 14px; border-radius: 8px; }
+}
+
+/* Card */
+.student-file-card {
+  width: 100%;
+  height: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.student-file-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-file-card,
+  .student-file-card:hover { transition: none; transform: none; }
+}
+
+/* Media box: shorter on phones, taller on larger screens */
+.card-image {
+  position: relative;
+  aspect-ratio: 16 / 9;     /* phones default */
+  background-color: #E0E0E0;
+}
+@media (min-width: 768px) {
+  .card-image { aspect-ratio: 4 / 3; }  /* tablets+ */
+}
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Status label */
+.status-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+}
+.status-label.active { background-color: #399d23a1; }
+.status-label.inactive { background-color: #f1b356ca; }
+.status-label.blocked { background-color: #b22222b5; color: #fff; }
+
+/* Content */
+.card-content {
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.card-content h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+.student-card-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 8px;
+}
+.view-file-link a{
+  color: var(--System-Blue);
+  text-decoration: underline;
+  font-weight: 500;
+  font-size: 12px;
+}
+.card-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
 .upload-file-btn {
-    background-color: var(--Wall-Teal);
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
+  background-color: var(--Wall-Teal);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* Scale up on desktop */
+@media (min-width: 1024px) {
+  .student-file-card { border-radius: 16px; }
+  .status-label { font-size: 12px; padding: 5px 10px; border-radius: 15px; }
+  .card-content { padding: 12px 14px 14px; gap: 10px; }
+  .card-content h3 { font-size: 18px; }
+  .card-content p { font-size: 15px; }
+  .upload-file-btn { padding: 8px 12px; font-size: 14px; border-radius: 8px; }
+}
+
+/* Make mobile cards more compact */
+@media (max-width: 640px) {
+  /* Default mobile tweaks */
+  .student-files-container { padding: 8px; }
+
+  /* Very narrow phones: 1 col to avoid horizontal scroll */
+  @media (max-width: 419.98px) {
+    .student-files-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 4px;
+    }
+    .student-file-card {
+      width: 100%;
+      height: 70px;            /* keep height */
+      display: grid;
+      grid-template-columns: 70px 1fr; /* thumb + content */
+      align-items: center;
+    }
+  }
+
+  /* Phones ≥402px: 2 columns, each card 150x95 */
+  @media (min-width: 402px) and (max-width: 640px) {
+    .student-files-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 200px); /* two fixed-width cards */
+      grid-auto-rows: 200px;                    /* fixed card height */
+      gap: 8px;
+      padding: 4px;
+      justify-content: space-between;          /* spread to edges */
+    }
+    .student-file-card {
+      width: 150px;
+      height: 200px;
+      display: grid;
+      grid-template-columns: 150px 1fr;         /* 150px thumb + content */
+      align-items: center;
+    }
+  }
+
+  /* Ensure inner elements don’t force extra width */
+  .student-file-card,
+  .card-content,
+  .student-card-grid,
+  .view-file-link { min-width: 0; }
+
+  /* Thumbnail: fixed 70x70, no aspect-ratio on mobile */
+  .card-image {
+    width: 100%;
+    height: 60%;
+    aspect-ratio: auto;
+    position: relative;
+    background-color: #E0E0E0;
+  }
+  .card-image img {
+    width: 100%;
+    height: 60%;
+    object-fit: fit;
+    display: block;
+  }
+
+  /* Status pill: small, top-left to avoid covering content */
+  .status-label {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+  }
+
+  /* Text/content: tight spacing to fit 70px height */
+  .card-content {
+    padding: 6px 8px;
+    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .card-content h3 {
+    font-size: 13px;
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Optional: show only one supporting line; hide extra to keep height */
+  .card-content p {
+    font-size: 11px;
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Right-side grid: single column to avoid stretching */
+  .student-card-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .view-file-link a {
+    font-size: 11px;
+    padding: 0;
+    text-decoration: underline;
+    white-space: nowrap;
+  }
+
+  /* Keep button tiny so card stays 70px tall */
+  .card-actions { margin-top: 0; }
+  .upload-file-btn {
+    padding: 4px 6px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+}
+
+/* Search and load more button styles */
+.search-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.search-container input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+.load-more-btn {
+  background-color: var(--Wall-Teal);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.load-more-btn:hover {
+  background-color: var(--Wall-Teal-Dark);
 }

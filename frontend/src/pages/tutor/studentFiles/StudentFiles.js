@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "./studentFiles.css";
 import StudentFileCard from "./studentFileCard";
 import { MagnifyingGlassIcon, FunnelSimple } from "@phosphor-icons/react"; 
@@ -12,6 +12,8 @@ function StudentFiles() {
     const [selectedStatus, setSelectedStatus] = useState("");
     const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
     const [showSortMenu, setShowSortMenu] = useState(false);
+    const [limit, setLimit] = useState(8);
+    const [query, setQuery] = useState("");
     const navigate = useNavigate();
 
 
@@ -60,6 +62,15 @@ function StudentFiles() {
             (b.name || b.studentName || "").localeCompare(a.name || a.studentName || "")
         );
     }
+
+    const filtered = useMemo(
+        () => (students || []).filter(s =>
+          !query || String(s.name || "").toLowerCase().includes(query.toLowerCase())
+        ),
+        [students, query]
+    );
+
+    const visible = filtered.slice(0, limit);
 
     return (
         <div className="blue-page-background">
@@ -121,14 +132,21 @@ function StudentFiles() {
             </div>
 
             {/* Responsive grid */}
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 pb-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredStudents.map((student) => (
+            <div className="mx-auto w-full  flex flex-col items-center max-w-7xl px-4 sm:px-6 pb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {visible.map((student) => (
                         <div key={student.studentID} className="min-w-0">
                             <StudentFileCard student={student} />
                         </div>
                     ))}
                 </div>
+                {limit < filtered.length && (
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+                        <button onClick={() => setLimit(l => l + 4)} className="upload-file-btn">
+                            Load more
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
