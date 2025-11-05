@@ -63,10 +63,10 @@ function UserCard({
   };
 
   return (
-    <div className="userCard w-full max-w-2xl mx-auto bg-white/95 rounded-xl shadow p-4 sm:p-6">
+    <div className="userCard w-10/12 mx-auto bg-white/95 rounded-xl shadow p-4 sm:p-6">
       {/* Image */}
       <div
-        className="userCard-image relative w-32 h-32 sm:w-44 sm:h-44 mx-auto rounded-full overflow-hidden bg-gray-200 hover:bg-sky-700 cursor-pointer"
+        className="userCard-imag  relative w-32 h-32 sm:w-44 sm:h-44 mx-auto rounded-full bg-gray-200 hover:bg-sky-700 cursor-pointer"
         onClick={handleImageClick}
         title="Click to upload a new profile image"
         role="button"

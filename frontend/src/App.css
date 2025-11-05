@@ -119,7 +119,6 @@ box-shadow: 0 4px 10px 5px rgba(0, 0, 0, 0.25);
   width: 100%;
   /* Fallback first, then modern unit overrides */
   min-height: 100vh;
-  min-height: 100dvh;
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
