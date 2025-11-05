@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
-/* .userCard {
+.userCard {
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -13,7 +13,7 @@
   align-items: center;
   gap: 50px;
   color: #000;
-} */
+}
 
 .userCard-content h3 {
   color: #181f2a;
