@@ -194,10 +194,10 @@ function UserCard({
           </form>
         ) : (
           <>
-            <h3 className="text-xl sm:text-2xl font-semibold text-[#2B5561] text-center sm:text-left break-words">
+            <h3 className="text-lg sm:text-2xl font-semibold text-[#2B5561] text-center sm:text-left break-words">
               {name}
             </h3>
-            <p className="text-gray-800 break-words mt-1">
+            <p className="text-gray-800 break-words mt-1 text-sm sm:text-lg">
               <strong>Email: </strong>{email}
             </p>
             <p className="text-gray-800 break-words mt-1">

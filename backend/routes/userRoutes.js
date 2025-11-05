@@ -24,6 +24,11 @@ router.put('/:id/assign-role', userController.assignRole);
 router.delete('/:id', userController.deleteUser);
 router.post('/login', userController.login); // ADD
 
+// Forgot password (OTP) flow
+router.post('/forgot-password/request', userController.forgotPasswordRequest);
+router.post('/forgot-password/verify', userController.forgotPasswordVerify);
+router.post('/:id/password', userController.resetPasswordByUserID);
+
 module.exports = router;
 
 

@@ -114,7 +114,9 @@ function Login() {
               Login
             </button>
           </form>
-
+          <div className="mt-4 text-center text-sm">
+            <a href="/forgotpassword" className="text-blue-600 hover:underline">Forgot Password?</a>
+          </div>
           <div className="mt-4 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>
             <a href="/signup" className="text-blue-600 hover:underline">Sign up</a>

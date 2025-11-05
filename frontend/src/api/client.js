@@ -57,6 +57,9 @@ export const endpoints = {
   sendOtp: () => '/api/users/send-otp',
   verifyOtp: () => '/api/users/verify-otp',
   assignRole: (id) => `/api/users/${id}/assign-role`,
+  forgotPasswordRequest: () => `/api/users/forgot-password/request`,
+  forgotPasswordVerify: () => `/api/users/forgot-password/verify`,
+  resetPasswordById: (id) => `/api/users/${id}/password`,
 
   // Tutor endpoints
   tutors: () => '/api/tutors',
@@ -94,6 +97,7 @@ export const endpoints = {
   // Messaging endpoints
   messages: () => `/api/messages`,
   messagesInbox: (id) => `/api/messages/inbox/${id}`,
+  messageMarkRead: (id) => `/api/messages/${id}/read`,
   
 
   //Newsletter endpoints (Admin)

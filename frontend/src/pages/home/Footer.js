@@ -58,7 +58,7 @@ function Footer() {
               className="w-full sm:flex-1 min-w-0 p-2.5 rounded-lg border border-white focus:outline-none focus:ring-2  bg-transparent placeholder-white/80 h-10"
               required
             />
-            <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-0">
+            <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-0 h-10">
               <input
               type="email"
               placeholder="Enter email"

@@ -15,7 +15,7 @@ function getDateLabel(dateString) {
   return msgDate.toLocaleDateString();
 }
 
-function MessageCard({ senderID, time, message, unread, online, subject, onOpen }) {
+function MessageCard({ messageID, senderID, time, message, unread, online, subject, onOpen }) {
   const [sender, setSender] = useState({ name: "Unknown", image: "https://via.placeholder.com/40" });
 
   useEffect(() => {
@@ -43,13 +43,25 @@ function MessageCard({ senderID, time, message, unread, online, subject, onOpen 
     : "";
   const dateLabel = getDateLabel(time);
 
+  const handleOpen = async () => {
+    try {
+      if (unread && messageID) {
+        await api.patch(endpoints.messageMarkRead(messageID));
+      }
+    } catch (e) {
+      console.warn('markAsRead failed', e);
+    } finally {
+      onOpen && onOpen();
+    }
+  };
+
   return (
     <div
       className="grid grid-cols-[auto,1fr,auto] items-center gap-3 sm:gap-4 px-3 py-2 sm:px-4 sm:py-3 hover:bg-cyan-50 rounded-xl cursor-pointer transition"
-      onClick={onOpen}
+      onClick={handleOpen}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen && onOpen(); } }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); } }}
     >
       {/* Avatar */}
       <div className="relative shrink-0">

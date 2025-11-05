@@ -34,10 +34,10 @@ function Inbox({ open, onClose, tabs, activeTab, setActiveTab, messages, visible
   const handleMarkRead = async () => {
     if (!selected?.messageID) return;
     try {
-      if (endpoints.messagesMarkRead) {
-        await api.post(endpoints.messagesMarkRead(selected.messageID));
+      if (endpoints.messageMarkRead) {
+        await api.patch(endpoints.messageMarkRead(selected.messageID)); // CHANGE: PATCH
       } else {
-        await api.post(`/api/messages/${selected.messageID}/read`);
+        await api.patch(`/api/messages/${selected.messageID}/read`);    // CHANGE: PATCH
       }
       closeSelected();
     } catch {
@@ -168,16 +168,17 @@ function Inbox({ open, onClose, tabs, activeTab, setActiveTab, messages, visible
             {visibleMessages.length === 0 ? (
               <div className="text-center text-gray-400 mt-10">No messages</div>
             ) : (
-              visibleMessages.map((msg) => (
+              visibleMessages.map((m) => (
                 <MessageCard
-                  key={msg.messageID}
-                  senderID={msg.senderID}
-                  time={msg.sentAt}
-                  message={msg.body}
-                  unread={!msg.isRead}
+                  key={m.messageID}
+                  messageID={m.messageID}
+                  senderID={m.senderID}
+                  time={m.sentAt}
+                  message={m.body}
+                  unread={!m.isRead}
                   online={false}
-                  subject={msg.subject}
-                  onOpen={() => setSelected(msg)}
+                  subject={m.subject}
+                  onOpen={() => setSelected(m)} // CHANGE: was openThread(m)
                 />
               ))
             )}
@@ -231,7 +232,7 @@ function Inbox({ open, onClose, tabs, activeTab, setActiveTab, messages, visible
                       rows={3}
                       value={replyBody}
                       onChange={(e) => setReplyBody(e.target.value)}
-                      className="w-full p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                      className="w-full p-2 rounded border border-gray-300 focus:outline-none text-black focus:ring-2 focus:ring-[#2B5561]"
                       placeholder={`Reply to ${senderUser?.name || "sender"}...`}
                     />
                     <div className="mt-2 flex justify-end">

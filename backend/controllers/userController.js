@@ -534,3 +534,64 @@ exports.userAvatars = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user images' });
   }
 };
+
+// Forgot password (OTP) — reuse in‑memory otpStore and resend mailer
+exports.forgotPasswordRequest = async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'email required' });
+
+    const [[user]] = await pool.query(
+      'SELECT userID, email FROM users WHERE LOWER(email) = ? LIMIT 1',
+      [email]
+    );
+
+    // Do not reveal if email exists; but if it does, send OTP and store userID
+    if (user) {
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      otpStore[email] = { otp, createdAt: Date.now(), userID: user.userID };
+      await sendEmail({
+        to: email,
+        subject: 'Tutor Aid - Password Reset OTP',
+        text: `Use this OTP to reset your password:\n\n${otp}\n\nThis OTP is valid for 1 minute.`,
+      });
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('forgotPasswordRequest error:', err);
+    return res.status(500).json({ error: 'Failed to process request' });
+  }
+};
+
+exports.forgotPasswordVerify = async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const otp = String(req.body?.otp || '');
+  if (!email || !otp) return res.status(400).json({ error: 'email and otp required' });
+
+  const rec = otpStore[email];
+  if (!rec) return res.status(400).json({ error: 'No OTP requested for this email' });
+  if (Date.now() - rec.createdAt > 60_000) return res.status(400).json({ error: 'OTP expired' });
+  if (rec.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+
+  const userID = rec.userID;
+  delete otpStore[email]; // one-time use
+  return res.json({ ok: true, userID });
+};
+
+exports.resetPasswordByUserID = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const newPassword = String(req.body?.newPassword || '');
+    if (!id || !newPassword) return res.status(400).json({ error: 'userID and newPassword required' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const [result] = await pool.query('UPDATE users SET password = ? WHERE userID = ?', [hashed, id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('resetPasswordByUserID error:', err);
+    return res.status(500).json({ error: 'Failed to reset password' });
+  }
+};
