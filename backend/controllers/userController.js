@@ -73,7 +73,7 @@ exports.getAllUsers = async (_req, res) => {
 };
 
 // Alias used by some code
-exports.getUsers = exports.getAllUsers;
+exports.getUsers = exports.getUsers || exports.getAllUsers;
 
 exports.getUser = async (req, res) => {
   try {
