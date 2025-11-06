@@ -32,8 +32,6 @@ function UserFeedback() {
       setComment("");
       setRating(5);
       setCategory("feature");
-      // Refresh queue for admins
-      loadFeedback();
     } catch (err) {
       setSubmitMsg(err.message || "Failed to submit feedback");
     } finally {

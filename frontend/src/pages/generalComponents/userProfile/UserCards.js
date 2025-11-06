@@ -20,6 +20,7 @@ function UserCard({
   city,
   province,
 }) {
+  const roleKey = String(role || '').toLowerCase(); // ADD: normalize role
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({
     image,
@@ -109,16 +110,8 @@ function UserCard({
               placeholder="Name"
               className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
             />
-            <input
-              name="email"
-              type="email"
-              value={editData.email || ""}
-              onChange={handleChange}
-              placeholder="Email"
-              className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
-            />
 
-            {role === "tutor" && (
+            {roleKey === "tutor" && ( // CHANGE: use roleKey
               <>
                 <textarea
                   name="bio"
@@ -135,6 +128,13 @@ function UserCard({
                   placeholder="Subjects"
                   className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
                 />
+                <input
+                  name="qualifications" // OPTIONAL: allow editing qualifications
+                  value={editData.qualifications || ""}
+                  onChange={handleChange}
+                  placeholder="Qualifications"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-300"
+                />
                 <textarea
                   name="availability"
                   value={editData.availability || ""}
@@ -146,7 +146,7 @@ function UserCard({
               </>
             )}
 
-            {role === "student" && (
+            {roleKey === "student" && ( // CHANGE: use roleKey
               <>
                 <input
                   name="school"
@@ -203,7 +203,7 @@ function UserCard({
             <p className="text-gray-800 break-words mt-1">
               <strong>Fun Fact: </strong>{funFact}
             </p>
-            {role === "Tutor" && (
+            {roleKey === "tutor" && ( // CHANGE: use roleKey
               <div className="space-y-1.5 mt-2">
                 <p className="text-gray-800 break-words"><strong>Bio: </strong>{bio}</p>
                 <p className="text-gray-800 break-words"><strong>Subjects: </strong>{subjects}</p>
@@ -211,7 +211,7 @@ function UserCard({
                 <p className="text-gray-800 break-words"><strong>Availability: </strong>{availability}</p>
               </div>
             )}
-            {role === "Student" && (
+            {roleKey === "student" && ( // CHANGE: use roleKey
               <>
                 <p className="text-gray-800 break-words mt-2"><strong>School: </strong>{school}</p>
                 <p className="text-gray-800 break-words mt-2"><strong>Address: </strong>{address}</p>
