@@ -29,9 +29,9 @@ router.post('/change-status', h('changeStatus'));  // POST { userID, newStatus, 
 router.post('/remove-user', h('removeUser'));      // POST { userID, adminPassword }
 
 // Helper endpoints used by frontend
-router.post('/user-avatars', h('userAvatars'));
 router.get('/tutor/:userID/availability', h('getTutorAvailability'));
 router.get('/student-id/:userID', h('getStudentIDByUserID'));
+router.post('/user-avatars', h('userAvatars'));
 
 // Staff management
 router.post('/add-staff', h('addStaff'));

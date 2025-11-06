@@ -1425,30 +1425,6 @@ exports.resetPasswordByUserID = async (req, res) => {
   }
 };
 
-exports.userAvatars = async (req, res) => {
-  try {
-    const { studentIDs } = req.body || {};
-    if (!Array.isArray(studentIDs) || !studentIDs.length) return res.json({});
-
-    const [rows] = await pool.query(
-      `SELECT s.studentID, s.userID, u.image, u.name
-       FROM students s
-       JOIN users u ON s.userID = u.userID
-       WHERE s.studentID IN (?)`,
-      [studentIDs]
-    );
-
-    const images = {};
-    rows.forEach(r => {
-      images[r.studentID] = { image: r.image, name: r.name, userID: r.userID }; // include userID
-    });
-    res.json(images);
-  } catch (err) {
-    console.error('[userController.userAvatars] error:', err);
-    res.status(500).send(err.sqlMessage || err.message);
-  }
-};
-
 // Add: uniform error helpers
 function errorMessage(err, fallback = 'An error occurred') {
   return (err && (err.sqlMessage || err.message)) || fallback;
