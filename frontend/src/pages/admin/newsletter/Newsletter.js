@@ -47,6 +47,12 @@ function Newsletter() {
 
   useEffect(() => { loadData(); }, []);
 
+  // Only subscribed users
+  const subscribedUsers = useMemo(
+    () => (Array.isArray(subs) ? subs.filter(s => String(s.status || '').toLowerCase() === 'subscribed') : []),
+    [subs]
+  );
+
   const onSelect = (id) => {
     setSelectedId(id);
     const found = templates.find(x => x.id === id);
@@ -110,17 +116,24 @@ function Newsletter() {
 
   const sendAll = async () => {
     if (!selectedId) { setMsg("Select a template first."); return; }
-    if (!window.confirm(`Send to all ${subs.length} subscribers?`)) return;
+    const total = subscribedUsers.length;
+    if (!total) { setMsg("No subscribed users to send to."); return; }
+    if (!window.confirm(`Send to all ${total} subscribed users?`)) return;
     setSending(true); setMsg("");
     try {
-      const r = await api.post(endpoints.newsletterSend(), { templateId: selectedId });
-      setMsg(`Newsletter sent to ${r.sent ?? 0} of ${r.total ?? subs.length}.`);
+      // Hint backend to target subscribed users only
+      const r = await api.post(endpoints.newsletterSend(), {
+        templateId: selectedId,
+        onlySubscribed: true
+        // Optionally include emails if your backend expects an explicit list:
+        // emails: subscribedUsers.map(u => u.email).filter(Boolean)
+      });
+      setMsg(`Newsletter sent to ${r.sent ?? total} of ${r.total ?? total}.`);
     } catch (e) {
       setMsg(e.message || "Failed to send newsletter");
     } finally { setSending(false); }
   };
 
-  // INSERT: helper to append unsubscribe link/footer
   const insertUnsubscribeLink = () => {
     const footer = `
     <p style="margin-top:30px;"> Kind regards,<br/>The Tutor Aid Team <br/> Visit our website <a href="https://gabydv.xyz" target="_blank" rel="noopener noreferrer" style="color:#2B5561; text-decoration:underline;">here</a>.</p>
@@ -157,7 +170,7 @@ function Newsletter() {
             ))}
           </ul>
           <div className="mt-4 text-sm text-gray-600">
-            Subscribers: <strong>{subs.length}</strong>
+            Subscribers (subscribed): <strong>{subscribedUsers.length}</strong>{Array.isArray(subs) ? ` / ${subs.length}` : ''}
           </div>
         </div>
 
@@ -240,8 +253,12 @@ function Newsletter() {
                   Send Test
                 </button>
               </div>
-              <button className="px-3 py-2 bg-emerald-600 text-white rounded" onClick={sendAll} disabled={sending || !selectedId || subs.length === 0}>
-                Send to All ({subs.length})
+              <button
+                className="px-3 py-2 bg-emerald-600 text-white rounded"
+                onClick={sendAll}
+                disabled={sending || !selectedId || subscribedUsers.length === 0}
+              >
+                Send to All Subscribed ({subscribedUsers.length})
               </button>
             </div>
           </div>
