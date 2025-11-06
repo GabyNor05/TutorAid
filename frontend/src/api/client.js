@@ -1,25 +1,21 @@
 const API_BASE =
-  (typeof window !== "undefined" && window.__API_BASE__) ||
-  process.env.REACT_APP_API_URL ||
-  "http://192.168.1.54:5000"; // Default API URL
-
-// ADD: alias for backward compatibility (fixes "Export 'API_URL' is not defined")
-export const API_URL = API_BASE;
+  process.env.REACT_APP_API_URL || // e.g. https://tutoraid-backend.onrender.com
+  (typeof window !== 'undefined' && window.__API_BASE__) ||
+  '';
 
 function buildUrl(path) {
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  if (!API_BASE) return path; // dev proxy
-  const base = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${p}`;
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path; // absolute
+  if (!API_BASE) return path; // dev proxy or same-origin
+  // ensure single slash join
+  return API_BASE.replace(/\/+$/, '') + '/' + String(path).replace(/^\/+/, '');
 }
 
 async function request(method, url, body, extraHeaders = {}) {
   const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   const headers = isForm ? { ...extraHeaders } : { 'Content-Type': 'application/json', ...extraHeaders };
 
-  const res = await fetch(url, {
+  const res = await fetch(buildUrl(url), {
     method,
     headers,
     body: body == null ? undefined : (isForm ? body : JSON.stringify(body)),
@@ -37,12 +33,12 @@ async function request(method, url, body, extraHeaders = {}) {
   return data;
 }
 
-// Convenience helpers
 export const api = {
-  get: (u, o) => request('GET', u, undefined, o),
-  post: (u, d, o) => request('POST', u, d, o),
-  put: (u, d, o) => request('PUT', u, d, o),
-  delete: (u, d, o) => request('DELETE', u, d, o),
+  get: (u) => request('GET', u),
+  post: (u, b) => request('POST', u, b),
+  put: (u, b) => request('PUT', u, b),
+  patch: (u, b) => request('PATCH', u, b),
+  delete: (u) => request('DELETE', u),
 };
 
 export const endpoints = {

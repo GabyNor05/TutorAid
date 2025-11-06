@@ -440,6 +440,7 @@ exports.changeStatus = async (req, res) => {
   }
 };
 
+// ...existing code...
 exports.removeUser = async (req, res) => {
   const { userID, adminPassword } = req.body || {};
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
@@ -459,11 +460,15 @@ exports.removeUser = async (req, res) => {
     const studentIDs = sRows.map(r => r.studentID);
 
     if (studentIDs.length) {
-      // Best-effort deletes; ignore if table doesn’t exist
+      // ...existing code...
       await conn.query('DELETE FROM lessonreports WHERE studentID IN (?)', [studentIDs]).catch(() => {});
       await conn.query('DELETE FROM progress_notes WHERE studentID IN (?)', [studentIDs]).catch(() => {});
       await conn.query('DELETE FROM lessons WHERE studentID IN (?)', [studentIDs]).catch(() => {});
-      // Add more student-dependent tables here if needed
+      // NEW: remove ratings linked to these students (fixes FK error)
+      await conn.query('DELETE FROM rating WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM ratings WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      // Optional: other student-dependent tables (best-effort)
+      await conn.query('DELETE FROM studentrequests WHERE studentID IN (?)', [studentIDs]).catch(() => {});
       await conn.query('DELETE FROM students WHERE studentID IN (?)', [studentIDs]);
     } else {
       await conn.query('DELETE FROM students WHERE userID = ?', [uid]).catch(() => {});
@@ -475,6 +480,9 @@ exports.removeUser = async (req, res) => {
 
     if (tutorIDs.length) {
       await conn.query('DELETE FROM lessons WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
+      // Optional: ratings referencing tutor
+      await conn.query('DELETE FROM rating WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
+      await conn.query('DELETE FROM ratings WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
       await conn.query('DELETE FROM tutors WHERE tutorID IN (?)', [tutorIDs]);
     } else {
       await conn.query('DELETE FROM tutors WHERE userID = ?', [uid]).catch(() => {});
