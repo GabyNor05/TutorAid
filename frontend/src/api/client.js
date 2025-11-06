@@ -15,26 +15,26 @@ function buildUrl(path) {
   return `${base}${p}`;
 }
 
-async function request(method, url, body, extraHeaders = {}) {
-  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
-  const headers = isForm ? { ...extraHeaders } : { 'Content-Type': 'application/json', ...extraHeaders };
-
+async function request(method, path, body, extra = {}) {
+  const url = buildUrl(path);
+  const isForm = body instanceof FormData;
+  const headers = isForm ? {} : { "Content-Type": "application/json" };
   const res = await fetch(url, {
     method,
-    headers,
-    body: body == null ? undefined : (isForm ? body : JSON.stringify(body)),
-    credentials: 'include',
+    headers: { ...headers, ...(extra.headers || {}) },
+    body: body == null ? undefined : isForm ? body : JSON.stringify(body),
+    mode: "cors",
+    credentials: "omit",
+    signal: extra.signal,
+  }).catch((e) => {
+    throw new Error(`Network error: ${e.message || e}`);
   });
-
-  const text = await res.text();
-  const isJson = (res.headers.get('content-type') || '').includes('application/json');
-  const data = isJson ? (text ? JSON.parse(text) : {}) : text;
-
   if (!res.ok) {
-    const msg = typeof data === 'string' ? data : data?.message || data?.error || `HTTP ${res.status}`;
-    throw new Error(`HTTP ${res.status} - ${msg}`);
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
   }
-  return data;
+  const ct = res.headers.get("content-type") || "";
+  return ct.includes("application/json") ? res.json() : res.text();
 }
 
 // Convenience helpers

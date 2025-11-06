@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() });
 
 // Safe handler wrapper (prevents "argument handler must be a function")
 const h = (name) => {
@@ -32,16 +30,18 @@ router.post('/remove-user', h('removeUser'));      // POST { userID, adminPasswo
 
 // Helper endpoints used by frontend
 router.post('/user-avatars', h('userAvatars'));
+router.get('/tutor/:userID/availability', h('getTutorAvailability'));
+router.get('/student-id/:userID', h('getStudentIDByUserID'));
 
 // Staff management
 router.post('/add-staff', h('addStaff'));
 router.post('/:id/assign-role', h('assignRole'));
 
-// Users CRUD (multipart for image on create/update)
+// Users CRUD (keep after specific routes)
 router.get('/', h('getUsers'));
 router.get('/:id', h('getUser'));
-router.post('/', upload.single('image'), h('createUser'));     // <— ADD multer
-router.patch('/:id', upload.single('image'), h('updateUser')); // <— ADD multer
+router.post('/', h('createUser'));
+router.patch('/:id', h('updateUser'));
 router.delete('/:id', h('deleteUser'));
 
 module.exports = router;
