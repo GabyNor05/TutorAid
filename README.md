@@ -8,7 +8,7 @@ Tutor Aid is a platform designed to connect **students** with **reliable and rel
 
 As a tutor myself, I saw how difficult it can be to manage timetables, communicate with students, and present yourself professionally online. Tutor Aid is built to make that entire process smoother, supportive, and human.
 
-The goal is to empower tutors to **share knowledge confidently**, while helping students receive ** consistent, meaningful academic support **.
+The goal is to empower tutors to **share knowledge confidently**, while helping students receive **consistent, meaningful academic support**.
 
 ---
 
@@ -16,7 +16,7 @@ The goal is to empower tutors to **share knowledge confidently**, while helping 
 
 #### Step 1: Clone the repo
 ```
-https://github.com/andrevanheerden/Yggdrasil.git
+https://github.com/GabyNor05/TutorAid.git
 ```
 #### Step 2:
 
@@ -59,7 +59,7 @@ npm start
 ```
 
 
-Your application should now automatically open in your browser.
+Your application should now run in your browser.
 
 ---
 
@@ -70,15 +70,14 @@ Your application should now automatically open in your browser.
 ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-00648B?style=for-the-badge&logo=mysql&logoColor=white)
 ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![HTML](https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 ---
 
 ## Data Structure Overview
-
-(Describe your database tables & how they relate — fill in when ready)
-
-Example:
 
 | Table        | Description | Key Fields |
 |-------------|-------------|------------|
@@ -114,12 +113,13 @@ Credentials are stored as environment variables.
 
 ## Reflection
 
-### ⭐ Proud Moments
-- (Example) Built a full stack application independently.
+### Proud Moments
+- Built a full-stack application independently.
 - Successfully integrated database + backend + frontend deployments.
 - Created a platform that reflects real tutor needs.
 
-### ⚡ Challenges & Solutions
+### Challenges & Solutions
+
 | Challenge | Solution |
 |----------|----------|
 | Deployment complexity between services | Learned to use environment variables & hosting platforms. |
@@ -136,6 +136,7 @@ Credentials are stored as environment variables.
 
 ## Conclusion
 
-Tutor Aid is more than a web application — it’s a tool built from real experience in tutoring. By bridging student needs with empathetic, prepared tutors, the platform helps create supportive learning environments that go beyond one session at a time.
+Tutor Aid is more than a web application; it’s a tool built from real experience in tutoring. By bridging student needs with empathetic, prepared tutors, the platform helps create supportive learning environments that go beyond one session at a time.
 
-Thank you to everyone who supported the process — from research, to testing, to reviewing.
+Thank you to everyone who supported the process, from research to testing to reviewing.
+
