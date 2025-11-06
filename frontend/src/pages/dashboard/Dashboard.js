@@ -169,7 +169,7 @@ function Dashboard() {
         <button className="navpill" onClick={() => handleNavigation("/manageusers")}><UserList size={24} className="opacity-30 mr-2"/> Manage Users</button>
         <button className="navpill" onClick={() => handleNavigation("/studentrequests")}><ListChecks size={24} className="opacity-30 mr-2"/> Manage Requests</button>
         <button className ="navpill" onClick={() => handleNavigation("/newsletter")}><Newspaper size={24} className="opacity-30 mr-2"/> Newsletter</button>
-        <button className="navpill" onClick={() => handleNavigation("/userexperiencefeedback")}><ClipboardText size={24} className="opacity-30 mr-2"/> User Experience Feedback</button>
+        <button className="navpill" onClick={() => handleNavigation("/userfeedback")}><ClipboardText size={24} className="opacity-30 mr-2"/> User Feedback</button>
         <button className="navpill navpill-red" onClick={() => handleNavigation("/managereports")}><Megaphone size={24} className="opacity-30 mr-2"/> Manage Reports</button>
       </div>
     </div>
@@ -209,11 +209,11 @@ function Dashboard() {
                                         </div>
                                     </div>
                                 </button>
-                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/userexperiencefeedback")}>
+                                <button className="navcard transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 relative" onClick={() => handleNavigation("/userfeedback")}>
                                     <div className="navcard-content">
                                         <ClipboardText size={120} className="navcard-icon opacity-30"/>
                                         <div className="navcard-text -bottom-3">
-                                            <h2>User Experience Feedback</h2>
+                                            <h2>User Feedback</h2>
                                         </div>
                                     </div>
                                 </button>

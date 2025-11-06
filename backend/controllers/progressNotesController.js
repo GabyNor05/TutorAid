@@ -1,5 +1,5 @@
-
 const cloudinary = require('cloudinary').v2;
+const pool = require('../config/db');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,7 +8,6 @@ cloudinary.config({
 });
 
 exports.uploadProgressNote = async (req, res) => {
-    const pool = require('../config/db');
     const { studentID } = req.body;
     const file = req.file;
     if (!file || !studentID) {
@@ -32,7 +31,6 @@ exports.uploadProgressNote = async (req, res) => {
 };
 
 exports.getNotesByStudentID = async (req, res) => {
-    const pool = require('../config/db');
     const { studentID } = req.params;
     try {
         const [rows] = await pool.query(
@@ -43,4 +41,17 @@ exports.getNotesByStudentID = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch notes" });
     }
+};
+
+exports.publish = async (req, res) => {
+  try {
+    const id = Number(req.body?.noteID ?? req.params.noteID);
+    if (!id) return res.status(400).send('noteID required');
+    const [r] = await pool.query('UPDATE progress_notes SET published = 1 WHERE noteID = ?', [id]);
+    if (r.affectedRows === 0) return res.status(404).send('Note not found');
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[publishNote] error:', err);
+    res.status(500).send(err.sqlMessage || err.message);
+  }
 };

@@ -1,26 +1,25 @@
-import React, { useEffect, useState } from 'react'; 
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "./manageUsers.css";
 import ManageUserCard from './ManageUserCard';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
+import { api, endpoints } from '../../../api/client';
 
 function ManageUsers() {
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // Add searchTerm state
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const API_URL =  process.env.REACT_APP_API_URL;  
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/users`);
-        setUsers(response.data);
+        const data = await api.get(endpoints.users());
+        setUsers(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching users:', error);
+        alert(error.message || 'Failed to fetch users');
       }
     };
-
     fetchUsers();
   }, []);
 
@@ -30,10 +29,11 @@ function ManageUsers() {
 
   const handleDelete = async (userId) => {
     try {
-      await axios.delete(`${API_URL}/api/users/${userId}`);
-      setUsers(users.filter((user) => user.userID !== userId));
+      await api.delete(endpoints.userById(userId));
+      setUsers(prev => prev.filter((user) => user.userID !== userId));
     } catch (error) {
       console.error('Error deleting user:', error);
+      alert(error.message || 'Failed to delete user');
     }
   };
 

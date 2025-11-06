@@ -56,6 +56,8 @@ router.post('/publish', async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to publish note." });
   }
 });
-
+router.get('/student/:studentID', progressNotesController.getNotesByStudentID);
+router.post('/publish', progressNotesController.publish);           // expects { noteID }
+router.patch('/:noteID/publish', progressNotesController.publish);  // alias
 
 module.exports = router;

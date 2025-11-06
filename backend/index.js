@@ -103,4 +103,7 @@ app.get('/uploads/progressnotes/:filename', (req, res) => {
 const newsletterRoutes = require('./routes/newsletterRoutes');
 app.use('/api/newsletter', newsletterRoutes);
 
+const feedbackRoutes = require('./routes/feedbackRoutes');
+app.use('/api/feedback', feedbackRoutes);
+
 module.exports = app;

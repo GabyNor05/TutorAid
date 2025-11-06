@@ -25,11 +25,11 @@ import { api, endpoints } from "../../api/client";
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showMenu, setShowMenu] = useState(false); 
+  const [showMenu, setShowMenu] = useState(false);
   const [role, setRole] = useState(null);
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [activeTab, setActiveTab] = useState("all"); 
+  const [activeTab, setActiveTab] = useState("all");
   const [inboxOpen, setInboxOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -156,13 +156,13 @@ function Navbar() {
         return list;
     }
 
-    if (tabKey === "other"){ 
+    if (tabKey === "other") {
       return list.filter(m => {
         const s = subj(m.subject);
         return !(s.includes("private message") || s.includes("lesson update") || s.includes("lesson") ||
-                 s.includes("progress note") || s.includes("progress") ||
-                 s.includes("request response") || s.includes("request") ||
-                 s.includes("warning") || s.includes("blocked"));
+          s.includes("progress note") || s.includes("progress") ||
+          s.includes("request response") || s.includes("request") ||
+          s.includes("warning") || s.includes("blocked"));
       });
     }
   };
@@ -277,7 +277,7 @@ function Navbar() {
                       <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/dashboard")}> <SquaresFour size={22} /> Dashboard</button>
                     </div>
                   </div>
-                  
+
                   {/* Role-specific */}
                   <div className="px-2 py-1 text-xs uppercase tracking-wide text-gray-500">Shortcuts</div>
                   {/* Reuse links */}
@@ -295,7 +295,7 @@ function Navbar() {
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/newsletter")}><Newspaper size={22} /> Newsletter</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userexperiencefeedback")}><ClipboardText size={22} /> User Experience Feedback</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userfeedback")}><ClipboardText size={22} /> User Feedback</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/managereports")}><Megaphone size={22} /> Manage Reports</button>
                       </>
                     )}
@@ -306,6 +306,9 @@ function Navbar() {
                       </>
                     )}
                   </div>
+                  <button className="mt-4 w-full text-left px-3 py-2 rounded hover:bg-red-50 text-teal-900 flex flex-row gap-2" onClick={() => handleNav("/userfeedback")}>
+                    <ClipboardText size={22} /> User Feedback
+                  </button>
                   <button
                     className="w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600 flex flex-row gap-2"
                     onClick={() => {

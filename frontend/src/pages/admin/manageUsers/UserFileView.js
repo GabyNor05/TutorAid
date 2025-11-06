@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import "./manageUsers.css";
+import { api, endpoints } from "../../../api/client"; // CHANGE: use client.js
 
 function UserFileView() {
     const { userID } = useParams();
@@ -16,15 +16,15 @@ function UserFileView() {
     const [removePassword, setRemovePassword] = useState("");
     const [removeMessage, setRemoveMessage] = useState("");
     const [statuses] = useState(["Active", "Inactive", "Blocked"]);
-    const API_URL =  process.env.REACT_APP_API_URL;  
 
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get(`${API_URL}/api/users/${userID}`);
-                setUser(response.data);
+                const data = await api.get(endpoints.userById(userID)); // CHANGE
+                setUser(data);
             } catch (error) {
                 console.error("Error fetching user:", error);
+                setStatusMessage(error.message || "Failed to fetch user.");
             }
         };
         fetchUser();
@@ -32,21 +32,17 @@ function UserFileView() {
 
     const handleStatusChange = async () => {
         try {
-            const res = await axios.post(`${API_URL}/api/users/change-status`, {
+            await api.post(endpoints.usersChangeStatus(), {             // CHANGE
                 userID: user.userID,
                 newStatus,
                 adminPassword
             });
-            if (res.data.success) {
-                setUser(prev => ({ ...prev, status: newStatus }));
-                setStatusMessage("Status updated successfully!");
-                setShowModal(false);
-                setTimeout(() => setStatusMessage(""), 3000);
-            } else {
-                setStatusMessage(res.data.message || "Failed to update status.");
-            }
+            setUser(prev => ({ ...prev, status: newStatus }));
+            setStatusMessage("Status updated successfully!");
+            setShowModal(false);
+            setTimeout(() => setStatusMessage(""), 3000);
         } catch (err) {
-            setStatusMessage("Error updating status.");
+            setStatusMessage(err.message || "Error updating status.");
         }
         setAdminPassword("");
         setNewStatus("");
@@ -54,21 +50,17 @@ function UserFileView() {
 
     const handleRemoveUser = async () => {
         try {
-            const res = await axios.post(`${API_URL}/api/users/remove-user`, {
+            await api.post(endpoints.usersRemove(), {                  // CHANGE
                 userID,
                 adminPassword: removePassword
             });
-            if (res.data.success) {
-                setRemoveMessage("User removed successfully!");
-                setTimeout(() => {
-                    setShowRemoveModal(false);
-                    window.history.back();
-                }, 1500);
-            } else {
-                setRemoveMessage(res.data.message || "Failed to remove user.");
-            }
+            setRemoveMessage("User removed successfully!");
+            setTimeout(() => {
+                setShowRemoveModal(false);
+                window.history.back();
+            }, 1500);
         } catch (err) {
-            setRemoveMessage("Error removing user.");
+            setRemoveMessage(err.message || "Error removing user.");
         }
         setRemovePassword("");
     };
@@ -117,7 +109,6 @@ function UserFileView() {
                     {user.role === "Admin" && (
                         <>
                             <p><span className="font-semibold">Admin Level:</span> {user.adminLevel}</p>
-                            {/* Add more admin-specific fields if needed */}
                         </>
                     )}
                 </div>
@@ -127,7 +118,6 @@ function UserFileView() {
                 >
                     Back to Manage Users
                 </button>
-                {/* Only show status change for students */}
                 {user.role === "Student" && (
                     <button
                         className="mt-4 w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -142,11 +132,9 @@ function UserFileView() {
                 >
                     Remove User
                 </button>
-                {/* Status Message */}
                 {statusMessage && showModal && (
                     <div className="mt-4 text-center text-sm text-green-600">{statusMessage}</div>
                 )}
-                {/* Change Status Modal */}
                 {showModal && user.role === "Student" && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
                         <form
@@ -200,7 +188,6 @@ function UserFileView() {
                         </form>
                     </div>
                 )}
-                {/* Remove User Modal */}
                 {showRemoveModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
                         <form

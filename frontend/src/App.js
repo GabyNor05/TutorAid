@@ -28,6 +28,7 @@ import Home from './pages/home/Home';
 import Newsletter from './pages/admin/newsletter/Newsletter';
 import Unsubscribe from './pages/admin/newsletter/Unsubscribe';
 import ForgotPassword from './pages/forgotpassword/ForgotPassword';
+import UserFeedback from './pages/admin/userFeedback/UserFeedback';
 
 
 function usePageTracking() {
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/newsletter" element={<Newsletter />}/>
         <Route path="/unsubscribe" element={<Unsubscribe />}/>
         <Route path="/forgotpassword" element={<ForgotPassword />} />
+        <Route path="/userFeedback" element={<UserFeedback />} />
       </Routes>
 
     </div>

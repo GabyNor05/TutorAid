@@ -70,13 +70,16 @@ export const endpoints = {
   updateTutorByUserID: (userID) => `/api/tutors/by-user/${userID}`,
   tutorsBySubject: (subject) => `/api/tutors/by-subject/${encodeURIComponent(subject)}`,
   tutorAvailability: (tutorID) => `/api/tutors/${encodeURIComponent(tutorID)}/availability`,
-  feedback: () => '/api/feedback',
+  feedback: () => `/api/feedback`,
+  feedbackList: (query = '') => `/api/feedback${query ? `?${query}` : ''}`,
+  feedbackStatus: (id) => `/api/feedback/${id}/status`,
+  feedbackById: (id) => `/api/feedback/${id}`,
 
   // Student endpoints
   students: () => '/api/students',
   studentByUser: (userID) => `/api/students/by-user/${encodeURIComponent(userID)}`,
   progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
-  progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}/lesson-notes`,
+  progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}`,
   progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
 
   lessons: () => '/api/lessons',
@@ -85,11 +88,15 @@ export const endpoints = {
   lessonReports: () => '/api/lessonReports',
   studentRequests: () => '/api/studentRequests',
   lessonReportEscalate: (studentID) => `/api/lessonReports/escalate/${studentID}`,
+  lessonReportIgnore: (studentID) => `/api/lessonReports/ignore/${studentID}`,
   progressNotes: () => '/api/progressNotes',
   progressNotesUpload: () => '/api/progressNotes/upload',
-  progressNotesPublish: () => '/api/progressNotes/publish',
+  progressNotesPublish: () => `/api/progressNotes/publish`,            // POST { noteID }
+  progressNotesPublishById: (noteID) => `/api/progressNotes/${noteID}/publish`, // PATCH
   usersByRole: (role) => `/api/users/role/${encodeURIComponent(role)}`,
-  adminGroupUser: () => `/api/users/admin-group`, // returns { userID, name, ... }
+  adminGroupUser: () => `/api/users/admin-group`,
+  usersChangeStatus: () => `/api/users/change-status`, 
+  usersRemove: () => `/api/users/remove-user`, 
 
   // Back-compat alias (if other code uses 'upload')
   upload: () => '/api/progressNotes/upload',

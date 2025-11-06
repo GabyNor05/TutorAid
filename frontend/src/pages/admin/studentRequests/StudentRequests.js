@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-// import axios from "axios"; // REMOVE
 import { DotsThreeVertical, X } from "@phosphor-icons/react";
-import { api, endpoints } from "../../../api/client"; // ADD
+import { api, endpoints } from "../../../api/client"; 
 
 function StudentRequests() {
   const [requests, setRequests] = useState([]);
@@ -25,6 +24,7 @@ function StudentRequests() {
   // Add state for the Appeal Block modal
   const [appealModalOpen, setAppealModalOpen] = useState(false);
   const [appealActionMessage, setAppealActionMessage] = useState("");
+  const [publishingId, setPublishingId] = useState(null);
   // const API_URL =  process.env.REACT_APP_API_URL;  
 
   const getInitials = (name) => {
@@ -155,12 +155,35 @@ function StudentRequests() {
     setAdminPassword("");
   };
 
-  const handlePublishNote = async (noteID) => {
+  const handlePublishNote = async (note) => {
+    // accept either noteID or progressNoteID
+    const id = Number(note?.noteID || note?.progressNoteID);
+    if (!id) {
+      alert("Missing note ID.");
+      return;
+    }
+    setPublishingId(id);
     try {
-      await api.post(endpoints.progressNotesPublish(), { noteID });
-      setProgressNotes(prev => prev.map(n => (n.noteID === noteID ? { ...n, published: true } : n)));
-    } catch {
-      alert("Failed to publish note.");
+      // 1) Preferred: POST body { noteID }
+      await api.post(endpoints.progressNotesPublish ? endpoints.progressNotesPublish() : `/api/progress-notes/publish`, { noteID: id });
+      setProgressNotes(prev => prev.map(n => (Number(n.noteID || n.progressNoteID) === id ? { ...n, published: true } : n)));
+    } catch (e1) {
+      // 2) Fallback: PATCH /:id/publish (no body)
+      const status = e1?.status || e1?.response?.status;
+      if (status === 404 || status === 405) {
+        try {
+          await api.patch(endpoints.progressNotesPublishById ? endpoints.progressNotesPublishById(id) : `/api/progress-notes/${id}/publish`);
+          setProgressNotes(prev => prev.map(n => (Number(n.noteID || n.progressNoteID) === id ? { ...n, published: true } : n)));
+        } catch (e2) {
+          const msg = (e2?.data || e2?.response?.data || e2?.message || 'Failed to publish note.');
+          alert(typeof msg === 'string' ? msg : 'Failed to publish note.');
+        }
+      } else {
+        const msg = (e1?.data || e1?.response?.data || e1?.message || 'Failed to publish note.');
+        alert(typeof msg === 'string' ? msg : 'Failed to publish note.');
+      }
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -495,10 +518,11 @@ function StudentRequests() {
                         <span className="text-green-600 font-semibold mt-1">Published</span>
                       ) : (
                         <button
-                          className="bg-blue-600 text-white px-3 py-1 rounded mt-1 hover:bg-blue-700"
-                          onClick={() => handlePublishNote(note.noteID)}
+                          className="bg-blue-600 text-white px-3 py-1 rounded mt-1 hover:bg-blue-700 disabled:opacity-60"
+                          onClick={() => handlePublishNote(note)}
+                          disabled={publishingId === Number(note.noteID || note.progressNoteID)}
                         >
-                          Publish PDF
+                          {publishingId === Number(note.noteID || note.progressNoteID) ? 'Publishing…' : 'Publish PDF'}
                         </button>
                       )}
                       <a

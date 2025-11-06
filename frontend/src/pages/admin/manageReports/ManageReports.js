@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api, endpoints } from "../../../api/client"; // ADD
 import { DotsThreeVertical, X} from "@phosphor-icons/react";
-
 
 const statusColors = {
   Pending: "bg-yellow-100 text-yellow-800",
   Escalated: "bg-red-100 text-red-800",
   Ignored: "bg-gray-100 text-gray-800",
-  
 };
-
 
 function ManageReports() {
   const [reports, setReports] = useState([]);
@@ -21,13 +18,12 @@ function ManageReports() {
   const [adminPassword, setAdminPassword] = useState("");
   const [escalateMessage, setEscalateMessage] = useState("");
   const [ignoreMessage, setIgnoreMessage] = useState("");
-  const API_URL =  process.env.REACT_APP_API_URL;  
-  
+
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/lessonReports`);
-        setReports(res.data);
+        const data = await api.get(endpoints.lessonReports()); 
+        setReports(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching reports:", err);
       }
@@ -38,28 +34,24 @@ function ManageReports() {
   const handleEscalate = async () => {
     if (!selectedReport) return;
     try {
-      const res = await axios.post(`${API_URL}/api/lessonReports/escalate`, {
-        lessonReportID: selectedReport.lessonReportID,
-        adminPassword
-      });
-      if (res.data.success) {
-        setEscalateMessage("Report status updated to Escalated!");
-        setReports(prev =>
-          prev.map(r =>
-            r.lessonReportID === selectedReport.lessonReportID
-              ? { ...r, status: "Escalated" }
-              : r
-          )
-        );
-        setTimeout(() => {
-          setEscalateModalOpen(false);
-          setEscalateMessage("");
-        }, 1200);
-      } else {
-        setEscalateMessage(res.data.message || "Failed to update status.");
-      }
+      await api.post(
+        endpoints.lessonReportEscalate(selectedReport.studentID),
+        { lessonReportID: selectedReport.lessonReportID, adminPassword }
+      );
+      setEscalateMessage("Report status updated to Escalated!");
+      setReports(prev =>
+        prev.map(r =>
+          r.lessonReportID === selectedReport.lessonReportID
+            ? { ...r, status: "Escalated" }
+            : r
+        )
+      );
+      setTimeout(() => {
+        setEscalateModalOpen(false);
+        setEscalateMessage("");
+      }, 1200);
     } catch (err) {
-      setEscalateMessage("Error updating status.");
+      setEscalateMessage(err.message || "Error updating status.");
     }
     setAdminPassword("");
   };
@@ -67,28 +59,24 @@ function ManageReports() {
   const handleIgnore = async () => {
     if (!selectedReport) return;
     try {
-      const res = await axios.post(`${API_URL}/api/lessonReports/ignore`, {
-        lessonReportID: selectedReport.lessonReportID,
-        adminPassword
-      });
-      if (res.data.success) {
-        setIgnoreMessage("Report status updated to Ignored!");
-        setReports(prev =>
-          prev.map(r =>
-            r.lessonReportID === selectedReport.lessonReportID
-              ? { ...r, status: "Ignored" }
-              : r
-          )
-        );
-        setTimeout(() => {
-          setIgnoreModalOpen(false);
-          setIgnoreMessage("");
-        }, 1200);
-      } else {
-        setIgnoreMessage(res.data.message || "Failed to update status.");
-      }
+      await api.post(
+        endpoints.lessonReportIgnore(selectedReport.studentID),
+        { lessonReportID: selectedReport.lessonReportID, adminPassword }
+      );
+      setIgnoreMessage("Report status updated to Ignored!");
+      setReports(prev =>
+        prev.map(r =>
+          r.lessonReportID === selectedReport.lessonReportID
+            ? { ...r, status: "Ignored" }
+            : r
+        )
+      );
+      setTimeout(() => {
+        setIgnoreModalOpen(false);
+        setIgnoreMessage("");
+      }, 1200);
     } catch (err) {
-      setIgnoreMessage("Error updating status.");
+      setIgnoreMessage(err.message || "Error updating status.");
     }
     setAdminPassword("");
   };
