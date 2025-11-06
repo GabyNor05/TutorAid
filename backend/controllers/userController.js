@@ -1,7 +1,7 @@
 const fs = require('fs');
 const net = require('net');
 const bcrypt = require('bcryptjs');
-const { Resend } = require('resend');       // ADD
+const { Resend } = require('resend');
 const cloudinary = require('cloudinary').v2;
 const pool = require('../config/db');
 const userModel = require('../models/userModel');
@@ -68,8 +68,7 @@ exports.getAllUsers = async (_req, res) => {
     const rows = await userModel.getAllUsers();
     res.json(rows);
   } catch (err) {
-    console.error('getAllUsers error:', err);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    return sendError(res, err, 500, 'Failed to fetch users');
   }
 };
 
@@ -79,16 +78,14 @@ exports.getUsers = exports.getAllUsers;
 exports.getUser = async (req, res) => {
   try {
     const user = await userModel.getUserById(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    // add studentID for convenience if student row exists
+    if (!user) return res.status(404).send('User not found');
     try {
       const [s] = await pool.query('SELECT studentID, status FROM students WHERE userID = ?', [req.params.id]);
       if (s[0]) user.studentID = s[0].studentID, user.status = s[0].status || user.status;
     } catch {}
     res.json(user);
   } catch (err) {
-    console.error('getUser error:', err);
-    res.status(500).json({ error: 'Failed to fetch user' });
+    return sendError(res, err, 500, 'Failed to fetch user');
   }
 };
 
@@ -96,24 +93,20 @@ exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role = '' } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'name, email, password required' });
+      return res.status(400).send('name, email, password required');
     }
-
     const [existing] = await pool.query('SELECT userID FROM users WHERE email = ? LIMIT 1', [email]);
-    if (existing.length) return res.status(409).json({ error: 'Email already registered' });
+    if (existing.length) return res.status(409).send('Email already registered');
 
     const hashed = await bcrypt.hash(password, 10);
     const imageUrl = await uploadImageIfAny(req);
-
     const [result] = await pool.query(
       'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
       [imageUrl, name, email, hashed, role]
     );
-
     return res.status(201).json({ userID: result.insertId });
   } catch (err) {
-    console.error('createUser error:', err);
-    res.status(500).json({ error: 'Failed to create user' });
+    return sendError(res, err, 500, 'Failed to create user');
   }
 };
 
@@ -122,7 +115,6 @@ exports.updateUser = async (req, res) => {
   try {
     const imageUrl = await uploadImageIfAny(req);
     const body = req.body || {};
-
     const fields = [];
     const values = [];
 
@@ -148,12 +140,7 @@ exports.updateUser = async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [id]);
     return res.json(rows[0] || {});
   } catch (err) {
-    console.error('updateUser error:', {
-      code: err.code,
-      message: err.message,
-      stack: err.stack,
-    });
-    return res.status(500).json({ error: 'Failed to update user', detail: err.message });
+    return sendError(res, err, 500, 'Failed to update user');
   }
 };
 
@@ -162,8 +149,7 @@ exports.deleteUser = async (req, res) => {
     await userModel.deleteUser(req.params.id);
     res.json({ message: 'User deleted' });
   } catch (err) {
-    console.error('deleteUser error:', err);
-    res.status(500).json({ error: 'Failed to delete user' });
+    return sendError(res, err, 500, 'Failed to delete user');
   }
 };
 
@@ -171,30 +157,22 @@ exports.deleteUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'email and password required' });
+  if (!email || !password) return res.status(400).send('email and password required');
   try {
     const user = await userModel.getUserByEmail(email);
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) return res.status(401).send('Invalid credentials');
 
     const ok = await bcrypt.compare(password, user.password || '');
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!ok) return res.status(401).send('Invalid credentials');
 
-    // If student, include status and studentID
     let status = null, studentID = null;
     if (user.role === 'Student') {
       const [s] = await pool.query('SELECT studentID, status FROM students WHERE userID = ?', [user.userID]);
       if (s[0]) { studentID = s[0].studentID; status = s[0].status || null; }
     }
-
-    res.json({
-      userID: user.userID,
-      role: user.role,
-      status,
-      studentID,
-    });
+    res.json({ userID: user.userID, role: user.role, status, studentID });
   } catch (err) {
-    console.error('loginUser error:', err);
-    res.status(500).json({ error: 'Login failed' });
+    return sendError(res, err, 500, 'Login failed');
   }
 };
 
@@ -202,33 +180,20 @@ exports.login = async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
     const password = String(req.body?.password || '');
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+    if (!email || !password) return res.status(400).send('Email and password are required');
 
     const [[user]] = await pool.query(
       'SELECT userID, email, password, role, name FROM users WHERE LOWER(email) = ? LIMIT 1',
       [email]
     );
-
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
+    if (!user) return res.status(401).send('Invalid email or password');
 
     const hash = user.password || '';
     let ok = false;
-    if (hash && hash.startsWith('$2')) {
-      ok = await bcrypt.compare(password, hash);
-    } else {
-      // fallback for plaintext dev data
-      ok = password === hash;
-    }
-    if (!ok) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
+    if (hash && hash.startsWith('$2')) ok = await bcrypt.compare(password, hash);
+    else ok = password === hash;
+    if (!ok) return res.status(401).send('Invalid email or password');
 
-    // Attach student info if applicable
     let student = null;
     if (user.role === 'Student') {
       const [[row]] = await pool.query(
@@ -237,17 +202,9 @@ exports.login = async (req, res) => {
       );
       if (row) student = row;
     }
-
-    // Success payload (kept minimal for your Login.js)
-    res.json({
-      userID: user.userID,
-      role: user.role,
-      name: user.name,
-      student, // may be null
-    });
+    res.json({ userID: user.userID, role: user.role, name: user.name, student });
   } catch (err) {
-    console.error('[users/login] error:', err);
-    res.status(500).json({ error: 'Login failed' });
+    return sendError(res, err, 500, 'Login failed');
   }
 };
 
@@ -256,7 +213,7 @@ exports.login = async (req, res) => {
 exports.sendOtp = async (req, res) => {
   try {
     const { email } = req.body || {};
-    if (!email) return res.status(400).json({ error: 'email required' });
+    if (!email) return res.status(400).send('email required');
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     otpStore[email] = { otp, createdAt: Date.now() };
@@ -264,38 +221,40 @@ exports.sendOtp = async (req, res) => {
     const result = await sendEmail({
       to: email,
       subject: 'Tutor Aid - Verification OTP',
-      text: `Please use the One Time Pin(OTP) below to verify your account.\n\n${otp}\n\nThis OTP is valid for 1 minute.`,
+      text: `Please use the One Time Pin(OTP) below to verify your account.\n\n${otp}\n\nThis OTP is valid for 1 minutes.`,
     });
 
-    // Include reason in non-production to diagnose why others don’t receive
+    // Success remains JSON
     const payload = { success: true, delivered: !!result.ok };
     if (!result.ok && process.env.NODE_ENV !== 'production') payload.reason = result.reason;
     return res.json(payload);
   } catch (err) {
-    console.error('sendOtp error:', err);
-    return res.json({ success: true, delivered: false });
+    return sendError(res, err, 500, 'Failed to send OTP');
   }
 };
 
 exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body || {};
-  if (!email || !otp) return res.status(400).json({ error: 'email and otp required' });
-  const rec = otpStore[email];
-  if (!rec) return res.status(400).json({ error: 'No OTP requested for this email' });
-  if (Date.now() - rec.createdAt > 60_000) return res.status(400).json({ error: 'OTP expired' });
-  if (rec.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
-  delete otpStore[email];
-  res.json({ success: true });
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) return res.status(400).send('email and otp required');
+    const rec = otpStore[email];
+    if (!rec) return res.status(400).send('No OTP requested for this email');
+    if (Date.now() - rec.createdAt > 60_000) return res.status(400).send('OTP expired');
+    if (rec.otp !== otp) return res.status(400).send('Invalid OTP');
+    delete otpStore[email];
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to verify OTP');
+  }
 };
 
-// Email health (Resend)
+// Email health (kept JSON)
 exports.emailHealth = async (_req, res) => {
-  if (!process.env.RESEND_API_KEY) {
-    return res.json({ ok: false, reason: 'No RESEND_API_KEY' });
-  }
+  if (!process.env.RESEND_API_KEY) return res.json({ ok: false, reason: 'No RESEND_API_KEY' });
   return res.json({ ok: true, provider: 'resend' });
 };
 
+// SMTP TCP check (kept JSON)
 exports.smtpTcpCheck = async (req, res) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = Number(req.query.port || process.env.SMTP_PORT || 465);
@@ -329,8 +288,7 @@ exports.getTutorsBySubject = async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error('getTutorsBySubject error:', err);
-    res.status(500).json({ error: 'Failed to fetch tutors' });
+    return sendError(res, err, 500, 'Failed to fetch tutors');
   }
 };
 
@@ -338,11 +296,10 @@ exports.getTutorAvailability = async (req, res) => {
   try {
     const { userID } = req.params;
     const [rows] = await pool.query('SELECT availability FROM tutors WHERE userID = ?', [userID]);
-    if (!rows.length) return res.status(404).json({ error: 'Tutor not found' });
+    if (!rows.length) return res.status(404).send('Tutor not found');
     res.json({ availability: rows[0].availability || '' });
   } catch (err) {
-    console.error('getTutorAvailability error:', err);
-    res.status(500).json({ error: 'Failed to fetch availability' });
+    return sendError(res, err, 500, 'Failed to fetch availability');
   }
 };
 
@@ -350,14 +307,13 @@ exports.getStudentIDByUserID = async (req, res) => {
   try {
     const { userID } = req.params;
     const [rows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
-    if (!rows.length) return res.status(404).json({ error: 'Student not found' });
+    if (!rows.length) return res.status(404).send('Student not found');
     res.json({ studentID: rows[0].studentID });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch studentID' });
+    return sendError(res, err, 500, 'Failed to fetch studentID');
   }
 };
 
-// Add staff (admin tool). Accepts optional image; will create role rows.
 exports.addStaff = async (req, res) => {
   try {
     const {
@@ -366,10 +322,10 @@ exports.addStaff = async (req, res) => {
       fee_per_hour = 0, experience = ''
     } = req.body;
 
-    if (!name || !email || !password) return res.status(400).json({ error: 'name, email, password required' });
+    if (!name || !email || !password) return res.status(400).send('name, email, password required');
 
     const [exists] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
-    if (exists.length) return res.status(409).json({ error: 'Email already registered' });
+    if (exists.length) return res.status(409).send('Email already registered');
 
     const hashed = await bcrypt.hash(password, 10);
     const imageUrl = await uploadImageIfAny(req);
@@ -394,25 +350,18 @@ exports.addStaff = async (req, res) => {
 
     res.status(201).json({ userID });
   } catch (err) {
-    console.error('addStaff error:', err);
-    res.status(500).json({ error: 'Failed to add staff' });
+    return sendError(res, err, 500, 'Failed to add staff');
   }
 };
 
-// Assign a role after signup and create role-specific row if missing
 exports.assignRole = async (req, res) => {
   const { id } = req.params;
   const {
     role,
-    // Optional tutor fields from onboarding step 1
-    bio = '',
-    subjects = '',
-    qualifications = '',
-    availability = '',
-    fee_per_hour = 0,
-    experience = '',
+    bio = '', subjects = '', qualifications = '', availability = '',
+    fee_per_hour = 0, experience = '',
   } = req.body || {};
-  if (!role) return res.status(400).json({ error: 'role required' });
+  if (!role) return res.status(400).send('role required');
 
   try {
     await pool.query('UPDATE users SET role = ? WHERE userID = ?', [role, id]);
@@ -420,14 +369,12 @@ exports.assignRole = async (req, res) => {
     if (role === 'Tutor') {
       const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
       if (!t.length) {
-        // Create tutor row with provided fields
         await pool.query(
           `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [id, bio, subjects, qualifications, availability, fee_per_hour ?? 0, experience]
         );
       } else {
-        // Update existing row with any provided fields (keep existing if blanks)
         const [currRows] = await pool.query(
           `SELECT bio, subjects, qualifications, availability, fee_per_hour, experience
              FROM tutors WHERE userID = ? LIMIT 1`,
@@ -465,55 +412,47 @@ exports.assignRole = async (req, res) => {
 
     res.json({ ok: true, userID: Number(id), role });
   } catch (err) {
-    console.error('assignRole error:', err);
-    res.status(500).json({ error: 'Failed to assign role' });
+    return sendError(res, err, 500, 'Failed to assign role');
   }
 };
 
-// ---------------- Admin utilities moved from routes ----------------
-
-// Change a student's status (Admin-protected)
 exports.changeStatus = async (req, res) => {
   const { userID, newStatus, adminPassword } = req.body || {};
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
-    return res.json({ success: false, message: 'Incorrect admin password.' });
+    return res.status(401).send('Incorrect admin password.');
   }
-  if (!userID || !newStatus) return res.json({ success: false, message: 'userID and newStatus required.' });
+  if (!userID || !newStatus) return res.status(400).send('userID and newStatus required.');
 
   try {
     const [studentRows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
-    if (!studentRows.length) return res.json({ success: false, message: 'Student not found.' });
+    if (!studentRows.length) return res.status(404).send('Student not found.');
 
     const studentID = studentRows[0].studentID;
     const [result] = await pool.query('UPDATE students SET status = ? WHERE studentID = ?', [newStatus, studentID]);
-    if (result.affectedRows === 0) return res.json({ success: false, message: 'Student not found.' });
+    if (result.affectedRows === 0) return res.status(404).send('Student not found.');
 
     res.json({ success: true });
   } catch (err) {
-    console.error('changeStatus error:', err);
-    res.status(500).json({ success: false, message: 'Error updating status.' });
+    return sendError(res, err, 500, 'Error updating status.');
   }
 };
 
-// Remove a user (Admin-protected)
 exports.removeUser = async (req, res) => {
   const { userID, adminPassword } = req.body || {};
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
-    return res.json({ success: false, message: 'Incorrect admin password.' });
+    return res.status(401).send('Incorrect admin password.');
   }
-  if (!userID) return res.json({ success: false, message: 'userID required.' });
+  if (!userID) return res.status(400).send('userID required.');
 
   try {
     const [result] = await pool.query('DELETE FROM users WHERE userID = ?', [userID]);
-    if (result.affectedRows === 0) return res.json({ success: false, message: 'User not found.' });
+    if (result.affectedRows === 0) return res.status(404).send('User not found.');
     res.json({ success: true });
   } catch (err) {
-    console.error('removeUser error:', err);
-    res.json({ success: false, message: 'Error removing user.', error: err.message });
+    return sendError(res, err, 500, 'Error removing user.');
   }
 };
 
-// Get avatars and names for a set of studentIDs
 exports.userAvatars = async (req, res) => {
   const { studentIDs } = req.body || {};
   if (!Array.isArray(studentIDs) || !studentIDs.length) return res.json({});
@@ -530,23 +469,21 @@ exports.userAvatars = async (req, res) => {
     rows.forEach(r => { images[r.studentID] = { image: r.image, name: r.name }; });
     res.json(images);
   } catch (err) {
-    console.error('userAvatars error:', err);
-    res.status(500).json({ error: 'Failed to fetch user images' });
+    return sendError(res, err, 500, 'Failed to fetch user images');
   }
 };
 
-// Forgot password (OTP) — reuse in‑memory otpStore and resend mailer
+// Forgot password (OTP)
 exports.forgotPasswordRequest = async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
-    if (!email) return res.status(400).json({ error: 'email required' });
+    if (!email) return res.status(400).send('email required');
 
     const [[user]] = await pool.query(
       'SELECT userID, email FROM users WHERE LOWER(email) = ? LIMIT 1',
       [email]
     );
 
-    // Do not reveal if email exists; but if it does, send OTP and store userID
     if (user) {
       const otp = String(Math.floor(100000 + Math.random() * 900000));
       otpStore[email] = { otp, createdAt: Date.now(), userID: user.userID };
@@ -556,42 +493,58 @@ exports.forgotPasswordRequest = async (req, res) => {
         text: `Use this OTP to reset your password:\n\n${otp}\n\nThis OTP is valid for 1 minute.`,
       });
     }
-
     return res.json({ ok: true });
   } catch (err) {
-    console.error('forgotPasswordRequest error:', err);
-    return res.status(500).json({ error: 'Failed to process request' });
+    return sendError(res, err, 500, 'Failed to process request');
   }
 };
 
 exports.forgotPasswordVerify = async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  const otp = String(req.body?.otp || '');
-  if (!email || !otp) return res.status(400).json({ error: 'email and otp required' });
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const otp = String(req.body?.otp || '');
+    if (!email || !otp) return res.status(400).send('email and otp required');
 
-  const rec = otpStore[email];
-  if (!rec) return res.status(400).json({ error: 'No OTP requested for this email' });
-  if (Date.now() - rec.createdAt > 60_000) return res.status(400).json({ error: 'OTP expired' });
-  if (rec.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    const rec = otpStore[email];
+    if (!rec) return res.status(400).send('No OTP requested for this email');
+    if (Date.now() - rec.createdAt > 60_000) return res.status(400).send('OTP expired');
+    if (rec.otp !== otp) return res.status(400).send('Invalid OTP');
 
-  const userID = rec.userID;
-  delete otpStore[email]; // one-time use
-  return res.json({ ok: true, userID });
+    const userID = rec.userID;
+    delete otpStore[email];
+    return res.json({ ok: true, userID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to verify OTP');
+  }
 };
 
 exports.resetPasswordByUserID = async (req, res) => {
   try {
     const { id } = req.params;
     const newPassword = String(req.body?.newPassword || '');
-    if (!id || !newPassword) return res.status(400).json({ error: 'userID and newPassword required' });
+    if (!id || !newPassword) return res.status(400).send('userID and newPassword required');
 
     const hashed = await bcrypt.hash(newPassword, 10);
     const [result] = await pool.query('UPDATE users SET password = ? WHERE userID = ?', [hashed, id]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+    if (result.affectedRows === 0) return res.status(404).send('User not found');
 
     return res.json({ ok: true });
   } catch (err) {
-    console.error('resetPasswordByUserID error:', err);
-    return res.status(500).json({ error: 'Failed to reset password' });
+    return sendError(res, err, 500, 'Failed to reset password');
   }
 };
+
+// Add: uniform error helpers
+function errorMessage(err, fallback = 'An error occurred') {
+  return (err && (err.sqlMessage || err.message)) || fallback;
+}
+function sendError(res, err, status = 500, fallback) {
+  console.error('[userController] error:', {
+    code: err?.code,
+    sqlState: err?.sqlState,
+    sqlMessage: err?.sqlMessage,
+    message: err?.message,
+    stack: err?.stack,
+  });
+  return res.status(status).send(errorMessage(err, fallback));
+}
