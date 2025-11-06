@@ -75,18 +75,6 @@ Your application should now run in your browser.
 ![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
----
-
-## Data Structure Overview
-
-| Table        | Description | Key Fields |
-|-------------|-------------|------------|
-| users       | Stores student & tutor accounts | user_id, name, email, role |
-| tutors      | Stores tutor profile details | tutor_id, subjects, bio, fee_per_hour |
-| bookings    | Stores tutoring session bookings | booking_id, student_id, tutor_id, date, status |
-| reviews     | Stores feedback from students | review_id, rating, comment, tutor_id |
-
----
 
 ## Deployment Process
 
@@ -120,11 +108,16 @@ Credentials are stored as environment variables.
 
 ### Challenges & Solutions
 
-| Challenge | Solution |
-|----------|----------|
-| Deployment complexity between services | Learned to use environment variables & hosting platforms. |
-| Managing database hosting | Moved from local MySQL to AlwaysData for remote access. |
-| Designing a clean user booking flow | Tested mock UI flows and simplified navigation. |
+One major challenge was deployment, managing the frontend, backend, and SQL database across different platforms. I solved this by hosting the backend on Render, the SQL database on AlwaysData, and using environment variables to securely connect everything.
+I also ran into CORS issues when the frontend tried to call the backend, I resolved those by configuring allowed origins and carefully using environment variables.
+Finally, I do not think I optimised performance by compressing images, using lazy loading for tutor images, and reducing unused CSS, like I should have.
+
+### Reflection
+
+This project was a full journey for me, not just in building a product, but in learning how to think like a full-stack developer.
+One of the biggest learning curves was setting up and maintaining the SQL database and ensuring secure communication between the frontend and backend. I also had to learn how to deploy both sides of the app separately, which required research, patience, and LOTS of trial-and-error.
+Through this, I really improved my debugging skills, my understanding of server-client communication, and how to optimise code for performance and loading speed.
+
 
 ---
 ## Final Presentation Slide Show
@@ -137,7 +130,7 @@ https://docs.google.com/presentation/d/1vyETFmOux20fAhR9wxqzYHYS3w0MuiS_R-jKe0lI
 
 ## Demo Video
 
-[![Watch the Demo](./documentation/mockupthumbnail.png)](./documentation/MockupVideo.mp4)
+https://drive.google.com/file/d/1dRxzOC-kDc0kWklAXQPmj9gaRTBLq8Uv/view?usp=sharing
 
 
 ---
