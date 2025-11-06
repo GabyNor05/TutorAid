@@ -127,10 +127,18 @@ Credentials are stored as environment variables.
 | Designing a clean user booking flow | Tested mock UI flows and simplified navigation. |
 
 ---
+## Final Presentation Slide Show
+
+https://docs.google.com/presentation/d/1vyETFmOux20fAhR9wxqzYHYS3w0MuiS_R-jKe0lIvwg/edit?usp=sharing
+
+---
 
 ## Mockups / Screenshots (optional)
 
-(Add Figma mockups or UI screenshots if you want)
+## Demo Video
+
+[![Watch the Demo](./documentation/mockupthumbnail.png)](./documentation/MockupVideo.mp4)
+
 
 ---
 
@@ -140,3 +148,17 @@ Tutor Aid is more than a web application; it’s a tool built from real experien
 
 Thank you to everyone who supported the process, from research to testing to reviewing.
 
+## Acknowledgements
+Thank you to everyone who supported the process, from research to testing to reviewing to late-night crashouts.
+
+### Keabetswe Olifant 
+My coding buddy, who helped me when I encountered problems I couldn't figure out late at night and sat with me when things just wouldn't work. Thank you, KB!
+
+### Jackie Norris
+My sister, who took the time to test my app, provided critical feedback and helped me solve problems from the other side of the world. Jackie is my coding role model, with an extensive career in the industry but still having time to help her little sister.
+
+### Andre van Heerden
+Andre played a crucial role in the set-up of my backend, guiding me when I didn't understand things. I really appreciate your patience with me.
+
+### Tsungai Katsuro
+My second year lecturer, who approved this project and guided me throughout the year.
