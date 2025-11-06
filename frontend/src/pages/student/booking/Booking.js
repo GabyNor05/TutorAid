@@ -237,7 +237,7 @@ function Booking() {
     }
     const userID = localStorage.getItem("userID");
     try {
-      // Students row gives us studentID (for lessons) and userID (for messages)
+      // Students row gives us studentID (profile) and userID (FK to users)
       const studentData = await api.get(endpoints.studentByUser(userID));
       if (!studentData?.studentID || !studentData?.userID) {
         alert("Student profile not found.");
@@ -256,7 +256,7 @@ function Booking() {
       const startTime = selectedDate.toTimeString().slice(0, 8); // HH:MM:SS
       const lessonPayload = {
         tutorID: Number(selectedTutor),
-        studentID: studentData.studentID,
+        studentID: Number(studentData.studentID),
         subject: selectedSubject,
         date: selectedDate.toISOString().slice(0, 10),
         startTime,
@@ -278,9 +278,33 @@ function Booking() {
   // Confirm: include total_fee and create the lesson, then send a message (sender/receiver are userIDs)
   const handleConfirmBooking = async () => {
     if (!pendingBooking) return;
+    setConfirmError("");
     try {
       const payload = { ...pendingBooking, total_fee: calcTotalFee() };
-      const res = await api.post(endpoints.lessons(), payload);
+      console.log("[Booking] create lesson payload:", payload);
+
+      let res;
+      try {
+        res = await api.post(endpoints.lessons(), payload);
+      } catch (err) {
+        const msg = String(err?.message || "");
+        const detail = String(err?.detail || "");
+        const combined = (msg + " " + detail).toLowerCase();
+
+        // Detect FK to users(userID) on server, then retry using userID
+        const looksLikeUsersFK =
+          combined.includes("er_no_referenced_row_2") &&
+          combined.includes("references users (userid)");
+
+        if (looksLikeUsersFK && studentInfo?.userID) {
+          const fallback = { ...payload, studentID: Number(studentInfo.userID) };
+          console.warn("[Booking] FK mismatch; retry with users.userID", fallback);
+          res = await api.post(endpoints.lessons(), fallback);
+        } else {
+          throw err;
+        }
+      }
+
       const lessonID = res?.lessonID;
 
       // Send a message via messagesController with userIDs
@@ -729,3 +753,36 @@ function Booking() {
 }
 
 export default Booking;
+
+// Add to your lessons controller create handler before INSERT
+// No filepath: paste into the handler that processes POST /api/lessons
+// ...existing code...
+// Normalize studentID to students.studentID even if client sent users.userID
+const sid = Number(req.body.studentID);
+let studentID = sid;
+
+// If no such student row, try mapping from users.userID => students.studentID
+const [[foundStudentBySID]] = await pool.query(
+  "SELECT studentID FROM students WHERE studentID = ? LIMIT 1",
+  [studentID]
+);
+if (!foundStudentBySID) {
+  const [[byUser]] = await pool.query(
+    "SELECT studentID FROM students WHERE userID = ? LIMIT 1",
+    [sid]
+  );
+  if (byUser?.studentID) studentID = byUser.studentID;
+}
+
+// Validate FKs early (return 400 instead of MySQL 500)
+const [[s]] = await pool.query("SELECT 1 FROM students WHERE studentID = ? LIMIT 1", [studentID]);
+if (!s) return res.status(400).json({ error: "Invalid studentID" });
+const [[t]] = await pool.query("SELECT 1 FROM tutors WHERE tutorID = ? LIMIT 1", [tutorID]);
+if (!t) return res.status(400).json({ error: "Invalid tutorID" });
+
+// Use normalized studentID in the INSERT
+await pool.query(
+  "INSERT INTO lessons (tutorID, studentID, subject, date, startTime, duration, total_fee) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  [tutorID, studentID, subject, date, startTime, duration, total_fee ?? null]
+);
+// ...existing code...
