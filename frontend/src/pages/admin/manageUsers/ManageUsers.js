@@ -28,8 +28,10 @@ function ManageUsers() {
   };
 
   const handleDelete = async (userId) => {
+    const adminPassword = window.prompt("Enter admin password to confirm deletion:");
+    if (!adminPassword) return;
     try {
-      await api.delete(endpoints.userById(userId));
+      await api.post(endpoints.usersRemove(), { userID: userId, adminPassword }); // CHANGE
       setUsers(prev => prev.filter((user) => user.userID !== userId));
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -58,8 +60,6 @@ function ManageUsers() {
           <ManageUserCard
             key={user.userID}
             user={user}
-            onEdit={() => handleEdit(user.userID)}
-            onDelete={() => handleDelete(user.userID)}
           />
         ))}
       </div>

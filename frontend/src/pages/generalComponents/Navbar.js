@@ -287,6 +287,7 @@ function Navbar() {
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/lessonrequests")}><ClockCountdown size={22} /> Lesson Requests</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentfiles")}><UsersThree size={22} /> Student Files</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/lessonfeedback")}><ChatText size={22} /> Lesson Feedback</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userfeedback")}><ClipboardText size={22} /> User Feedback Form</button>
                       </>
                     )}
                     {role === "Admin" && (
@@ -295,7 +296,7 @@ function Navbar() {
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/manageusers")}><UserList size={22} /> Manage Users</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/studentrequests")}><ListChecks size={22} /> Student Requests</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/newsletter")}><Newspaper size={22} /> Newsletter</button>
-                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userfeedback")}><ClipboardText size={22} /> User Feedback</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/managefeedback")}><ClipboardText size={22} /> ManageUser Feedback</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/managereports")}><Megaphone size={22} /> Manage Reports</button>
                       </>
                     )}
@@ -303,12 +304,10 @@ function Navbar() {
                       <>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/booking")}><Calendar size={22} /> Book Lessons</button>
                         <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/requestform")}><QuestionMark size={22} /> Request Form</button>
+                        <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex flex-row gap-2" onClick={() => handleNav("/userfeedback")}><ClipboardText size={22} /> User Feedback Form</button>
                       </>
                     )}
                   </div>
-                  <button className="mt-4 w-full text-left px-3 py-2 rounded hover:bg-red-50 text-teal-900 flex flex-row gap-2" onClick={() => handleNav("/userfeedback")}>
-                    <ClipboardText size={22} /> User Feedback
-                  </button>
                   <button
                     className="w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600 flex flex-row gap-2"
                     onClick={() => {

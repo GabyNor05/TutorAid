@@ -42,7 +42,8 @@ function UserFileView() {
             setShowModal(false);
             setTimeout(() => setStatusMessage(""), 3000);
         } catch (err) {
-            setStatusMessage(err.message || "Error updating status.");
+            console.error("Error updating status:", err.message);
+            setStatusMessage( "Error updating status.");
         }
         setAdminPassword("");
         setNewStatus("");

@@ -444,32 +444,923 @@ exports.removeUser = async (req, res) => {
   }
   if (!userID) return res.status(400).send('userID required.');
 
+  let conn;
   try {
-    const [result] = await pool.query('DELETE FROM users WHERE userID = ?', [userID]);
-    if (result.affectedRows === 0) return res.status(404).send('User not found.');
-    res.json({ success: true });
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const uid = Number(userID);
+
+    // If user is a Student, delete dependent rows referencing students(studentID)
+    const [sRows] = await conn.query('SELECT studentID FROM students WHERE userID = ?', [uid]);
+    const studentIDs = sRows.map(r => r.studentID);
+
+    if (studentIDs.length) {
+      // Best-effort deletes; ignore if table doesn’t exist
+      await conn.query('DELETE FROM lessonreports WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM progress_notes WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM lessons WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      // Add more student-dependent tables here if needed
+      await conn.query('DELETE FROM students WHERE studentID IN (?)', [studentIDs]);
+    } else {
+      await conn.query('DELETE FROM students WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // If user is a Tutor, clean up tutor-dependent rows
+    const [tRows] = await conn.query('SELECT tutorID FROM tutors WHERE userID = ?', [uid]);
+    const tutorIDs = tRows.map(r => r.tutorID);
+
+    if (tutorIDs.length) {
+      await conn.query('DELETE FROM lessons WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
+      await conn.query('DELETE FROM tutors WHERE tutorID IN (?)', [tutorIDs]);
+    } else {
+      await conn.query('DELETE FROM tutors WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // Admin record (if present)
+    await conn.query('DELETE FROM admins WHERE userID = ?', [uid]).catch(() => {});
+
+    // Finally delete the user
+    const [result] = await conn.query('DELETE FROM users WHERE userID = ?', [uid]);
+    if (result.affectedRows === 0) {
+      await conn.rollback();
+      return res.status(404).send('User not found.');
+    }
+
+    await conn.commit();
+    return res.json({ success: true });
   } catch (err) {
+    if (conn) { try { await conn.rollback(); } catch {} }
     return sendError(res, err, 500, 'Error removing user.');
+  } finally {
+    if (conn) conn.release();
   }
 };
 
-exports.userAvatars = async (req, res) => {
-  const { studentIDs } = req.body || {};
-  if (!Array.isArray(studentIDs) || !studentIDs.length) return res.json({});
+// ---------------- OTP ----------------
+
+exports.sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).send('email required');
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    otpStore[email] = { otp, createdAt: Date.now() };
+
+    const result = await sendEmail({
+      to: email,
+      subject: 'Tutor Aid - Verification OTP',
+      text: `Please use the One Time Pin(OTP) below to verify your account.\n\n${otp}\n\nThis OTP is valid for 1 minutes.`,
+    });
+
+    // Success remains JSON
+    const payload = { success: true, delivered: !!result.ok };
+    if (!result.ok && process.env.NODE_ENV !== 'production') payload.reason = result.reason;
+    return res.json(payload);
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to send OTP');
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) return res.status(400).send('email and otp required');
+    const rec = otpStore[email];
+    if (!rec) return res.status(400).send('No OTP requested for this email');
+    if (Date.now() - rec.createdAt > 60_000) return res.status(400).send('OTP expired');
+    if (rec.otp !== otp) return res.status(400).send('Invalid OTP');
+    delete otpStore[email];
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to verify OTP');
+  }
+};
+
+// Email health (kept JSON)
+exports.emailHealth = async (_req, res) => {
+  if (!process.env.RESEND_API_KEY) return res.json({ ok: false, reason: 'No RESEND_API_KEY' });
+  return res.json({ ok: true, provider: 'resend' });
+};
+
+// SMTP TCP check (kept JSON)
+exports.smtpTcpCheck = async (req, res) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(req.query.port || process.env.SMTP_PORT || 465);
+  const socket = new net.Socket();
+  let done = false;
+  const end = (status, info) => {
+    if (done) return;
+    done = true;
+    try { socket.destroy(); } catch {}
+    res.status(status).json(info);
+  };
+  socket.setTimeout(8000);
+  socket.on('connect', () => end(200, { ok: true, host, port }));
+  socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
+  socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
+  socket.connect({ host, port, family: 4 });
+};
+
+// ---------------- Helpers used by other pages ----------------
+
+exports.getTutorsBySubject = async (req, res) => {
+  try {
+    const subject = String(req.params.subject || '').trim();
+    if (!subject) return res.json([]);
+    const [rows] = await pool.query(
+      `SELECT t.*, u.name, u.image
+       FROM tutors t
+       JOIN users u ON t.userID = u.userID
+       WHERE FIND_IN_SET(?, REPLACE(t.subjects, ' ', '')) OR t.subjects LIKE ?`,
+      [subject, `%${subject}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch tutors');
+  }
+};
+
+exports.getTutorAvailability = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT availability FROM tutors WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).send('Tutor not found');
+    res.json({ availability: rows[0].availability || '' });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch availability');
+  }
+};
+
+exports.getStudentIDByUserID = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).send('Student not found');
+    res.json({ studentID: rows[0].studentID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch studentID');
+  }
+};
+
+exports.addStaff = async (req, res) => {
+  try {
+    const {
+      name, email, password, role = 'Admin',
+      bio = '', subjects = '', qualifications = '', availability = '',
+      fee_per_hour = 0, experience = ''
+    } = req.body;
+
+    if (!name || !email || !password) return res.status(400).send('name, email, password required');
+
+    const [exists] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
+    if (exists.length) return res.status(409).send('Email already registered');
+
+    const hashed = await bcrypt.hash(password, 10);
+    const imageUrl = await uploadImageIfAny(req);
+
+    const [userRes] = await pool.query(
+      'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      [imageUrl, name, email, hashed, role]
+    );
+    const userID = userRes.insertId;
+
+    if (role === 'Tutor') {
+      await pool.query(
+        `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, bio, subjects, qualifications, availability, fee_per_hour, experience]
+      );
+    } else if (role === 'Student') {
+      await pool.query(`INSERT INTO students (userID, status) VALUES (?, 'Active')`, [userID]);
+    } else if (role === 'Admin') {
+      await pool.query(`INSERT INTO admins (userID) VALUES (?)`, [userID]).catch(() => {});
+    }
+
+    res.status(201).json({ userID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to add staff');
+  }
+};
+
+exports.assignRole = async (req, res) => {
+  const { id } = req.params;
+  const {
+    role,
+    bio = '', subjects = '', qualifications = '', availability = '',
+    fee_per_hour = 0, experience = '',
+  } = req.body || {};
+  if (!role) return res.status(400).send('role required');
 
   try {
-    const [rows] = await pool.query(
-      `SELECT s.studentID, u.image, u.name
-       FROM students s
-       JOIN users u ON s.userID = u.userID
-       WHERE s.studentID IN (?)`,
-      [studentIDs]
-    );
-    const images = {};
-    rows.forEach(r => { images[r.studentID] = { image: r.image, name: r.name }; });
-    res.json(images);
+    await pool.query('UPDATE users SET role = ? WHERE userID = ?', [role, id]);
+
+    if (role === 'Tutor') {
+      const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
+      if (!t.length) {
+        await pool.query(
+          `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [id, bio, subjects, qualifications, availability, fee_per_hour ?? 0, experience]
+        );
+      } else {
+        const [currRows] = await pool.query(
+          `SELECT bio, subjects, qualifications, availability, fee_per_hour, experience
+             FROM tutors WHERE userID = ? LIMIT 1`,
+          [id]
+        );
+        const curr = currRows?.[0] || {};
+        await pool.query(
+          `UPDATE tutors
+             SET bio = ?, subjects = ?, qualifications = ?, availability = ?, fee_per_hour = ?, experience = ?
+           WHERE userID = ?`,
+          [
+            bio || curr.bio || '',
+            subjects || curr.subjects || '',
+            qualifications || curr.qualifications || '',
+            availability || curr.availability || '',
+            fee_per_hour ?? curr.fee_per_hour ?? 0,
+            experience || curr.experience || '',
+            id,
+          ]
+        );
+      }
+    } else if (role === 'Student') {
+      const [s] = await pool.query('SELECT userID FROM students WHERE userID = ?', [id]);
+      if (!s.length) {
+        await pool.query(
+          `INSERT INTO students (userID, grade, school, address, city, province, status)
+           VALUES (?, NULL, NULL, NULL, NULL, NULL, 'Active')`,
+          [id]
+        );
+      }
+    } else if (role === 'Admin') {
+      const [a] = await pool.query('SELECT userID FROM admins WHERE userID = ?', [id]);
+      if (!a.length) await pool.query('INSERT INTO admins (userID) VALUES (?)', [id]);
+    }
+
+    res.json({ ok: true, userID: Number(id), role });
   } catch (err) {
-    return sendError(res, err, 500, 'Failed to fetch user images');
+    return sendError(res, err, 500, 'Failed to assign role');
+  }
+};
+
+exports.changeStatus = async (req, res) => {
+  const { userID, newStatus, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).send('Incorrect admin password.');
+  }
+  if (!userID || !newStatus) return res.status(400).send('userID and newStatus required.');
+
+  try {
+    const [studentRows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!studentRows.length) return res.status(404).send('Student not found.');
+
+    const studentID = studentRows[0].studentID;
+    const [result] = await pool.query('UPDATE students SET status = ? WHERE studentID = ?', [newStatus, studentID]);
+    if (result.affectedRows === 0) return res.status(404).send('Student not found.');
+
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Error updating status.');
+  }
+};
+
+exports.removeUser = async (req, res) => {
+  const { userID, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).send('Incorrect admin password.');
+  }
+  if (!userID) return res.status(400).send('userID required.');
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const uid = Number(userID);
+
+    // If user is a Student, delete dependent rows referencing students(studentID)
+    const [sRows] = await conn.query('SELECT studentID FROM students WHERE userID = ?', [uid]);
+    const studentIDs = sRows.map(r => r.studentID);
+
+    if (studentIDs.length) {
+      // Best-effort deletes; ignore if table doesn’t exist
+      await conn.query('DELETE FROM lessonreports WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM progress_notes WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM lessons WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      // Add more student-dependent tables here if needed
+      await conn.query('DELETE FROM students WHERE studentID IN (?)', [studentIDs]);
+    } else {
+      await conn.query('DELETE FROM students WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // If user is a Tutor, clean up tutor-dependent rows
+    const [tRows] = await conn.query('SELECT tutorID FROM tutors WHERE userID = ?', [uid]);
+    const tutorIDs = tRows.map(r => r.tutorID);
+
+    if (tutorIDs.length) {
+      await conn.query('DELETE FROM lessons WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
+      await conn.query('DELETE FROM tutors WHERE tutorID IN (?)', [tutorIDs]);
+    } else {
+      await conn.query('DELETE FROM tutors WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // Admin record (if present)
+    await conn.query('DELETE FROM admins WHERE userID = ?', [uid]).catch(() => {});
+
+    // Finally delete the user
+    const [result] = await conn.query('DELETE FROM users WHERE userID = ?', [uid]);
+    if (result.affectedRows === 0) {
+      await conn.rollback();
+      return res.status(404).send('User not found.');
+    }
+
+    await conn.commit();
+    return res.json({ success: true });
+  } catch (err) {
+    if (conn) { try { await conn.rollback(); } catch {} }
+    return sendError(res, err, 500, 'Error removing user.');
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
+// ---------------- OTP ----------------
+
+exports.sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).send('email required');
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    otpStore[email] = { otp, createdAt: Date.now() };
+
+    const result = await sendEmail({
+      to: email,
+      subject: 'Tutor Aid - Verification OTP',
+      text: `Please use the One Time Pin(OTP) below to verify your account.\n\n${otp}\n\nThis OTP is valid for 1 minutes.`,
+    });
+
+    // Success remains JSON
+    const payload = { success: true, delivered: !!result.ok };
+    if (!result.ok && process.env.NODE_ENV !== 'production') payload.reason = result.reason;
+    return res.json(payload);
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to send OTP');
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) return res.status(400).send('email and otp required');
+    const rec = otpStore[email];
+    if (!rec) return res.status(400).send('No OTP requested for this email');
+    if (Date.now() - rec.createdAt > 60_000) return res.status(400).send('OTP expired');
+    if (rec.otp !== otp) return res.status(400).send('Invalid OTP');
+    delete otpStore[email];
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to verify OTP');
+  }
+};
+
+// Email health (kept JSON)
+exports.emailHealth = async (_req, res) => {
+  if (!process.env.RESEND_API_KEY) return res.json({ ok: false, reason: 'No RESEND_API_KEY' });
+  return res.json({ ok: true, provider: 'resend' });
+};
+
+// SMTP TCP check (kept JSON)
+exports.smtpTcpCheck = async (req, res) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(req.query.port || process.env.SMTP_PORT || 465);
+  const socket = new net.Socket();
+  let done = false;
+  const end = (status, info) => {
+    if (done) return;
+    done = true;
+    try { socket.destroy(); } catch {}
+    res.status(status).json(info);
+  };
+  socket.setTimeout(8000);
+  socket.on('connect', () => end(200, { ok: true, host, port }));
+  socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
+  socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
+  socket.connect({ host, port, family: 4 });
+};
+
+// ---------------- Helpers used by other pages ----------------
+
+exports.getTutorsBySubject = async (req, res) => {
+  try {
+    const subject = String(req.params.subject || '').trim();
+    if (!subject) return res.json([]);
+    const [rows] = await pool.query(
+      `SELECT t.*, u.name, u.image
+       FROM tutors t
+       JOIN users u ON t.userID = u.userID
+       WHERE FIND_IN_SET(?, REPLACE(t.subjects, ' ', '')) OR t.subjects LIKE ?`,
+      [subject, `%${subject}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch tutors');
+  }
+};
+
+exports.getTutorAvailability = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT availability FROM tutors WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).send('Tutor not found');
+    res.json({ availability: rows[0].availability || '' });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch availability');
+  }
+};
+
+exports.getStudentIDByUserID = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).send('Student not found');
+    res.json({ studentID: rows[0].studentID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch studentID');
+  }
+};
+
+exports.addStaff = async (req, res) => {
+  try {
+    const {
+      name, email, password, role = 'Admin',
+      bio = '', subjects = '', qualifications = '', availability = '',
+      fee_per_hour = 0, experience = ''
+    } = req.body;
+
+    if (!name || !email || !password) return res.status(400).send('name, email, password required');
+
+    const [exists] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
+    if (exists.length) return res.status(409).send('Email already registered');
+
+    const hashed = await bcrypt.hash(password, 10);
+    const imageUrl = await uploadImageIfAny(req);
+
+    const [userRes] = await pool.query(
+      'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      [imageUrl, name, email, hashed, role]
+    );
+    const userID = userRes.insertId;
+
+    if (role === 'Tutor') {
+      await pool.query(
+        `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, bio, subjects, qualifications, availability, fee_per_hour, experience]
+      );
+    } else if (role === 'Student') {
+      await pool.query(`INSERT INTO students (userID, status) VALUES (?, 'Active')`, [userID]);
+    } else if (role === 'Admin') {
+      await pool.query(`INSERT INTO admins (userID) VALUES (?)`, [userID]).catch(() => {});
+    }
+
+    res.status(201).json({ userID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to add staff');
+  }
+};
+
+exports.assignRole = async (req, res) => {
+  const { id } = req.params;
+  const {
+    role,
+    bio = '', subjects = '', qualifications = '', availability = '',
+    fee_per_hour = 0, experience = '',
+  } = req.body || {};
+  if (!role) return res.status(400).send('role required');
+
+  try {
+    await pool.query('UPDATE users SET role = ? WHERE userID = ?', [role, id]);
+
+    if (role === 'Tutor') {
+      const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
+      if (!t.length) {
+        await pool.query(
+          `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [id, bio, subjects, qualifications, availability, fee_per_hour ?? 0, experience]
+        );
+      } else {
+        const [currRows] = await pool.query(
+          `SELECT bio, subjects, qualifications, availability, fee_per_hour, experience
+             FROM tutors WHERE userID = ? LIMIT 1`,
+          [id]
+        );
+        const curr = currRows?.[0] || {};
+        await pool.query(
+          `UPDATE tutors
+             SET bio = ?, subjects = ?, qualifications = ?, availability = ?, fee_per_hour = ?, experience = ?
+           WHERE userID = ?`,
+          [
+            bio || curr.bio || '',
+            subjects || curr.subjects || '',
+            qualifications || curr.qualifications || '',
+            availability || curr.availability || '',
+            fee_per_hour ?? curr.fee_per_hour ?? 0,
+            experience || curr.experience || '',
+            id,
+          ]
+        );
+      }
+    } else if (role === 'Student') {
+      const [s] = await pool.query('SELECT userID FROM students WHERE userID = ?', [id]);
+      if (!s.length) {
+        await pool.query(
+          `INSERT INTO students (userID, grade, school, address, city, province, status)
+           VALUES (?, NULL, NULL, NULL, NULL, NULL, 'Active')`,
+          [id]
+        );
+      }
+    } else if (role === 'Admin') {
+      const [a] = await pool.query('SELECT userID FROM admins WHERE userID = ?', [id]);
+      if (!a.length) await pool.query('INSERT INTO admins (userID) VALUES (?)', [id]);
+    }
+
+    res.json({ ok: true, userID: Number(id), role });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to assign role');
+  }
+};
+
+exports.changeStatus = async (req, res) => {
+  const { userID, newStatus, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).send('Incorrect admin password.');
+  }
+  if (!userID || !newStatus) return res.status(400).send('userID and newStatus required.');
+
+  try {
+    const [studentRows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!studentRows.length) return res.status(404).send('Student not found.');
+
+    const studentID = studentRows[0].studentID;
+    const [result] = await pool.query('UPDATE students SET status = ? WHERE studentID = ?', [newStatus, studentID]);
+    if (result.affectedRows === 0) return res.status(404).send('Student not found.');
+
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Error updating status.');
+  }
+};
+
+exports.removeUser = async (req, res) => {
+  const { userID, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).send('Incorrect admin password.');
+  }
+  if (!userID) return res.status(400).send('userID required.');
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const uid = Number(userID);
+
+    // If user is a Student, delete dependent rows referencing students(studentID)
+    const [sRows] = await conn.query('SELECT studentID FROM students WHERE userID = ?', [uid]);
+    const studentIDs = sRows.map(r => r.studentID);
+
+    if (studentIDs.length) {
+      // Best-effort deletes; ignore if table doesn’t exist
+      await conn.query('DELETE FROM lessonreports WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM progress_notes WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM lessons WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      // Add more student-dependent tables here if needed
+      await conn.query('DELETE FROM students WHERE studentID IN (?)', [studentIDs]);
+    } else {
+      await conn.query('DELETE FROM students WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // If user is a Tutor, clean up tutor-dependent rows
+    const [tRows] = await conn.query('SELECT tutorID FROM tutors WHERE userID = ?', [uid]);
+    const tutorIDs = tRows.map(r => r.tutorID);
+
+    if (tutorIDs.length) {
+      await conn.query('DELETE FROM lessons WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
+      await conn.query('DELETE FROM tutors WHERE tutorID IN (?)', [tutorIDs]);
+    } else {
+      await conn.query('DELETE FROM tutors WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // Admin record (if present)
+    await conn.query('DELETE FROM admins WHERE userID = ?', [uid]).catch(() => {});
+
+    // Finally delete the user
+    const [result] = await conn.query('DELETE FROM users WHERE userID = ?', [uid]);
+    if (result.affectedRows === 0) {
+      await conn.rollback();
+      return res.status(404).send('User not found.');
+    }
+
+    await conn.commit();
+    return res.json({ success: true });
+  } catch (err) {
+    if (conn) { try { await conn.rollback(); } catch {} }
+    return sendError(res, err, 500, 'Error removing user.');
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
+// ---------------- OTP ----------------
+
+exports.sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).send('email required');
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    otpStore[email] = { otp, createdAt: Date.now() };
+
+    const result = await sendEmail({
+      to: email,
+      subject: 'Tutor Aid - Verification OTP',
+      text: `Please use the One Time Pin(OTP) below to verify your account.\n\n${otp}\n\nThis OTP is valid for 1 minutes.`,
+    });
+
+    // Success remains JSON
+    const payload = { success: true, delivered: !!result.ok };
+    if (!result.ok && process.env.NODE_ENV !== 'production') payload.reason = result.reason;
+    return res.json(payload);
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to send OTP');
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) return res.status(400).send('email and otp required');
+    const rec = otpStore[email];
+    if (!rec) return res.status(400).send('No OTP requested for this email');
+    if (Date.now() - rec.createdAt > 60_000) return res.status(400).send('OTP expired');
+    if (rec.otp !== otp) return res.status(400).send('Invalid OTP');
+    delete otpStore[email];
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to verify OTP');
+  }
+};
+
+// Email health (kept JSON)
+exports.emailHealth = async (_req, res) => {
+  if (!process.env.RESEND_API_KEY) return res.json({ ok: false, reason: 'No RESEND_API_KEY' });
+  return res.json({ ok: true, provider: 'resend' });
+};
+
+// SMTP TCP check (kept JSON)
+exports.smtpTcpCheck = async (req, res) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(req.query.port || process.env.SMTP_PORT || 465);
+  const socket = new net.Socket();
+  let done = false;
+  const end = (status, info) => {
+    if (done) return;
+    done = true;
+    try { socket.destroy(); } catch {}
+    res.status(status).json(info);
+  };
+  socket.setTimeout(8000);
+  socket.on('connect', () => end(200, { ok: true, host, port }));
+  socket.on('timeout', () => end(504, { ok: false, host, port, error: 'timeout' }));
+  socket.on('error', (err) => end(502, { ok: false, host, port, error: err.code || err.message }));
+  socket.connect({ host, port, family: 4 });
+};
+
+// ---------------- Helpers used by other pages ----------------
+
+exports.getTutorsBySubject = async (req, res) => {
+  try {
+    const subject = String(req.params.subject || '').trim();
+    if (!subject) return res.json([]);
+    const [rows] = await pool.query(
+      `SELECT t.*, u.name, u.image
+       FROM tutors t
+       JOIN users u ON t.userID = u.userID
+       WHERE FIND_IN_SET(?, REPLACE(t.subjects, ' ', '')) OR t.subjects LIKE ?`,
+      [subject, `%${subject}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch tutors');
+  }
+};
+
+exports.getTutorAvailability = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT availability FROM tutors WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).send('Tutor not found');
+    res.json({ availability: rows[0].availability || '' });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch availability');
+  }
+};
+
+exports.getStudentIDByUserID = async (req, res) => {
+  try {
+    const { userID } = req.params;
+    const [rows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!rows.length) return res.status(404).send('Student not found');
+    res.json({ studentID: rows[0].studentID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to fetch studentID');
+  }
+};
+
+exports.addStaff = async (req, res) => {
+  try {
+    const {
+      name, email, password, role = 'Admin',
+      bio = '', subjects = '', qualifications = '', availability = '',
+      fee_per_hour = 0, experience = ''
+    } = req.body;
+
+    if (!name || !email || !password) return res.status(400).send('name, email, password required');
+
+    const [exists] = await pool.query('SELECT userID FROM users WHERE email = ?', [email]);
+    if (exists.length) return res.status(409).send('Email already registered');
+
+    const hashed = await bcrypt.hash(password, 10);
+    const imageUrl = await uploadImageIfAny(req);
+
+    const [userRes] = await pool.query(
+      'INSERT INTO users (image, name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      [imageUrl, name, email, hashed, role]
+    );
+    const userID = userRes.insertId;
+
+    if (role === 'Tutor') {
+      await pool.query(
+        `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userID, bio, subjects, qualifications, availability, fee_per_hour, experience]
+      );
+    } else if (role === 'Student') {
+      await pool.query(`INSERT INTO students (userID, status) VALUES (?, 'Active')`, [userID]);
+    } else if (role === 'Admin') {
+      await pool.query(`INSERT INTO admins (userID) VALUES (?)`, [userID]).catch(() => {});
+    }
+
+    res.status(201).json({ userID });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to add staff');
+  }
+};
+
+exports.assignRole = async (req, res) => {
+  const { id } = req.params;
+  const {
+    role,
+    bio = '', subjects = '', qualifications = '', availability = '',
+    fee_per_hour = 0, experience = '',
+  } = req.body || {};
+  if (!role) return res.status(400).send('role required');
+
+  try {
+    await pool.query('UPDATE users SET role = ? WHERE userID = ?', [role, id]);
+
+    if (role === 'Tutor') {
+      const [t] = await pool.query('SELECT userID FROM tutors WHERE userID = ?', [id]);
+      if (!t.length) {
+        await pool.query(
+          `INSERT INTO tutors (userID, bio, subjects, qualifications, availability, fee_per_hour, experience)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [id, bio, subjects, qualifications, availability, fee_per_hour ?? 0, experience]
+        );
+      } else {
+        const [currRows] = await pool.query(
+          `SELECT bio, subjects, qualifications, availability, fee_per_hour, experience
+             FROM tutors WHERE userID = ? LIMIT 1`,
+          [id]
+        );
+        const curr = currRows?.[0] || {};
+        await pool.query(
+          `UPDATE tutors
+             SET bio = ?, subjects = ?, qualifications = ?, availability = ?, fee_per_hour = ?, experience = ?
+           WHERE userID = ?`,
+          [
+            bio || curr.bio || '',
+            subjects || curr.subjects || '',
+            qualifications || curr.qualifications || '',
+            availability || curr.availability || '',
+            fee_per_hour ?? curr.fee_per_hour ?? 0,
+            experience || curr.experience || '',
+            id,
+          ]
+        );
+      }
+    } else if (role === 'Student') {
+      const [s] = await pool.query('SELECT userID FROM students WHERE userID = ?', [id]);
+      if (!s.length) {
+        await pool.query(
+          `INSERT INTO students (userID, grade, school, address, city, province, status)
+           VALUES (?, NULL, NULL, NULL, NULL, NULL, 'Active')`,
+          [id]
+        );
+      }
+    } else if (role === 'Admin') {
+      const [a] = await pool.query('SELECT userID FROM admins WHERE userID = ?', [id]);
+      if (!a.length) await pool.query('INSERT INTO admins (userID) VALUES (?)', [id]);
+    }
+
+    res.json({ ok: true, userID: Number(id), role });
+  } catch (err) {
+    return sendError(res, err, 500, 'Failed to assign role');
+  }
+};
+
+exports.changeStatus = async (req, res) => {
+  const { userID, newStatus, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).send('Incorrect admin password.');
+  }
+  if (!userID || !newStatus) return res.status(400).send('userID and newStatus required.');
+
+  try {
+    const [studentRows] = await pool.query('SELECT studentID FROM students WHERE userID = ?', [userID]);
+    if (!studentRows.length) return res.status(404).send('Student not found.');
+
+    const studentID = studentRows[0].studentID;
+    const [result] = await pool.query('UPDATE students SET status = ? WHERE studentID = ?', [newStatus, studentID]);
+    if (result.affectedRows === 0) return res.status(404).send('Student not found.');
+
+    res.json({ success: true });
+  } catch (err) {
+    return sendError(res, err, 500, 'Error updating status.');
+  }
+};
+
+exports.removeUser = async (req, res) => {
+  const { userID, adminPassword } = req.body || {};
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).send('Incorrect admin password.');
+  }
+  if (!userID) return res.status(400).send('userID required.');
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const uid = Number(userID);
+
+    // If user is a Student, delete dependent rows referencing students(studentID)
+    const [sRows] = await conn.query('SELECT studentID FROM students WHERE userID = ?', [uid]);
+    const studentIDs = sRows.map(r => r.studentID);
+
+    if (studentIDs.length) {
+      // Best-effort deletes; ignore if table doesn’t exist
+      await conn.query('DELETE FROM lessonreports WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM progress_notes WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      await conn.query('DELETE FROM lessons WHERE studentID IN (?)', [studentIDs]).catch(() => {});
+      // Add more student-dependent tables here if needed
+      await conn.query('DELETE FROM students WHERE studentID IN (?)', [studentIDs]);
+    } else {
+      await conn.query('DELETE FROM students WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // If user is a Tutor, clean up tutor-dependent rows
+    const [tRows] = await conn.query('SELECT tutorID FROM tutors WHERE userID = ?', [uid]);
+    const tutorIDs = tRows.map(r => r.tutorID);
+
+    if (tutorIDs.length) {
+      await conn.query('DELETE FROM lessons WHERE tutorID IN (?)', [tutorIDs]).catch(() => {});
+      await conn.query('DELETE FROM tutors WHERE tutorID IN (?)', [tutorIDs]);
+    } else {
+      await conn.query('DELETE FROM tutors WHERE userID = ?', [uid]).catch(() => {});
+    }
+
+    // Admin record (if present)
+    await conn.query('DELETE FROM admins WHERE userID = ?', [uid]).catch(() => {});
+
+    // Finally delete the user
+    const [result] = await conn.query('DELETE FROM users WHERE userID = ?', [uid]);
+    if (result.affectedRows === 0) {
+      await conn.rollback();
+      return res.status(404).send('User not found.');
+    }
+
+    await conn.commit();
+    return res.json({ success: true });
+  } catch (err) {
+    if (conn) { try { await conn.rollback(); } catch {} }
+    return sendError(res, err, 500, 'Error removing user.');
+  } finally {
+    if (conn) conn.release();
   }
 };
 

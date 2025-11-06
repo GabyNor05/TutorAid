@@ -79,20 +79,26 @@ export const endpoints = {
   students: () => '/api/students',
   studentByUser: (userID) => `/api/students/by-user/${encodeURIComponent(userID)}`,
   progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
-  progressNotesLessonNotes: (studentID) => `/api/progressNotes/student/${studentID}`,
+  progressNotesLessonNotes: (studentID) => `/api/progress-notes/student/${studentID}`,
   progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
 
   lessons: () => '/api/lessons',
 
   //Admin endpoints
   lessonReports: () => '/api/lessonReports',
-  studentRequests: () => '/api/studentRequests',
-  lessonReportEscalate: (studentID) => `/api/lessonReports/escalate/${studentID}`,
-  lessonReportIgnore: (studentID) => `/api/lessonReports/ignore/${studentID}`,
+  studentRequests: () => `/api/studentRequests`,
+  studentRequestsPostpone: () => `/api/studentRequests/postpone`,
+  studentRequestsReject: () => `/api/studentRequests/reject`,
+  studentRequestsRespond: () => `/api/studentRequests/respond`,
+  studentRequestsRevokeAppeal: () => `/api/studentRequests/revoke-appeal`,
+
+  newSubjectRequests: () => `/api/newSubjectRequests`,
+  userAvatars: () => `/api/users/user-avatars`,
+
   progressNotes: () => '/api/progressNotes',
   progressNotesUpload: () => '/api/progressNotes/upload',
-  progressNotesPublish: () => `/api/progressNotes/publish`,            // POST { noteID }
-  progressNotesPublishById: (noteID) => `/api/progressNotes/${noteID}/publish`, // PATCH
+  progressNotesPublish: () => `/api/progress-notes/publish`,            // POST { noteID }
+  progressNotesPublishById: (noteID) => `/api/progress-notes/${noteID}/publish`, // PATCH alias
   usersByRole: (role) => `/api/users/role/${encodeURIComponent(role)}`,
   adminGroupUser: () => `/api/users/admin-group`,
   usersChangeStatus: () => `/api/users/change-status`, 

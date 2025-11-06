@@ -52,7 +52,8 @@ function StudentRequests() {
           .map(r => r.studentID)
           .filter(Boolean);
         if (studentIDs.length) {
-          const avatarRes = await api.post(`/api/users/user-avatars`, { studentIDs });
+          // CHANGE: use client endpoint
+          const avatarRes = await api.post(endpoints.userAvatars(), { studentIDs });
           setUserImages(avatarRes || {});
         }
       } catch (err) {
@@ -91,7 +92,8 @@ function StudentRequests() {
   const handlePostpone = async () => {
     if (!selectedRequest) return;
     try {
-      const r = await api.post(`/api/studentRequests/postpone`, {
+      // CHANGE: use client endpoint
+      const r = await api.post(endpoints.studentRequestsPostpone(), {
         studentRequestID: selectedRequest.studentRequestID,
         adminPassword
       });
@@ -132,7 +134,8 @@ function StudentRequests() {
   const handleReject = async () => {
     if (!selectedRequest) return;
     try {
-      const r = await api.post(`/api/studentRequests/reject`, {
+      // CHANGE: use client endpoint
+      const r = await api.post(endpoints.studentRequestsReject(), {
         studentRequestID: selectedRequest.studentRequestID,
         adminPassword
       });
@@ -193,7 +196,8 @@ function StudentRequests() {
       const toUserID =
         userImages[selectedRequest.studentID]?.userID ?? selectedRequest.studentID;
 
-      await api.post(`/api/studentRequests/respond`, {
+      // CHANGE: use client endpoint
+      await api.post(endpoints.studentRequestsRespond(), {
         toUserID,
         subject: responseSubject,
         message: responseMessage,
@@ -220,7 +224,8 @@ function StudentRequests() {
 
   const revokeAppeal = async () => {
     try {
-      await api.post(`/api/studentRequests/revoke-appeal`, {
+      // CHANGE: use client endpoint
+      await api.post(endpoints.studentRequestsRevokeAppeal(), {
         studentRequestID: selectedRequest.studentRequestID,
         studentID: selectedRequest.studentID
       });
@@ -419,7 +424,8 @@ function StudentRequests() {
                 className="mt-6 w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                 onClick={async () => {
                   try {
-                    await api.post(`/api/newSubjectRequests`, {
+                    // CHANGE: use client endpoint
+                    await api.post(endpoints.newSubjectRequests(), {
                       subjectName: selectedRequest.newSubjectName,
                       subjectDescription: selectedRequest.newSubjectDescription,
                       dateRequested: selectedRequest.createdAt,
@@ -553,7 +559,8 @@ function StudentRequests() {
                 const toUserID =
                   userImages[selectedRequest.studentID]?.userID ?? selectedRequest.studentID;
 
-                await api.post(`/api/studentRequests/respond`, {
+                // CHANGE: use client endpoint
+                await api.post(endpoints.studentRequestsRespond(), {
                   toUserID,
                   subject: responseSubject,
                   message: responseMessage,
@@ -692,7 +699,8 @@ function StudentRequests() {
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                 onClick={async () => {
                   try {
-                    await api.post(`/api/studentRequests/revoke-appeal`, {
+                    // CHANGE: use client endpoint
+                    await api.post(endpoints.studentRequestsRevokeAppeal(), {
                       studentRequestID: selectedRequest.studentRequestID,
                       studentID: selectedRequest.studentID
                     });
