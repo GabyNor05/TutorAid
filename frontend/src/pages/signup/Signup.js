@@ -11,7 +11,8 @@ import { analytics } from '../../lib/analytics';
 function Signup() {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -28,7 +29,7 @@ function Signup() {
 
   const validate = () => {
     const newErrors = {};
-    if (!username) newErrors.username = "Username is required";
+    if (!firstName || !lastName) newErrors.name = "Name is required";
     if (!email) newErrors.email = "Email is required";
     else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,7 +54,7 @@ function Signup() {
     try {
       setSubmitting(true);
       const res = await api.post(endpoints.users(), {
-        name: username,
+        name: `${firstName} ${lastName}`,
         email,
         password,
         role: "Student"
@@ -80,9 +81,11 @@ function Signup() {
         }
         if (adminID) {
           await api.post(endpoints.messages(), {
-            type: "System",
+            type: "Welcome Message",
             subject: "Welcome to Tutor Aid",
-            body: `Hi ${username || "there"}, welcome to Tutor Aid! We're glad you're here.`,
+            body: `Hi ${firstName || "there"}, welcome to Tutor Aid! We're glad you're here. Feel free to explore and start booking lessons with our tutors. If you have any questions, don't hesitate to reach out. Happy learning!
+            Best regards,
+            Tutor Aid Team`,
             senderID: adminID,           // Admin sends
             receiverID: Number(userID),  // New user receives
           });
@@ -94,7 +97,7 @@ function Signup() {
       navigate('/onboarding');
       analytics.event('sign_up', { method: 'password' });
     } catch (error) {
-      setErrors({ api: error.message || "Signup failed. Please try again." });
+      setErrors({ general: "Signup failed. Please try again." });
     } finally {
       setSubmitting(false);
     }
@@ -115,19 +118,34 @@ function Signup() {
             Create your account
           </h2>
 
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4 sm:space-y-6 flex flex-col items-center">
+            <div className="w-full flex flex-row gap-4">
+              <div className="w-1/2 flex flex-col items-start">
+                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
               <input
                 type="text"
-                id="username"
-                name="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="firstname"
+                name="firstname"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 required
                 className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
-              {errors.username && <span className="text-red-600 text-xs">{errors.username}</span>}
+              </div>
+              <div className="w-1/2 flex flex-col items-start">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+              <input
+                type="text"
+                id="lastname"
+                name="lastname"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+              />
+              </div>
+              
+              {errors.name && <span className="text-red-600 text-xs">{errors.name}</span>}
             </div>
 
             <div className="w-full">

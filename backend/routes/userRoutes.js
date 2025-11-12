@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Safe handler wrapper (prevents "argument handler must be a function")
 const h = (name) => {
@@ -37,12 +39,13 @@ router.post('/user-avatars', h('userAvatars'));
 router.post('/add-staff', h('addStaff'));
 router.post('/:id/assign-role', h('assignRole'));
 
-// Users CRUD (keep after specific routes)
-router.get('/', h('getUsers'));
-router.get('/:id', h('getUser'));
-router.post('/', h('createUser'));
-router.patch('/:id', h('updateUser'));
-router.delete('/:id', h('deleteUser'));
+// Users CRUD (multipart for image)
+router.get('/', userController.getUsers);
+router.get('/:id', userController.getUser);
+router.post('/', upload.single('image'), userController.createUser); // JSON works; multer ignores when not multipart
+router.patch('/:id', upload.single('image'), userController.updateUser); // CHANGE: add multer
+router.put('/:id', upload.single('image'), userController.updateUser);
+router.delete('/:id', userController.deleteUser);
 
 module.exports = router;
 

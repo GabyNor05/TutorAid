@@ -88,7 +88,7 @@ function Inbox({ open, onClose, tabs, activeTab, setActiveTab, messages, visible
 
   const primaryDest = useMemo(() => {
     const t = resolveType(selected);
-    if (t === "lesson request") return "/lessonrequest";
+    if (t === "lesson request") return "/lessonrequests";
     if (t === "progress note") return "/userprofile";
     if (t === "student request") return "/studentrequests";
     return null;

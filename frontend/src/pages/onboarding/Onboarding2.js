@@ -103,17 +103,17 @@ export default function Onboarding2() {
         </div>
 
         {/* Form */}
-        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto">
+        <div className="h-full min-h-0 p-6 sm:p-8 overflow-y-auto flex flex-col justify-center items-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2B5561] mb-6 text-center md:text-center">
-            Add a profile photo and fun fact
+            Make your profile yours
           </h2>
 
           <div className="space-y-4 w-full">
             {/* Photo */}
-            <div className="flex flex-col sm:flex-row items-start gap-3">
+            <div className="flex flex-col items-start gap-3">
               <label className="min-w-28 pt-2">Photo</label>
-              <div className="flex items-center gap-4 w-full">
-                <div className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden border">
+              <div className="flex flex-col items-start gap-4 w-full">
+                <div className="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden border">
                   {preview ? <img src={preview} alt="preview" className="w-full h-full object-cover" /> :
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No image</div>}
                 </div>
@@ -125,7 +125,7 @@ export default function Onboarding2() {
             </div>
 
             {/* Fun fact */}
-            <div className="flex flex-col sm:flex-row items-start gap-3">
+            <div className="flex flex-col items-start gap-3">
               <label className="min-w-28 pt-2">Fun fact (Optional)</label>
               <input
                 type="text" placeholder="Optional" value={funFact}
@@ -133,44 +133,6 @@ export default function Onboarding2() {
                 className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
               />
             </div>
-
-            {/* Tutor-only extras */}
-            {role === 'Tutor' && (
-              <>
-                <div className="flex flex-col sm:flex-row items-start gap-3">
-                  <label className="min-w-28 pt-2">Rate (R/hour)</label>
-                  <div className="w-full">
-                    <input
-                      type="number" min="0" step="0.01" placeholder="e.g., 250"
-                      value={feePerHour} onChange={(e) => setFeePerHour(e.target.value)}
-                      className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                    />
-                    {tutorErrors.feePerHour && <span className="text-red-600 text-xs">{tutorErrors.feePerHour}</span>}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start gap-3">
-                  <label className="min-w-28 pt-2">Experience</label>
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                    <div>
-                      <input
-                        type="number" min="0" placeholder="Value"
-                        value={expValue} onChange={(e) => setExpValue(e.target.value)}
-                        className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                      />
-                      {tutorErrors.expValue && <span className="text-red-600 text-xs">{tutorErrors.expValue}</span>}
-                    </div>
-                    <select
-                      value={expUnit} onChange={(e) => setExpUnit(e.target.value)}
-                      className="bg-transparent h-12 p-2 rounded-lg border-2 border-gray-300 shadow-inner w-full focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
-                    >
-                      <option value="years">years</option>
-                      <option value="months">months</option>
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
 
             {error && <div className="text-red-600 text-xs">{error}</div>}
 

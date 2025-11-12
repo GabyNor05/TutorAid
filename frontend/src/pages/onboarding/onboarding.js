@@ -130,7 +130,7 @@ function Onboarding() {
                 <select
                   id="province" name="province" value={province}
                   onChange={(e) => setProvince(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
+                  className="w-full h-11 px-3 rounded-lg border bg-transparent border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2B5561]"
                 >
                   <option value="">Select Province</option>
                   <option value="Eastern Cape">Eastern Cape</option>
@@ -149,7 +149,7 @@ function Onboarding() {
             {errors.api && <div className="text-red-600 text-xs">{errors.api}</div>}
 
             <button
-              className="w-full h-11 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold transition disabled:opacity-60"
+              className="w-full h-11 rounded-lg bg-[#2B5561] hover:bg-[#2B5561]/70 text-white font-semibold transition disabled:opacity-60"
               type="button" disabled={loading} onClick={submitStudent}
             >
               {loading ? 'Saving…' : 'Next'}
