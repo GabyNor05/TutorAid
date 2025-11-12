@@ -1,4 +1,3 @@
-<!-- filepath: d:\TutorAid\frontend\public\robots.txt -->
 User-agent: *
 Allow: /
 Sitemap: https://gabydv.xyz/sitemap.xml

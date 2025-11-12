@@ -13,9 +13,7 @@ function StudentFiles() {
     const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [limit, setLimit] = useState(8);
-    const [query, setQuery] = useState("");
     const navigate = useNavigate();
-
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -26,7 +24,6 @@ function StudentFiles() {
                 console.error('Error fetching students:', error);
             }
         };
-
         fetchStudents();
     }, []);
 
@@ -42,35 +39,41 @@ function StudentFiles() {
         fetchStatuses();
     }, []);
 
-    // Filter students by search term (case-insensitive)
-    let filteredStudents = students.filter(student =>
-        (student.name || student.studentName || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-    );
+    // Reset pagination when filters/search change
+    useEffect(() => { setLimit(8); }, [searchTerm, selectedStatus, sortOrder]);
 
-    if (selectedStatus) {
-        filteredStudents = filteredStudents.filter(student => student.status === selectedStatus);
-    }
+    const normalize = (v) => String(v || "").toLowerCase();
+    const collator = useMemo(() => new Intl.Collator(undefined, { sensitivity: "base" }), []);
 
-    if (sortOrder === "asc") {
-        filteredStudents = [...filteredStudents].sort((a, b) =>
-            (a.name || a.studentName || "").localeCompare(b.name || b.studentName || "")
-        );
-    } else if (sortOrder === "desc") {
-        filteredStudents = [...filteredStudents].sort((a, b) =>
-            (b.name || b.studentName || "").localeCompare(a.name || a.studentName || "")
-        );
-    }
+    // Single source of truth: filtered + sorted list
+    const filteredList = useMemo(() => {
+        let list = Array.isArray(students) ? [...students] : [];
 
-    const filtered = useMemo(
-        () => (students || []).filter(s =>
-          !query || String(s.name || "").toLowerCase().includes(query.toLowerCase())
-        ),
-        [students, query]
-    );
+        // Search by name (supports both name and studentName fields)
+        if (searchTerm) {
+            const q = normalize(searchTerm);
+            list = list.filter(s =>
+                normalize(s.name || s.studentName || "").includes(q)
+            );
+        }
 
-    const visible = filtered.slice(0, limit);
+        // Status filter (case-insensitive exact match)
+        if (selectedStatus) {
+            const want = normalize(selectedStatus);
+            list = list.filter(s => normalize(s.status) === want);
+        }
+
+        // Sort by name
+        if (sortOrder === "asc") {
+            list.sort((a, b) => collator.compare(a.name || a.studentName || "", b.name || b.studentName || ""));
+        } else if (sortOrder === "desc") {
+            list.sort((a, b) => collator.compare(b.name || b.studentName || "", a.name || a.studentName || ""));
+        }
+
+        return list;
+    }, [students, searchTerm, selectedStatus, sortOrder, collator]);
+
+    const visible = filteredList.slice(0, limit);
 
     return (
         <div className="blue-page-background">
@@ -132,7 +135,7 @@ function StudentFiles() {
             </div>
 
             {/* Responsive grid */}
-            <div className="mx-auto w-full  flex flex-col items-center max-w-7xl px-4 sm:px-6 pb-8">
+            <div className="mx-auto w-full flex flex-col items-center max-w-7xl px-4 sm:px-6 pb-8">
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {visible.map((student) => (
                         <div key={student.studentID} className="min-w-0">
@@ -140,7 +143,10 @@ function StudentFiles() {
                         </div>
                     ))}
                 </div>
-                {limit < filtered.length && (
+                {visible.length === 0 && (
+                    <div className="text-gray-200 mt-6">No students match your filters.</div>
+                )}
+                {limit < filteredList.length && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
                         <button onClick={() => setLimit(l => l + 4)} className="upload-file-btn">
                             Load more

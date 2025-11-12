@@ -54,15 +54,15 @@ function StudentFileCard({ student }) {
 
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col justify-between px-4 py-1.5 sm:py-2 md:px-5 md:py-3 lg:px-6 lg:py-4">
-        <div className="grid grid-rows-2 lg:grid-rows-1 lg:grid-cols-2 items-center gap-2">
-          <div className="min-w-0">
-            <h3 className="font-semibold truncate text-sm sm:text-base md:text-lg">
+        <div className="">
+          <div className="w-full">
+            <h3 className="font-semibold text-sm sm:text-base md:text-lg w-full">
               {student.name}
             </h3>
             <p className="text-xs sm:text-sm md:text-base text-gray-500">
               Grade {student.grade}
             </p>
-            <div className="flex flex-row justify-between lg:justify-end items-center gap-3">
+            <div className="flex flex-row justify-between items-start gap-3">
                 <div className="card-actions">
               <input
                 type="file"

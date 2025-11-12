@@ -7,14 +7,16 @@ const STAR_ICON = () => (
     </svg>
 );
 
-function ReviewCard({ review }, intials) {
+function ReviewCard({ review }) {
     const { studentName, rating, comment, created_at } = review;
     const dateStr = created_at ? new Date(created_at).toLocaleDateString() : '';
+
+    const initials = studentName ? studentName.split(' ').map(n => n[0]).join('').toUpperCase() : 'N/A';
     return (
         <div className="border rounded-lg p-3 bg-white shadow-sm">
             <div className="flex flex-row items-start gap-3">
                 <div className="flex">
-                    <span className="flex justify-center items-center h-16 w-16 rounded-full bg-gray-300 text-center font-semibold text-lg text-white"> MN</span>
+                    <span className="flex justify-center items-center h-16 w-16 rounded-full bg-gray-300 text-center font-semibold text-lg text-white"> {initials}</span>
                 </div>
                 <div className="flex flex-col items-start w-full">
                     <div className='flex flex-row justify-between w-full'>
