@@ -103,21 +103,23 @@ function LessonCards({
                         Address: {lesson.address}
                     </p>
 
-                    {/* Primary actions (mobile: full width, desktop: inline) */}
-                    <div className="flex flex-col sm:flex-row gap-2 mt-2 w-full">
-                        <button
-                            className="bg-cyan-600 text-white px-3 py-2 rounded hover:bg-cyan-700 w-full sm:w-auto"
-                            onClick={onContactTutor}
-                        >
-                            Contact Tutor
-                        </button>
-                        <button
-                            className="bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600 w-full sm:w-auto"
-                            onClick={onRateTutor}
-                        >
-                            Rate Tutor
-                        </button>
-                    </div>
+                    {/* Contact/Rate: show only for students */}
+                    {role === "Student" && (
+                      <div className="flex flex-col sm:flex-row gap-2 mt-2 w-full">
+                          <button
+                              className="bg-[var(--Wall-Teal)] text-white px-3 py-2 rounded hover:bg-[var(--Wall-Teal-Light)] w-full sm:w-auto"
+                              onClick={onContactTutor}
+                          >
+                              Contact Tutor
+                          </button>
+                          <button
+                              className="bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600 w-full sm:w-auto"
+                              onClick={onRateTutor}
+                          >
+                              Rate Tutor
+                          </button>
+                      </div>
+                    )}
 
                     {/* Accept/Decline (mobile shows here; desktop in right column) */}
                     {showStatus && (

@@ -146,13 +146,7 @@ function StudentFiles() {
                 {visible.length === 0 && (
                     <div className="text-gray-200 mt-6">No students match your filters.</div>
                 )}
-                {limit < filteredList.length && (
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-                        <button onClick={() => setLimit(l => l + 4)} className="upload-file-btn">
-                            Load more
-                        </button>
-                    </div>
-                )}
+                
             </div>
         </div>
     );

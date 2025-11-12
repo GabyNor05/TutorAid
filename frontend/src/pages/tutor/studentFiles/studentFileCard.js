@@ -62,7 +62,7 @@ function StudentFileCard({ student }) {
             <p className="text-xs sm:text-sm md:text-base text-gray-500">
               Grade {student.grade}
             </p>
-            <div className="flex flex-row justify-between items-start gap-3">
+            <div className="flex flex-row justify-between items-start gap-3 mt-1">
                 <div className="card-actions">
               <input
                 type="file"
