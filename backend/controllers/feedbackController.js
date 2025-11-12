@@ -1,29 +1,30 @@
 const pool = require('../config/db');
 
-// Plain-text error helper (consistent with your controllers)
-function errMsg(err, fb = 'Error') {
-  return (err && (err.sqlMessage || err.message)) || fb;
-}
-function sendErr(res, err, status = 500, fb) {
-  console.error('[feedback]', { code: err?.code, msg: err?.message, sql: err?.sqlMessage, stack: err?.stack });
-  return res.status(status).send(errMsg(err, fb));
-}
-
 exports.create = async (req, res) => {
   try {
-    const { userID = null, email = null, category, rating, comment, page = null, userAgent = null } = req.body || {};
-    if (!category || !rating || !comment) return res.status(400).send('category, rating and comment are required');
-    const r = Math.max(1, Math.min(5, parseInt(rating, 10)));
+    const {
+      userID = null,
+      email = null,
+      category,
+      rating,
+      comment,
+      page = null,
+      userAgent = null
+    } = req.body || {};
 
-    const [result] = await pool.query(
-      `INSERT INTO feedback (userID, email, category, rating, comment, page, userAgent)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userID || null, email || null, String(category).trim(), r, String(comment).trim(), page || null, userAgent || null]
+    if (!category || !comment || !rating) {
+      return res.status(400).send('category, rating, comment required');
+    }
+    const r = Math.max(1, Math.min(5, Number(rating)));
+
+    const [ins] = await pool.query(
+      `INSERT INTO feedback (userID, email, category, rating, comment, page, userAgent, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'new')`,
+      [userID || null, email || null, category, r, comment, page, userAgent]
     );
-
-    return res.status(201).json({ ok: true, feedbackID: result.insertId });
-  } catch (err) {
-    return sendErr(res, err, 500, 'Failed to submit feedback');
+    return res.status(201).json({ feedbackID: ins.insertId });
+  } catch (e) {
+    return res.status(500).send(e.sqlMessage || e.message || 'Failed to submit feedback');
   }
 };
 

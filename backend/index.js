@@ -8,7 +8,6 @@ dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
-// CORS using ALLOWED_ORIGINS (e.g. "http://localhost:3000 https://tutoraid.vercel.app https://tutoraid-*.vercel.app")
 function parseAllowed() {
   return String(process.env.ALLOWED_ORIGINS || '')
     .split(/[,\s]+/)
