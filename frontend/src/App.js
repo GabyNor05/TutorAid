@@ -45,9 +45,6 @@ export default function App() {
   const location = useLocation();
   const hideNavbar = ['/login', '/signup', '/onboarding', '/otp'].includes(location.pathname);
 
-  const userId = localStorage.getItem("userID");
-  const [inboxOpen, setInboxOpen] = React.useState(false);
-
   return (
     <div className="App">
       {!hideNavbar && <Navbar />}
