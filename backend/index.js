@@ -8,22 +8,42 @@ dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
-// Unconditional CORS for every request + OPTIONS (no wildcards in route paths)
-app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  const reqHeaders = req.headers['access-control-request-headers'] || '*';
+// CORS using ALLOWED_ORIGINS (e.g. "http://localhost:3000 https://tutoraid.vercel.app https://tutoraid-*.vercel.app")
+function parseAllowed() {
+  return String(process.env.ALLOWED_ORIGINS || '')
+    .split(/[,\s]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+function matchOrigin(origin, pattern) {
+  if (pattern === '*') return true;
+  const esc = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${esc}$`, 'i').test(origin);
+}
+function originAllowed(origin, list) {
+  if (!origin) return true; // same-origin or server-to-server
+  return list.some(p => matchOrigin(origin, p));
+}
 
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Vary', 'Origin');
+// Replace the existing CORS block with this:
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const allowed = parseAllowed();
+
+  if (originAllowed(origin, allowed)) {
+    // Echo allowed origin (required if credentials are used)
+    if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
+    else res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  const reqHeaders = req.headers['access-control-request-headers'] || 'Content-Type, Authorization';
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', reqHeaders);
-  res.setHeader('Access-Control-Allow-Credentials', 'false');
   res.setHeader('Access-Control-Max-Age', '86400');
 
-  if (req.method === 'OPTIONS') {
-    // Return 200 to avoid upstream/proxy stripping headers on 204
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
   next();
 });
 
