@@ -49,8 +49,8 @@ function UserFeedback() {
   }), []);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-semibold text-[#2B5561] mb-4">User Feedback</h1>
+    <div className="page-background p-24">
+      <h1 className="page-title my-6 text-center">User Feedback</h1>
 
       {/* Submit feedback */}
       <form onSubmit={onSubmit} className="bg-white rounded-xl shadow p-4 mb-8">
@@ -60,7 +60,7 @@ function UserFeedback() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg border border-gray-300"
+              className="w-full h-11 px-3 rounded-lg border border-gray-300 bg-transparent"
               required
             >
               {Object.entries(categories).map(([v, l]) => (
@@ -73,7 +73,7 @@ function UserFeedback() {
             <select
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
-              className="w-full h-11 px-3 rounded-lg border border-gray-300"
+              className="w-full h-11 px-3 rounded-lg border border-gray-300 bg-transparent"
               required
             >
               {[5,4,3,2,1].map(r => (

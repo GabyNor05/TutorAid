@@ -8,6 +8,7 @@ import HeroSection from './HeroSection';
 import FAQSection from './FAQSection';
 import Footer from './Footer';
 import { useSEO } from '../../lib/seo';
+import ReviewCard from './reviewCard';
 
 // ADD: helpers to normalize and extract subjects from tutors
 function normalizeSubjectName(s) {
@@ -58,11 +59,15 @@ function Home() {
   const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
   const [subjects, setSubjects] = useState([]); // kept but no longer used for display
+  const [rating, setRating] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
   const [loadingTutorDetails, setLoadingTutorDetails] = useState(false);
+  const [ratingsMap, setRatingsMap] = useState({}); // tutorID -> { avgRating, numRatings }
+  const [reviewsMap, setReviewsMap] = useState({}); // tutorID -> { summary, reviews }
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   // ADD: derived subjects and selected subject filter
   const [subjectsFromTutors, setSubjectsFromTutors] = useState([]);
@@ -71,15 +76,24 @@ function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [tutorsJson, subjectsJson] = await Promise.all([
+        const [tutorsJson, subjectsJson, ratingSummary] = await Promise.all([
           api.get(endpoints.tutors()),
           api.get(endpoints.subjects()),
+          api.get(endpoints.ratingsSummary()).catch(() => []),
         ]);
         const tArr = Array.isArray(tutorsJson) ? tutorsJson : [];
         setTutors(tArr);
         setSubjects(Array.isArray(subjectsJson) ? subjectsJson : []);
-        // compute subjects only from tutors
         setSubjectsFromTutors(extractSubjectsFromTutors(tArr));
+        // Map rating summary
+        const map = {};
+        (Array.isArray(ratingSummary) ? ratingSummary : []).forEach(r => {
+          map[r.tutorID] = {
+            avgRating: Number(r.avgRating || 0),
+            numRatings: Number(r.numRatings || 0),
+          };
+        });
+        setRatingsMap(map);
       } catch (e) {
         console.error('Home load error:', e);
         setErr(e.message || 'Failed to load');
@@ -106,9 +120,13 @@ function Home() {
 
   // ADD: filter tutors by selected subject (client-side)
   const tutorsArr = Array.isArray(tutors) ? tutors : [];
-  const displayedTutors = selectedSubject
+  const displayedTutors = (selectedSubject
     ? tutorsArr.filter(t => subjectMatches(t, selectedSubject))
-    : tutorsArr;
+    : tutorsArr).map(t => {
+      const r = ratingsMap[t.tutorID];
+      return r ? { ...t, avgRating: r.avgRating, numRatings: r.numRatings } : t;
+    });
+
 
   const onSubjectClick = (subject) => {
     setSelectedSubject(prev => (prev === subject ? '' : subject)); // toggle
@@ -119,23 +137,29 @@ function Home() {
     setModalOpen(true);
     try {
       setLoadingTutorDetails(true);
-
-      // Prefer full tutor profile by userID; fallback by tutorID
       let full = null;
-      try {
-        full = await api.get(endpoints.tutorByUser(tutor.userID));
-      } catch {}
-      if (!full) {
-        try {
-          full = await api.get(endpoints.tutorById(tutor.tutorID));
-        } catch {}
-      }
+      try { full = await api.get(endpoints.tutorByUser(tutor.userID)); } catch {}
+      if (!full) { try { full = await api.get(endpoints.tutorById(tutor.tutorID)); } catch {} }
       if (full) {
         setSelectedTutor(prev => ({
           ...prev,
-          ...full,
-          subjects: formatSubjects(full.subjects),
+            ...full,
+            subjects: formatSubjects(full.subjects),
+            avgRating: ratingsMap[tutor.tutorID]?.avgRating,
+            numRatings: ratingsMap[tutor.tutorID]?.numRatings
         }));
+      }
+      // Load reviews if not already
+      if (!reviewsMap[tutor.tutorID]) {
+        setLoadingReviews(true);
+        try {
+          const data = await api.get(endpoints.ratingsByTutor(tutor.tutorID));
+          setReviewsMap(prev => ({ ...prev, [tutor.tutorID]: data }));
+        } catch (e) {
+          setReviewsMap(prev => ({ ...prev, [tutor.tutorID]: { summary: { avgRating: 0, numRatings: 0 }, reviews: [] } }));
+        } finally {
+          setLoadingReviews(false);
+        }
       }
     } catch (e) {
       console.warn('Failed to load tutor details:', e);
@@ -177,7 +201,7 @@ function Home() {
                 onClick={() => onSubjectClick(subject)}
                 className={`tag px-3 py-1 rounded-lg font-medium text-sm sm:text-base transition
                   ${selectedSubject === subject
-                    ? 'bg-cyan-900 text-white'
+                    ? 'border-2 border-[#2B5561] text-[#2B5561]'
                     : 'bg-cyan-800 text-white hover:bg-cyan-700'}`}
                 aria-pressed={selectedSubject === subject}
               >
@@ -267,10 +291,22 @@ function Home() {
                 <div><span className="font-semibold">Experience:</span> {selectedTutor.experience || '—'}</div>
                 <div><span className="font-semibold">Qualifications:</span> {selectedTutor.qualifications || '—'}</div>
                 <div><span className="font-semibold">Bio:</span> {selectedTutor.bio || '—'}</div>
+                <div><span className="font-semibold">Rating:</span> {selectedTutor.avgRating != null ? `${selectedTutor.avgRating.toFixed(1)} (${selectedTutor.numRatings || 0})` : '—'}</div>
               </dl>
-              {selectedTutor.bio && (
-                <p className="text-gray-600 mt-4">{selectedTutor.bio}</p>
-              )}
+
+              <hr className="my-4" />
+              <h3 className="text-lg font-semibold mb-2">Reviews</h3>
+              {loadingReviews && <div className="text-sm text-gray-500">Loading reviews…</div>}
+              {!loadingReviews && (() => {
+                const data = reviewsMap[selectedTutor.tutorID];
+                if (!data) return <div className="text-sm text-gray-500">No reviews yet.</div>;
+                if (!data.reviews?.length) return <div className="text-sm text-gray-500">No reviews yet.</div>;
+                return (
+                  <div className="flex flex-col gap-4">
+                    {data.reviews.map(r => <ReviewCard key={r.ratingID} review={r} />)}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

@@ -424,7 +424,7 @@ function Booking() {
     // Container: keep full device height, top-aligned
     <div className="page-background min-h-[100dvh] sm:min-h-screen w-full flex justify-center px-4 py-6 md:py-10">
       {/* Card: auto height (grows with form) */}
-      <div className="w-full max-w-3xl lg:max-w-4xl bg-white rounded-2xl shadow-md flex flex-col h-auto">
+      <div className="w-full max-w-3xl lg:max-w-4xl bg-white rounded-2xl shadow-md flex flex-col h-full">
         <div className="p-4 sm:p-6 md:p-8">
           <form className="space-y-5 sm:space-y-6 w-full" onSubmit={handleSubmit}>
             <h2 className="text-3xl font-semibold text-[#2B5561]">Book a Lesson</h2>

@@ -115,6 +115,7 @@
     background-image: url('../../reusableAssets/blueWallpaper.png');
     background-size: cover;
     background-position: center;
+    min-height: 250px;
 }
 
 .mobile-nav-list {

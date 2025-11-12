@@ -134,8 +134,8 @@ function Newsletter() {
   };
 
   return (
-    <div className="blue-page-background max-w-6xl p-4">
-      <h1 className="blue-page-title mb-4">Newsletter</h1>
+    <div className="blue-page-background p-2">
+      <h1 className="blue-page-title mb-8">Newsletter</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Sidebar: templates list */}
         <div className="bg-white rounded-lg shadow p-3">

@@ -6,8 +6,8 @@ const STAR_ICON = () => (
 );
 
 function TutorCards({ tutor, onClick }) {
-  const rating = tutor?.rating != null ? tutor.rating : '—';
-  const count = tutor?.num_ratings != null ? tutor.num_ratings : '0';
+  const rating = tutor?.avgRating != null ? tutor.avgRating.toFixed(1) : (tutor?.rating != null ? tutor.rating : '—');
+  const count = tutor?.numRatings != null ? tutor.numRatings : (tutor?.num_ratings != null ? tutor.num_ratings : 0);
   const fee = tutor?.fee_per_hour != null ? tutor.fee_per_hour : '—';
   const exp = tutor?.experience || '—';
 
