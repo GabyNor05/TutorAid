@@ -48,8 +48,9 @@ const lessonReportRoutes = require('./routes/lessonReportRoutes');
 app.use('/api/lessonReports', lessonReportRoutes);
 
 const progressNotesRoutes = require('./routes/progressNotesRoutes');
+app.use('/api/progress-notes', progressNotesRoutes); 
+
 app.use('/api/progressNotes', progressNotesRoutes);
-app.use('/api/progressnotes', progressNotesRoutes); // lowercase alias
 
 const subjectRoutes = require('./routes/subjectRoutes');
 app.use('/api/subjects', subjectRoutes);

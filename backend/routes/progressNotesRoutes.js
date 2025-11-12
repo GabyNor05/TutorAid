@@ -1,63 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const progressNotesController = require('../controllers/progressNotesController');
+const controller = require('../controllers/progressNotesController');
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/progressnotes/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-const upload = multer({ storage });
+// List notes by student
+router.get('/student/:studentID', controller.getByStudent);
 
-router.post('/upload', upload.single('file'), progressNotesController.uploadProgressNote);
-router.get('/student/:studentID', progressNotesController.getNotesByStudentID);
-router.get('/student/:studentID/lesson-notes', async (req, res) => {
-    const pool = require('../config/db');
-    const { studentID } = req.params;
-    try {
-        const [rows] = await pool.query(
-            "SELECT * FROM progressnotes WHERE studentID = ? AND file_name LIKE 'lesson-feedback-%'",
-            [studentID]
-        );
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch progress notes" });
-    }
-});
-router.get('/student/:studentID/published', async (req, res) => {
-    const pool = require('../config/db');
-    const { studentID } = req.params;
-    try {
-        const [rows] = await pool.query(
-            "SELECT * FROM progressnotes WHERE studentID = ? AND published = 1 ORDER BY uploaded_at DESC",
-            [studentID]
-        );
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch published progress notes" });
-    }
-});
-router.post('/publish', async (req, res) => {
-    const pool = require('../config/db');
-  const { noteID } = req.body;
-  
-  try {
-    await pool.query(
-      "UPDATE progressnotes SET published = 1 WHERE noteID = ?",
-      [noteID]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Failed to publish progress note:", err);
-    res.status(500).json({ success: false, message: "Failed to publish note." });
-  }
-});
-router.get('/student/:studentID', progressNotesController.getNotesByStudentID);
-router.post('/publish', progressNotesController.publish);           // expects { noteID }
-router.patch('/:noteID/publish', progressNotesController.publish);  // alias
+// Publish via body { noteID }
+router.post('/publish', controller.publishByBody);
+
+// Publish via URL param
+router.patch('/:id/publish', controller.publishById);
 
 module.exports = router;

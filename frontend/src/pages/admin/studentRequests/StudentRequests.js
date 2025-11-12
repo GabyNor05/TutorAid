@@ -190,20 +190,47 @@ function StudentRequests() {
     }
   };
 
+  // Resolve receiver userID from studentID (uses avatar map, falls back to students list)
+  const resolveReceiverUserID = async (studentID) => {
+    const mapped = userImages?.[studentID]?.userID;
+    if (mapped) return mapped;
+    try {
+      const list = await api.get(endpoints.students());
+      const s = (Array.isArray(list) ? list : []).find(x => Number(x.studentID) === Number(studentID));
+      return s?.userID || null;
+    } catch {
+      return null;
+    }
+  };
+
   const onRespondSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const toUserID =
-        userImages[selectedRequest.studentID]?.userID ?? selectedRequest.studentID;
+    if (!selectedRequest) return;
 
-      // CHANGE: use client endpoint
-      await api.post(endpoints.studentRequestsRespond(), {
-        toUserID,
+    const senderID = Number(localStorage.getItem("userID")) || null;
+    if (!senderID) {
+      setResponseStatus("Missing sender userID.");
+      return;
+    }
+
+    const receiverID = await resolveReceiverUserID(selectedRequest.studentID);
+    if (!receiverID) {
+      setResponseStatus("Could not resolve receiver userID.");
+      return;
+    }
+
+    try {
+      // Create in-app message
+      await api.post(endpoints.messages(), {
+        senderID,
+        receiverID,
         subject: responseSubject,
-        message: responseMessage,
-        studentRequestID: selectedRequest.studentRequestID
+        body: responseMessage,
+        type: "Admin Response"
       });
+
       setResponseStatus("Response sent!");
+      // Mark request completed in UI
       setRequests(prev =>
         prev.map(r =>
           r.studentRequestID === selectedRequest.studentRequestID
@@ -217,8 +244,8 @@ function StudentRequests() {
         setResponseSubject("");
         setResponseMessage("");
       }, 1200);
-    } catch {
-      setResponseStatus("Failed to send response.");
+    } catch (err) {
+      setResponseStatus(err?.message || "Failed to send response.");
     }
   };
 
@@ -412,7 +439,7 @@ function StudentRequests() {
             {/* In your View Request Modal */}
             {selectedRequest.requestType === "Progress_Note" && (
               <button
-                className="mt-6 w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="mt-6 w-full py-2 px-4 bg-[var(--Wall-Teal)] text-white rounded-lg hover:bg-[var(--Wall-Teal-Light)] transition"
                 onClick={handleShowProgressNotes}
               >
                 Publish Progress Note
@@ -421,7 +448,7 @@ function StudentRequests() {
 
             {selectedRequest.requestType === "New_Subject" && (
               <button
-                className="mt-6 w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                className="mt-6 w-full py-2 px-4 bg-[var(--Wall-Teal)] text-white rounded-lg hover:bg-[var(--Wall-Teal-Light)] transition"
                 onClick={async () => {
                   try {
                     // CHANGE: use client endpoint
@@ -442,7 +469,7 @@ function StudentRequests() {
 
             {selectedRequest.requestType === "General_Query" && (
               <button
-                className="mt-6 w-full py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                className="mt-6 w-full py-2 px-4 bg-[var(--Wall-Teal)] text-white rounded-lg hover:bg-[var(--Wall-Teal-Light)] transition"
                 onClick={() => setRespondModalOpen(true)}
               >
                 Respond
@@ -478,7 +505,7 @@ function StudentRequests() {
             <div className="flex gap-2 mt-2">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-[var(--Wall-Teal)] text-white px-4 py-2 rounded hover:bg-[var(--Wall-Teal-Light)]"
               >
                 Submit
               </button>
@@ -524,7 +551,7 @@ function StudentRequests() {
                         <span className="text-green-600 font-semibold mt-1">Published</span>
                       ) : (
                         <button
-                          className="bg-blue-600 text-white px-3 py-1 rounded mt-1 hover:bg-blue-700 disabled:opacity-60"
+                          className="bg-[var(--Wall-Teal)] text-white px-3 py-1 rounded mt-1 hover:bg-[var(--Wall-Teal-Light)] disabled:opacity-60"
                           onClick={() => handlePublishNote(note)}
                           disabled={publishingId === Number(note.noteID || note.progressNoteID)}
                         >
@@ -553,37 +580,7 @@ function StudentRequests() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <form
             className="bg-white rounded-lg shadow-lg p-6 w-96 flex flex-col gap-4"
-            onSubmit={async e => {
-              e.preventDefault();
-              try {
-                const toUserID =
-                  userImages[selectedRequest.studentID]?.userID ?? selectedRequest.studentID;
-
-                // CHANGE: use client endpoint
-                await api.post(endpoints.studentRequestsRespond(), {
-                  toUserID,
-                  subject: responseSubject,
-                  message: responseMessage,
-                  studentRequestID: selectedRequest.studentRequestID
-                });
-                setResponseStatus("Response sent!");
-                setRequests(prev =>
-                  prev.map(r =>
-                    r.studentRequestID === selectedRequest.studentRequestID
-                      ? { ...r, status: "Completed" }
-                      : r
-                  )
-                );
-                setTimeout(() => {
-                  setRespondModalOpen(false);
-                  setResponseStatus("");
-                  setResponseSubject("");
-                  setResponseMessage("");
-                }, 1200);
-              } catch {
-                setResponseStatus("Failed to send response.");
-              }
-            }}
+            onSubmit={onRespondSubmit} // CHANGE: use the shared handler
           >
             <h3 className="text-lg font-semibold mb-2">Respond to Query</h3>
             <input
@@ -608,9 +605,9 @@ function StudentRequests() {
             <div className="flex gap-2 mt-2">
               <button
                 type="submit"
-                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                className="bg-[var(--Wall-Teal)] text-white px-4 py-2 rounded hover:bg-[var(--Wall-Teal-Light)]"
               >
-                Send Email
+                Send Message
               </button>
               <button
                 type="button"

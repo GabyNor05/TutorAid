@@ -29,48 +29,45 @@ exports.create = async (req, res) => {
 
 exports.list = async (req, res) => {
   try {
-    const { status, limit = 50 } = req.query;
-    const lim = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
+    const { status } = req.query || {};
     const params = [];
     let where = '';
     if (status) { where = 'WHERE f.status = ?'; params.push(status); }
 
     const [rows] = await pool.query(
-      `
-      SELECT f.feedbackID, f.category, f.rating, f.comment, f.page, f.status, f.created_at,
-             f.email, u.name AS userName
-      FROM feedback f
-      LEFT JOIN users u ON f.userID = u.userID
-      ${where}
-      ORDER BY f.created_at DESC
-      LIMIT ${lim}
-      `,
+      `SELECT
+         f.feedbackID,
+         f.userID,
+         f.category,
+         f.rating,
+         f.comment,
+         f.email,
+         f.page,
+         f.status,
+         f.created_at,
+         u.name AS userName
+       FROM feedback f
+       LEFT JOIN users u ON u.userID = f.userID
+       ${where}
+       ORDER BY f.created_at DESC`,
       params
     );
-    return res.json(rows);
-  } catch (err) {
-    return sendErr(res, err, 500, 'Failed to fetch feedback');
+    res.json(rows);
+  } catch (e) {
+    res.status(500).send(e.sqlMessage || e.message || 'Failed to fetch feedback');
   }
 };
 
 exports.updateStatus = async (req, res) => {
+  const id = Number(req.params.id);
+  const { status } = req.body || {};
+  if (!id || !status) return res.status(400).send('id and status required');
   try {
-    const id = Number(req.params.id);
-    const { status } = req.body || {};
-    if (!id || !status) return res.status(400).send('id and status are required');
-
-    const allowed = new Set(['new','reviewed','actioned','dismissed']);
-    if (!allowed.has(status)) return res.status(400).send('Invalid status');
-
-    const [r] = await pool.query(
-      `UPDATE feedback SET status = ? WHERE feedbackID = ?`,
-      [status, id]
-    );
+    const [r] = await pool.query('UPDATE feedback SET status = ? WHERE feedbackID = ?', [status, id]);
     if (r.affectedRows === 0) return res.status(404).send('Feedback not found');
-
-    return res.json({ ok: true });
-  } catch (err) {
-    return sendErr(res, err, 500, 'Failed to update feedback');
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).send(e.sqlMessage || e.message || 'Failed to update status');
   }
 };
 

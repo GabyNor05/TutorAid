@@ -39,10 +39,11 @@ async function request(method, path, body, extra = {}) {
 
 // Convenience helpers
 export const api = {
-  get: (u, o) => request('GET', u, undefined, o),
-  post: (u, d, o) => request('POST', u, d, o),
-  put: (u, d, o) => request('PUT', u, d, o),
-  delete: (u, d, o) => request('DELETE', u, d, o),
+  get: (u) => request('GET', u),
+  post: (u, b) => request('POST', u, b),
+  put: (u, b) => request('PUT', u, b),
+  patch: (u, b) => request('PATCH', u, b),        // ADD
+  delete: (u) => request('DELETE', u),
 };
 
 export const endpoints = {
@@ -80,9 +81,10 @@ export const endpoints = {
   // Student endpoints
   students: () => '/api/students',
   studentByUser: (userID) => `/api/students/by-user/${encodeURIComponent(userID)}`,
-  progressNotesByStudent: (studentID) => `/api/progressNotes/student/${studentID}`,
+  progressNotesByStudent: (studentID) => `/api/progress-notes/student/${studentID}`,
   progressNotesLessonNotes: (studentID) => `/api/progress-notes/student/${studentID}`,
-  progressNotesStudentPublished: (studentID) => `/api/progressNotes/student/${studentID}/published`,
+  progressNotesPublish: () => `/api/progress-notes/publish`,
+  progressNotesPublishById: (id) => `/api/progress-notes/${id}/publish`,
 
   lessons: () => '/api/lessons',
 
@@ -94,13 +96,13 @@ export const endpoints = {
   studentRequestsRespond: () => `/api/studentRequests/respond`,
   studentRequestsRevokeAppeal: () => `/api/studentRequests/revoke-appeal`,
 
-  newSubjectRequests: () => `/api/newSubjectRequests`,
+  newSubjectRequests: () => '/api/newSubjectRequests',
   userAvatars: () => `/api/users/user-avatars`,
 
   progressNotes: () => '/api/progressNotes',
   progressNotesUpload: () => '/api/progressNotes/upload',
-  progressNotesPublish: () => `/api/progress-notes/publish`,            // POST { noteID }
-  progressNotesPublishById: (noteID) => `/api/progress-notes/${noteID}/publish`, // PATCH alias
+  progressNotesPublish: () => `/api/progressNotes/publish`,            // POST { noteID }
+  progressNotesPublishById: (noteID) => `/api/progressNotes/${noteID}/publish`, // PATCH alias
   usersByRole: (role) => `/api/users/role/${encodeURIComponent(role)}`,
   adminGroupUser: () => `/api/users/admin-group`,
   usersChangeStatus: () => `/api/users/change-status`, 

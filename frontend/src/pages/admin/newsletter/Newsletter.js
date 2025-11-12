@@ -9,6 +9,7 @@ function Newsletter() {
   const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState("");
   const [msg, setMsg] = useState("");
 
   const previewHtml = useMemo(() => {
@@ -108,13 +109,25 @@ function Newsletter() {
     } finally { setSending(false); }
   };
 
+  const subscribedUsers = useMemo(
+    () => subs.filter(s => String(s.status || '').toLowerCase() === 'subscribed'),
+    [subs]
+  );
+
   const sendAll = async () => {
     if (!selectedId) { setMsg("Select a template first."); return; }
-    if (!window.confirm(`Send to all ${subs.length} subscribers?`)) return;
+    const total = subscribedUsers.length;
+    if (!total) { setMsg("No subscribed users."); return; }
+    if (!window.confirm(`Send to all ${total} subscribed users?`)) return;
     setSending(true); setMsg("");
     try {
-      const r = await api.post(endpoints.newsletterSend(), { templateId: selectedId });
-      setMsg(`Newsletter sent to ${r.sent ?? 0} of ${r.total ?? subs.length}.`);
+      const r = await api.post(endpoints.newsletterSend(), {
+        templateId: selectedId,
+        onlySubscribed: true,
+        // If backend needs explicit emails uncomment:
+        // emails: subscribedUsers.map(u => u.email).filter(Boolean)
+      });
+      setMsg(`Newsletter sent to ${r.sent ?? total} of ${r.total ?? total}.`);
     } catch (e) {
       setMsg(e.message || "Failed to send newsletter");
     } finally { setSending(false); }
@@ -134,7 +147,7 @@ function Newsletter() {
   };
 
   return (
-    <div className="blue-page-background p-2">
+    <div className="blue-page-background p-24">
       <h1 className="blue-page-title mb-8">Newsletter</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Sidebar: templates list */}
@@ -157,12 +170,12 @@ function Newsletter() {
             ))}
           </ul>
           <div className="mt-4 text-sm text-gray-600">
-            Subscribers: <strong>{subs.length}</strong>
+            Subscribers: <strong>{subscribedUsers.length}</strong>
           </div>
         </div>
 
         {/* Editor */}
-        <div className="bg-white rounded-lg shadow p-3 lg:col-span-2">
+        <div className="bg-white rounded-lg shadow p-12 lg:col-span-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm">Name</label>
@@ -170,7 +183,7 @@ function Newsletter() {
             </div>
             <div>
               <label className="text-sm">Type</label>
-              <select className="w-full border rounded px-2 py-1" value={tpl.type} onChange={e => setTpl({ ...tpl, type: e.target.value })}>
+              <select className="w-full border rounded px-2 py-1 bg-transparent" value={tpl.type} onChange={e => setTpl({ ...tpl, type: e.target.value })}>
                 <option>General</option>
                 <option>Monthly Update</option>
                 <option>New Tutors</option>
@@ -240,8 +253,10 @@ function Newsletter() {
                   Send Test
                 </button>
               </div>
-              <button className="px-3 py-2 bg-emerald-600 text-white rounded" onClick={sendAll} disabled={sending || !selectedId || subs.length === 0}>
-                Send to All ({subs.length})
+              <button className="px-3 py-2 bg-emerald-600 text-white rounded"
+                onClick={sendAll}
+                disabled={sending || !selectedId || subscribedUsers.length === 0}>
+                Send to All Subscribed ({subscribedUsers.length})
               </button>
             </div>
           </div>
