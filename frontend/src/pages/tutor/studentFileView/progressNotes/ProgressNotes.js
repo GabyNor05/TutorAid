@@ -24,13 +24,6 @@ function ProgressNotes({ studentID }) {
                 <h1 className="blue-page-title">Progress Notes</h1>
             </div>
 
-            {/* Header: hidden on mobile */}
-            <div className="hidden sm:grid grid-cols-12 gap-2 px-4 sm:px-6 mt-2 text-white/90 text-sm">
-                <div className="col-span-6 md:col-span-6">Name</div>
-                <div className="col-span-3 md:col-span-3">Date</div>
-                <div className="col-span-3 md:col-span-3">Size</div>
-            </div>
-
             <div className="px-4 sm:px-6 pb-4 space-y-3">
                 {notes.map(note => (
                     <PdfCard

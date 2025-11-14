@@ -50,10 +50,9 @@ function UserFeedback() {
 
   return (
     <div className="page-background p-24">
-      <h1 className="page-title my-6 text-center">User Feedback</h1>
-
       {/* Submit feedback */}
       <form onSubmit={onSubmit} className="bg-white rounded-xl shadow p-4 mb-8">
+        <h2 className="text-3xl font-semibold text-[#2B5561]">User Feedback</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm mb-1">Category</label>

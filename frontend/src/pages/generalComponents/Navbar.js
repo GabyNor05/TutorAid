@@ -179,7 +179,7 @@ function Navbar() {
             src={Logo}
             alt="TutorAid"
             className="h-10 w-auto cursor-pointer"
-            onClick={() => handleNav("/dashboard")}
+            onClick={() => handleNav("/")}
           />
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./booking.css";
@@ -105,6 +106,17 @@ function Booking() {
   const [confirmError, setConfirmError] = useState("");
   const [studentInfo, setStudentInfo] = useState(null);
   const [studentUser, setStudentUser] = useState(null); // ADD: user row for name
+
+  // Lock to tutorID from localStorage (ensure it loads after mount)
+  const [lockedTutorID, setLockedTutorID] = useState(null);
+  useEffect(() => {
+    const v = localStorage.getItem('selectedTutorID');
+    setLockedTutorID(v ? Number(v) : null);
+  }, []);
+
+  // ADD: success modal state (replaces alert)
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successDetails, setSuccessDetails] = useState(null);
 
   const subjectOptions = [
       "Math", "Afrikaans", "Physics", "Biology", "English", "Zulu", "Sepedi",
@@ -300,6 +312,7 @@ function Booking() {
           const fallback = { ...payload, studentID: Number(studentInfo.userID) };
           console.warn("[Booking] FK mismatch; retry with users.userID", fallback);
           res = await api.post(endpoints.lessons(), fallback);
+          localStorage.removeItem('selectedTutorID'); 
         } else {
           throw err;
         }
@@ -334,10 +347,10 @@ function Booking() {
             lessonID ? `Lesson ID: ${lessonID}` : null,
           ].filter(Boolean);
 
-          const studentName = studentUser?.name || "A student"; // USE Users.name
+          const studentName = studentUser?.name || "A student";
           await api.post(endpoints.messages(), {
-            senderID: senderUserID,       // Users.userID
-            receiverID: receiverUserID,   // Tutor’s Users.userID
+            senderID: senderUserID,
+            receiverID: receiverUserID,
             type: 'Lesson Request',
             subject: `${studentName} requested a lesson`,
             body: bodyParts.join("\n"),
@@ -347,15 +360,21 @@ function Booking() {
         console.warn("Message send failed (lesson was created):", msgErr);
       }
 
+      // CLOSE confirm, OPEN success (replaces alert + immediate navigate)
       setConfirmOpen(false);
       setPendingBooking(null);
-      alert("Lesson booked!");
-      navigate("/dashboard");
+      setSuccessDetails({
+        subject: payload.subject,
+        tutorName: selectedTutorInfo?.name || String(payload.tutorID),
+        dateTime: confirmDateTime,
+        totalFee: selectedTutorInfo?.fee_per_hour != null ? calcTotalFee() : null,
+      });
+      setSuccessOpen(true);
 
       analytics.event('lesson_booking_confirmed', {
-        subject: pendingBooking.subject,
-        tutor_id: pendingBooking.tutorID,
-        duration_min: pendingBooking.duration,
+        subject: payload.subject,
+        tutor_id: payload.tutorID,
+        duration_min: payload.duration,
         value: Number(calcTotalFee()),
         currency: 'ZAR',
       });
@@ -420,11 +439,92 @@ function Booking() {
     return `${pendingBooking.date} ${time}`;
   }, [pendingBooking]);
 
+  // ADD: effect to pre-fill tutor info if lockedTutorID is set
+  useEffect(() => {
+    if (!lockedTutorID) return;
+    (async () => {
+      try {
+        // Set selected tutor
+        setSelectedTutor(String(lockedTutorID));
+
+        // Find tutor in preloaded list for quick info
+        const t = (allTutors || []).find(x => Number(x.tutorID ?? x.id) === Number(lockedTutorID));
+        const userID = t?.userID ?? t?.user_id ?? null;
+        setSelectedTutorUserID(userID ?? null);
+
+        // Build immediate info from list if available
+        if (t) {
+          const subjects = Array.isArray(t.subjects)
+            ? t.subjects
+            : typeof t.subjects === 'string'
+              ? t.subjects.split(/[,\|;]+/).map(s => s.trim()).filter(Boolean)
+              : [];
+          setSelectedTutorInfo({
+            userID: userID ?? null,
+            name: t.name ?? 'Tutor',
+            image: t.image ?? '',
+            email: t.email ?? '',
+            fee_per_hour: t.fee_per_hour ?? t.feePerHour ?? null,
+            bio: t.bio ?? t.about ?? '',
+            subjects,
+          });
+          if (subjects.length) setAvailableSubjects(subjects);
+        }
+
+        // Ensure subjects filled if not from list
+        if (!t || !Array.isArray(t?.subjects) || t.subjects?.length === 0) {
+          try {
+            const info = await fetchTutorDetailsFlexible({ tutorID: lockedTutorID });
+            setSelectedTutorInfo(prev => ({ ...(prev || {}), ...(info || {}) }));
+            if (Array.isArray(info?.subjects) && info.subjects.length) {
+              setAvailableSubjects(info.subjects);
+            } else if (typeof info?.subjects === 'string') {
+              const arr = info.subjects.split(/[,\|;]+/).map(s => s.trim()).filter(Boolean);
+              setAvailableSubjects(arr);
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        // Load availability
+        try {
+          const availStr = await fetchTutorAvailabilityFlexible(lockedTutorID);
+          setAvailability(parseAvailabilityString(availStr));
+        } catch {
+          setAvailability([]);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockedTutorID, allTutors]);
+
+  // ADD: show tutor card only when NOT locked and a tutor is selected
+  const showTutorCard = useMemo(
+    () => !lockedTutorID && !!selectedTutor,
+    [lockedTutorID, selectedTutor]
+  );
+
   return (
-    // Container: keep full device height, top-aligned
     <div className="page-background min-h-[100dvh] sm:min-h-screen w-full flex justify-center px-4 py-6 md:py-10">
-      {/* Card: auto height (grows with form) */}
-      <div className="w-full max-w-3xl lg:max-w-4xl bg-white rounded-2xl shadow-md flex flex-col h-full">
+
+      {/* Back button: fixed and always visible; clears lock if present */}
+      <button
+        type="button"
+        style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg"
+        onClick={() => {
+          if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+          navigate(-1);
+        }}
+      >
+        {/* ← */}  <CaretLeftIcon size={24} /> Back
+      </button>
+
+      {/* Card */}
+      <div className="w-full max-w-3xl lg:max-w-3xl bg-white rounded-2xl shadow-md flex flex-col h-full">
         <div className="p-4 sm:p-6 md:p-8">
           <form className="space-y-5 sm:space-y-6 w-full" onSubmit={handleSubmit}>
             <h2 className="text-3xl font-semibold text-[#2B5561]">Book a Lesson</h2>
@@ -439,10 +539,18 @@ function Booking() {
                   onChange={async e => {
                     const subject = e.target.value;
                     setSelectedSubject(subject);
+                    setSelectedDate(null);
+
+                    // If locked to a tutor, do NOT refetch tutors. Keep current tutor.
+                    if (lockedTutorID) {
+                      // availability already loaded for tutor; nothing else to do here
+                      return;
+                    }
+
+                    // Original behavior when not locked
                     setSelectedTutor("");
                     setSelectedTutorUserID(null);
                     setSelectedTutorInfo(null);
-                    setSelectedDate(null);
                     setAvailability([]);
 
                     if (!subject) {
@@ -450,12 +558,10 @@ function Booking() {
                       return;
                     }
 
-                    // Try backend endpoint first (if it exists), else fallback to client filter
                     try {
                       const data = await api.get(endpoints.tutorsBySubject(subject));
                       let list = normalizeTutors(data);
                       if (!Array.isArray(list) || list.length === 0) {
-                        // Fallback: filter allTutors by subject token
                         const fromAll = (allTutors || []).filter(t => subjectMatches(t, subject));
                         list = fromAll.map(t => ({
                           tutorID: t.tutorID ?? t.id,
@@ -485,7 +591,8 @@ function Booking() {
                 </select>
               </div>
 
-              {tutors.length > 0 && (
+              {/* HIDE tutor select when locked to a tutor */}
+              {!lockedTutorID && tutors.length > 0 && (
                 <div className="flex flex-col w-full">
                   <label className="mb-1 text-sm text-gray-800">Tutor</label>
                   <select
@@ -553,53 +660,53 @@ function Booking() {
                   </select>
                 </div>
               )}
-            </div>
 
-            {/* Tutor info card */}
-            {selectedTutor && (
-              <div className="w-full">
-                <div className="w-full rounded-xl bg-white/90 border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
-                  <div className="shrink-0 self-center sm:self-start">
-                    {loadingTutorInfo ? (
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 animate-pulse" />
-                    ) : selectedTutorInfo?.image ? (
-                      <img
-                        src={selectedTutorInfo.image}
-                        alt={selectedTutorInfo.name}
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-xl">
-                        {(selectedTutorInfo?.name?.[0] || "T").toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                      <h3 className="text-lg sm:text-xl font-semibold text-[#2B5561] truncate">
-                        {selectedTutorInfo?.name || "Tutor"}
-                      </h3>
-                      <div className="text-sm text-gray-700">
-                        Fee per hour: {selectedTutorInfo?.fee_per_hour != null ? `R ${Number(selectedTutorInfo.fee_per_hour).toFixed(2)}` : "N/A"}
-                      </div>
+              {/* Tutor info card: ONLY show when not locked AND a tutor is selected */}
+              {showTutorCard && (
+                <div className="sm:col-span-2">
+                  <div className="w-full rounded-xl bg-white/90 border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
+                    <div className="shrink-0 self-center sm:self-start">
+                      {loadingTutorInfo ? (
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 animate-pulse" />
+                      ) : selectedTutorInfo?.image ? (
+                        <img
+                          src={selectedTutorInfo.image}
+                          alt={selectedTutorInfo.name}
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-300 flex items-center justify-center text-white text-xl">
+                          {(selectedTutorInfo?.name?.[0] || "T").toUpperCase()}
+                        </div>
+                      )}
                     </div>
-                    {selectedTutorInfo?.email && (
-                      <div className="text-sm text-gray-600 truncate">{selectedTutorInfo.email}</div>
-                    )}
-                    {selectedTutorInfo?.bio && (
-                      <p className="mt-1 text-sm text-gray-700 line-clamp-3">{selectedTutorInfo.bio}</p>
-                    )}
-                    {Array.isArray(selectedTutorInfo?.subjects) && selectedTutorInfo.subjects.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedTutorInfo.subjects.map((s, i) => (
-                          <span key={i} className="px-2 py-0.5 rounded-full border text-xs text-gray-700">{s}</span>
-                        ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        <h3 className="text-lg sm:text-xl font-semibold text-[#2B5561] truncate">
+                          {selectedTutorInfo?.name || "Tutor"}
+                        </h3>
+                        <div className="text-sm text-gray-700">
+                          Fee per hour: {selectedTutorInfo?.fee_per_hour != null ? `R ${Number(selectedTutorInfo.fee_per_hour).toFixed(2)}` : "N/A"}
+                        </div>
                       </div>
-                    )}
+                      {selectedTutorInfo?.email && (
+                        <div className="text-sm text-gray-600 truncate">{selectedTutorInfo.email}</div>
+                      )}
+                      {selectedTutorInfo?.bio && (
+                        <p className="mt-1 text-sm text-gray-700 line-clamp-3">{selectedTutorInfo.bio}</p>
+                      )}
+                      {Array.isArray(selectedTutorInfo?.subjects) && selectedTutorInfo.subjects.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {selectedTutorInfo.subjects.map((s, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-full border text-xs text-gray-700">{s}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Duration / Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -680,7 +787,7 @@ function Booking() {
             <div className="w-full flex justify-center mt-4">
               <button
                 type="submit"
-                className="login-btn w-1/2 h-12 rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
+                className="login-btn h-12 px-6 w-full sm:w-auto rounded-[4px] bg-[#2B5561] text-white font-semibold transition hover:bg-[#2B5561]/70"
               >
                 Book Lesson
               </button>
@@ -743,6 +850,60 @@ function Booking() {
                 disabled={selectedTutorInfo?.fee_per_hour == null}
               >
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD: Success Modal */}
+      {successOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 sm:px-6">
+          <div className="bg-white w-full max-w-md rounded-xl shadow p-5">
+            <h3 className="text-xl font-bold text-[#2B5561] mb-3">Lesson Booked</h3>
+            <div className="space-y-1 text-sm text-gray-700">
+              {successDetails?.subject && (
+                <div className="flex justify-between gap-3">
+                  <span>Subject</span>
+                  <span className="font-semibold text-right">{successDetails.subject}</span>
+                </div>
+              )}
+              {successDetails?.tutorName && (
+                <div className="flex justify-between gap-3">
+                  <span>Tutor</span>
+                  <span className="font-semibold text-right">{successDetails.tutorName}</span>
+                </div>
+              )}
+              {successDetails?.dateTime && (
+                <div className="flex justify-between gap-3">
+                  <span>Date &amp; Time</span>
+                  <span className="font-semibold text-right">{successDetails.dateTime}</span>
+                </div>
+              )}
+              {successDetails?.totalFee != null && (
+                <div className="flex justify-between border-t pt-2 mt-2 gap-3">
+                  <span>Total Fee</span>
+                  <span className="font-bold text-right">R {Number(successDetails.totalFee).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                onClick={() => setSuccessOpen(false)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded bg-[#2B5561] text-white hover:bg-[#2B5561]/70"
+                onClick={() => {
+                  setSuccessOpen(false);
+                  navigate("/dashboard");
+                }}
+              >
+                Go to Dashboard
               </button>
             </div>
           </div>

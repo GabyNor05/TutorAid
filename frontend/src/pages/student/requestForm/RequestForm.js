@@ -170,15 +170,12 @@ function RequestForm() {
   return (
     <div className="page-background">
       <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-4 sm:py-6 flex flex-col">
-        <h2 className="page-title text-2xl sm:text-3xl font-semibold text-white text-center sm:text-left">
-          Feedback Requests
-        </h2>
-
         <div className="bg-white rounded-xl shadow-lg p-5 sm:p-8 mt-4">
           <form
             className="lesson-feedback-form flex flex-col gap-5 text-gray-900"
             onSubmit={handleSubmit}
           >
+            <h2 className="text-3xl font-semibold text-[#2B5561]">Request Form</h2>
             {/* Request type */}
             <div className="flex flex-col">
               <label className="feedback-label mb-2">Request Type:</label>

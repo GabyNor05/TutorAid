@@ -48,12 +48,12 @@ function Home() {
     keywords: 'tutoring, South Africa, maths tutor Johannesburg, online tutoring, private tutor, Cape Town, high school tutoring, exam prep',
     canonical: 'https://gabydv.xyz/',
     jsonLd: {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Tutor Aid",
-    "url": "https://gabydv.xyz/",
-    "logo": "https://gabydv.xyz/favicon_io/android-chrome-512x512.png"
-  }
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Tutor Aid",
+      "url": "https://gabydv.xyz/",
+      "logo": "https://gabydv.xyz/favicon_io/android-chrome-512x512.png"
+    }
   });
 
   const navigate = useNavigate();
@@ -69,9 +69,19 @@ function Home() {
   const [reviewsMap, setReviewsMap] = useState({}); // tutorID -> { summary, reviews }
   const [loadingReviews, setLoadingReviews] = useState(false);
 
+  // ADD: auth + modal state
+  const [userID] = useState(() => Number(localStorage.getItem('userID') || 0));
+  
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [pendingTutorID, setPendingTutorID] = useState(null);
+
   // ADD: derived subjects and selected subject filter
   const [subjectsFromTutors, setSubjectsFromTutors] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
+
+  // REMOVE localStorage role usage and fetch role by userID
+  const [role, setRole] = useState(null);       // null until fetched, then 'admin'|'tutor'|'student'|'' 
+  const [roleLoading, setRoleLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -112,6 +122,20 @@ function Home() {
     setSubjectsFromTutors(extractSubjectsFromTutors(tutors));
   }, [tutors]);
 
+  // FETCH role by userID
+  useEffect(() => {
+    let cancelled = false;
+    if (!userID) { setRole(null); return; }
+    setRoleLoading(true);
+    api.get(endpoints.userById(userID))
+      .then(u => {
+        if (!cancelled) setRole(String(u?.role || '').toLowerCase());
+      })
+      .catch(() => { if (!cancelled) setRole(''); })
+      .finally(() => { if (!cancelled) setRoleLoading(false); });
+    return () => { cancelled = true; };
+  }, [userID]);
+
   const formatSubjects = (subs) => {
     if (Array.isArray(subs)) return subs.filter(Boolean).join(', ');
     if (typeof subs === 'string') return subs;
@@ -138,15 +162,15 @@ function Home() {
     try {
       setLoadingTutorDetails(true);
       let full = null;
-      try { full = await api.get(endpoints.tutorByUser(tutor.userID)); } catch {}
-      if (!full) { try { full = await api.get(endpoints.tutorById(tutor.tutorID)); } catch {} }
+      try { full = await api.get(endpoints.tutorByUser(tutor.userID)); } catch { }
+      if (!full) { try { full = await api.get(endpoints.tutorById(tutor.tutorID)); } catch { } }
       if (full) {
         setSelectedTutor(prev => ({
           ...prev,
-            ...full,
-            subjects: formatSubjects(full.subjects),
-            avgRating: ratingsMap[tutor.tutorID]?.avgRating,
-            numRatings: ratingsMap[tutor.tutorID]?.numRatings
+          ...full,
+          subjects: formatSubjects(full.subjects),
+          avgRating: ratingsMap[tutor.tutorID]?.avgRating,
+          numRatings: ratingsMap[tutor.tutorID]?.numRatings
         }));
       }
       // Load reviews if not already
@@ -166,6 +190,36 @@ function Home() {
     } finally {
       setLoadingTutorDetails(false);
     }
+  };
+
+  
+  const onBookLesson = async (tutorID) => {
+    // Not logged in -> prompt login
+    if (!userID) {
+      setPendingTutorID(tutorID);
+      setLoginPromptOpen(true);
+      return;
+    }
+    // Ensure we have the latest role
+    let r = role;
+    if (r == null) {
+      try {
+        setRoleLoading(true);
+        const u = await api.get(endpoints.userById(userID));
+        r = String(u?.role || '').toLowerCase();
+        setRole(r);
+      } catch {
+        r = '';
+      } finally {
+        setRoleLoading(false);
+      }
+    }
+    // Block admins/tutors
+    if (r === 'admin' || r === 'tutor') return;
+
+    // Proceed
+    localStorage.setItem('selectedTutorID', tutorID);
+    navigate('/booking');
   };
 
   if (loading) return <div className="p-6">Loading…</div>;
@@ -284,6 +338,7 @@ function Home() {
             {/* Details */}
             <div className="flex-1 p-6 md:p-8">
               <h2 className="text-xl md:text-2xl font-bold mb-4">{selectedTutor.name}</h2>
+
               {loadingTutorDetails && <div className="text-sm text-gray-500 mb-2">Loading details…</div>}
               <dl className="space-y-2 text-sm md:text-base">
                 <div><span className="font-semibold">Subjects:</span> {selectedTutor.subjects || '—'}</div>
@@ -292,7 +347,18 @@ function Home() {
                 <div><span className="font-semibold">Qualifications:</span> {selectedTutor.qualifications || '—'}</div>
                 <div><span className="font-semibold">Bio:</span> {selectedTutor.bio || '—'}</div>
                 <div><span className="font-semibold">Rating:</span> {selectedTutor.avgRating != null ? `${selectedTutor.avgRating.toFixed(1)} (${selectedTutor.numRatings || 0})` : '—'}</div>
+
               </dl>
+              
+              {/* HIDE Book button for admin/tutor roles. Show for not-logged-in (click prompts login). Hide while role is loading. */}
+              {(!userID || (!roleLoading && role !== 'admin' && role !== 'tutor')) && (
+                <button
+                  className="bg-[var(--Wall-Teal)] text-white px-3 py-1 rounded my-4"
+                  onClick={() => onBookLesson(selectedTutor.tutorID)}
+                >
+                  Book Lesson
+                </button>
+              )}
 
               <hr className="my-4" />
               <h3 className="text-lg font-semibold mb-2">Reviews</h3>
@@ -307,6 +373,37 @@ function Home() {
                   </div>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD: Login required popup */}
+      {loginPromptOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h3 className="text-xl font-semibold text-cyan-800 mb-2">Sign in required</h3>
+            <p className="text-sm text-gray-700">
+              You need to be logged in as a student to book a lesson.
+            </p>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                onClick={() => { setLoginPromptOpen(false); setPendingTutorID(null); }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-[var(--Wall-Teal)] text-white hover:opacity-90"
+                onClick={() => {
+                  setLoginPromptOpen(false);
+                  // Optionally keep the tutor ID for after login
+                  if (pendingTutorID) localStorage.setItem('selectedTutorID', pendingTutorID);
+                  navigate('/login');
+                }}
+              >
+                Login
+              </button>
             </div>
           </div>
         </div>

@@ -64,10 +64,10 @@ function UserCard({
   };
 
   return (
-    <div className="userCard w-full max-w-2xl mx-auto bg-white/95 rounded-xl shadow p-4 sm:p-6">
+    <div className="userCard w-full max-w-2xl mx-auto bg-white/95 rounded-xl shadow p-4 sm:p-12 gap-24 flex flex-col sm:flex-row items-center sm:items-start">
       {/* Image */}
       <div
-        className="userCard-image relative w-32 h-32 sm:w-44 sm:h-44 mx-auto rounded-full overflow-hidden bg-gray-200 hover:bg-sky-700 cursor-pointer"
+        className="userCard-image relative w-32 h-32 sm:w-52 sm:h-52 rounded-full  bg-gray-200 hover:bg-sky-700 cursor-pointer"
         onClick={handleImageClick}
         title="Click to upload a new profile image"
         role="button"
@@ -77,7 +77,7 @@ function UserCard({
         <img
           src={image}
           alt={name || "Profile"}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-full"
         />
         {/* Hidden file input */}
         <input
@@ -97,7 +97,7 @@ function UserCard({
       </div>
 
       {/* Content */}
-      <div className="userCard-content mt-4">
+      <div className="userCard-content mt-4 ">
         {editMode ? (
           <form
             className="userCard-edit-form space-y-3"
@@ -194,7 +194,7 @@ function UserCard({
           </form>
         ) : (
           <>
-            <h3 className="text-lg sm:text-2xl font-semibold text-[#2B5561] text-center sm:text-left break-words">
+            <h3 className="text-lg sm:text-2xl font-semibold text-cyan-900 text-center sm:text-left break-words mb-2">
               {name}
             </h3>
             <p className="text-gray-800 break-words mt-1 text-sm sm:text-lg">

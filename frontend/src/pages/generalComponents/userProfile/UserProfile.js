@@ -18,9 +18,16 @@ function UserProfile() {
                 setUser(u);
 
                 const studentID = u?.studentID;
-                if (u?.role === "Student" && studentID) {
-                    const published = await api.get(endpoints.progressNotesStudentPublished(studentID));
-                    setNotes(Array.isArray(published) ? published : []);
+                if (String(u?.role || "").toLowerCase() === "student" && studentID) {
+                    // Fetch ALL notes for the student
+                    let allNotes = [];
+                    try {
+                        allNotes = await api.get(endpoints.progressNotesLessonNotes(studentID));
+                    } catch {
+                        // Fallback: if only published endpoint exists
+                        allNotes = await api.get(endpoints.progressNotesStudentPublished(studentID));
+                    }
+                    setNotes(Array.isArray(allNotes) ? allNotes : []);
                 }
             } catch (err) {
                 console.error("Failed to fetch user/profile data:", err);
@@ -50,19 +57,20 @@ function UserProfile() {
                 onSave={handleSave}
                 onDelete={() => {/* your delete logic */}}
             />
-            {user.role === "Student" && (
+            {String(user.role || "").toLowerCase() === "student" && (
                 <div>
                     <div className="blue-page-background mt-6 p-4">
-                        <div className="mt-8 bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-semibold mb-4 text-cyan-800">Published Notes</h2>
+                        <h2 className="blue-page-title">Progress Notes</h2>
+                        <div className="mt-8 bg-transparent rounded-lg shadow p-6">
+                            
                             <div className="space-y-4">
                                 {notes.map(note => (
                                     <PdfCard
-                                        key={note.noteID}
+                                        key={note.noteID || note.progressNoteID}
                                         title={note.file_name}
-                                        date={note.uploaded_at?.slice(0, 10)}
+                                        date={(note.uploaded_at || note.created_at || "").slice(0, 10)}
                                         size={note.file_size}
-                                        filePath={note.file_path}
+                                        filePath={note.file_path || note.file_url}
                                     />
                                 ))}
                             </div>

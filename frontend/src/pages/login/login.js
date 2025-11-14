@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./css/login.css";
 import loginImage from "./assets/loginImage.png";
 import { useNavigate } from "react-router-dom";
-import { X } from "@phosphor-icons/react";
+import { X, House } from "@phosphor-icons/react";
 import { api, endpoints } from "../../api/client";
 import { useSEO } from '../../lib/seo';
 import { analytics } from '../../api/../lib/analytics';
@@ -42,6 +42,8 @@ function Login() {
     }
     setErrors(newErrors);
 
+    const tutorIsSelected = localStorage.getItem('selectedTutorID');
+
     if (Object.keys(newErrors).length === 0) {
       try {
         const res = await api.post(endpoints.login(), { email: email.trim(), password });
@@ -54,7 +56,9 @@ function Login() {
           analytics.setUser(userID, { role });            // set user_id + role
           analytics.event('login', { method: 'password' }); // GA4 recommended event
           navigate("/otp");
-        } else {
+        } else if (!tutorIsSelected === null && res.userID && res.role === "Student") {
+          navigate("/");
+        }else {
           setErrors({ general: "Login failed" });
         }
       } catch (err) {
@@ -67,7 +71,10 @@ function Login() {
   };
 
   return (
-    <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
+    <div className="page-background min-h-dvh flex flex-colitems-center justify-center px-4 py-8">
+      <button onClick={() => navigate('/')}>
+        <House size={24} weight="bold" /> Home
+      </button>
       <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5 h-full min-h-0">
