@@ -2,7 +2,7 @@
 
 - - - -
 
-# Tutor Aid
+# 🎓 Tutor Aid — Connect Students & Trusted Tutors
 
 Tutor Aid is a platform designed to connect **students** with **reliable and relatable tutors** who understand their learning journey. The platform focuses on simplicity, trust, and efficiency — allowing students to easily find support, book sessions, and grow academically.
 
@@ -12,47 +12,83 @@ The goal is to empower tutors to **share knowledge confidently**, while helping 
 
 ---
 
-## How to run Tutor Aid
+# 🔎 Overview
 
-#### Step 1: Clone the repo
+Tutor Aid was created from personal experience tutoring — the idea: remove friction so tutors can teach and students can learn. The platform helps tutors present their subject expertise, availability, and teaching style while allowing students and parents to find, compare, and book with confidence.
+
+**Project goals**
+- Improve tutor visibility and professionalism.  
+- Simplify booking and communication.  
+- Provide a calm, supportive UI that encourages learning.
+
+---
+
+# 🏗️ Tech Stack Overview
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| Frontend | React (CRA) + Tailwind CSS | SPA UI, responsive layout, components |
+| Backend | Node.js + Express | REST API, authentication, business logic |
+| Database | MySQL (AlwaysData) | Relational data for users, tutors, bookings |
+| HTTP Client | Axios | Frontend ↔ backend requests |
+| Deployment | Vercel (frontend), Render (backend) | CI/CD and hosting |
+| Domain | gabydv.xyz | DNS / production domain |
+| Analytics | Google Analytics (GA4) | Tracking user activity & engagement |
+
+---
+
+# 🎨 UI & Brand Style
+
+**Style summary**
+- Palette: calming teals / greens for trust & growth.  
+- Typography: modern, accessible (system fonts or Inter/Poppins).  
+- Components: rounded cards, soft shadows, clear CTAs.  
+- Illustration: friendly tutoring scenes, subtle texture background.
+
+---
+
+# 💡 Key Features
+
+- **Tutor Profiles** — bio, qualifications, subjects, hourly rate, fun fact.  
+- **Search & Filters** — subject, language, availability, rating.  
+- **Bookings / Enquiries** — schedule requests and session tracking.  
+- **Progress Notes Uploads** — store and access student progress files (ProgressNotes table).  
+- **Newsletter & Resources** — study tips, exam prep, and updates.  
+- **Admin tools** — manage tutors, students, and platform content (basic).
+
+---
+
+## ⚙️ How to run Tutor Aid locally
+
+#### 1️⃣ Clone the repo
 ```
 https://github.com/GabyNor05/TutorAid.git
 ```
-#### Step 2:
-
-Open tutoraid frontend file in terminal:
+#### 2️⃣ Open tutoraid frontend file in terminal:
 
 ```
 cd frontend
 ```
 
-#### Step 3:
-
-Install dependencies using the terminal:
+#### 3️⃣ Install dependencies using the terminal:
 
 ```
 npm install
 ```
 
-#### Step 4:
-
-Now open a new terminal and open backend files:
+#### 4️⃣ Now open a new terminal and open backend files:
 
 ```
 cd backend
 ```
 
-#### Step 5:
-
-start the backend: 
+#### 5️⃣ start the backend: 
 
 ```
 npm start
 ```
 
-#### Step 6:
-
-Go to the frontend terminal and start the frontend: 
+#### 6️⃣ Go to the frontend terminal and start the frontend: 
 
 ```
 npm start
@@ -63,7 +99,7 @@ Your application should now run in your browser.
 
 ---
 
-## Tutor Aid is built with
+## 🛠️ Tutor Aid is built with
 
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
@@ -76,7 +112,7 @@ Your application should now run in your browser.
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 
-## Deployment Process
+## 🚀 Deployment Process
 
 #### Frontend (React):
 Deployed on **Vercel**.  
@@ -92,27 +128,25 @@ Credentials are stored as environment variables.
 
 ---
 
-## Demo Video
+## 📽️ Demo Video
 
 (Insert link here once recorded)
 
 
 ---
 
-## Reflection
-
-### Proud Moments
+### 👏 Proud Moments
 - Built a full-stack application independently.
 - Successfully integrated database + backend + frontend deployments.
 - Created a platform that reflects real tutor needs.
 
-### Challenges & Solutions
+### 🧪 Challenges & Solutions
 
 One major challenge was deployment, managing the frontend, backend, and SQL database across different platforms. I solved this by hosting the backend on Render, the SQL database on AlwaysData, and using environment variables to securely connect everything.
 I also ran into CORS issues when the frontend tried to call the backend, I resolved those by configuring allowed origins and carefully using environment variables.
 Finally, I do not think I optimised performance by compressing images, using lazy loading for tutor images, and reducing unused CSS, like I should have.
 
-### Reflection
+### 🧭 Reflection
 
 This project was a full journey for me, not just in building a product, but in learning how to think like a full-stack developer.
 One of the biggest learning curves was setting up and maintaining the SQL database and ensuring secure communication between the frontend and backend. I also had to learn how to deploy both sides of the app separately, which required research, patience, and LOTS of trial-and-error.
@@ -120,18 +154,20 @@ Through this, I really improved my debugging skills, my understanding of server-
 
 
 ---
-## Final Presentation Slide Show
+## 👩‍🏫 Final Presentation Slide Show
 
 https://docs.google.com/presentation/d/1vyETFmOux20fAhR9wxqzYHYS3w0MuiS_R-jKe0lIvwg/edit?usp=sharing
 
 ---
 
-## Mockups / Screenshots (optional)
+## 🖼️ Mockups / Screenshots 
 
-## Demo Video
+![Banner](./documentation/mockups/mockupthumbnail.png)
+
+
+## 📽️ Mockup Video
 
 https://drive.google.com/file/d/1dRxzOC-kDc0kWklAXQPmj9gaRTBLq8Uv/view?usp=sharing
-
 
 ---
 
@@ -139,9 +175,9 @@ https://drive.google.com/file/d/1dRxzOC-kDc0kWklAXQPmj9gaRTBLq8Uv/view?usp=shari
 
 Tutor Aid is more than a web application; it’s a tool built from real experience in tutoring. By bridging student needs with empathetic, prepared tutors, the platform helps create supportive learning environments that go beyond one session at a time.
 
-Thank you to everyone who supported the process, from research to testing to reviewing.
+---
 
-## Acknowledgements
+## 👩‍💻 Credits and Contributions
 Thank you to everyone who supported the process, from research to testing to reviewing to late-night crashouts.
 
 ### Keabetswe Olifant 
