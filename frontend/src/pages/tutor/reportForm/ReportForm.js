@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./reportForm.css";
-import { CaretLeft } from "@phosphor-icons/react";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import {useSEO} from '../../../lib/seo';
 
@@ -79,10 +79,17 @@ function ReportForm() {
 
     return (
         <div className="page-background">
-            <div className="back-button flex flex-row items-center mb-6 cursor-pointer" onClick={() => window.history.back()}>
-                <CaretLeft size={20} />
-                <span className="back-text text-xl"> Back</span>
-            </div>
+            <button
+                    type="button"
+                    style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+                    className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+                    onClick={() => {
+                      if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+                      navigate(-1);
+                    }}
+                  >
+                    {/* ← */}  <CaretLeftIcon size={24} /> Back
+                  </button>
             <div className=" bg-white rounded-xl shadow-lg p-10 max-w-2xl mx-auto ">
                 <form className="lesson-feedback-form flex flex-col  gap-5 text-gray-900 max-w-xl items-center" onSubmit={handleSubmit}>
                     <h2 className="items-center">Report Form</h2>

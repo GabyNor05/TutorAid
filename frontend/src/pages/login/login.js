@@ -72,8 +72,15 @@ function Login() {
 
   return (
     <div className="page-background min-h-dvh flex flex-colitems-center justify-center px-4 py-8">
-      <button onClick={() => navigate('/')}>
-        <House size={24} weight="bold" /> Home
+      <button
+        type="button"
+        style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+        onClick={() => {
+          navigate(-1);
+        }}
+      >
+         <House size={24} /> Home
       </button>
       <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}

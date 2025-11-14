@@ -1,14 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { api, endpoints } from "../../../api/client";
+import { useNavigate } from "react-router-dom";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 
 function ManageFeedback() {
-  // Submit form
-  const [category, setCategory] = useState("feature");
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitMsg, setSubmitMsg] = useState("");
+  const navigate = useNavigate();
 
   // Admin list
   const [statusFilter, setStatusFilter] = useState("new");
@@ -57,6 +53,17 @@ function ManageFeedback() {
 
   return (
     <div className="page-background p-48">
+      <button
+              type="button"
+              style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+              className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+              onClick={() => {
+                if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+                navigate(-1);
+              }}
+            >
+              {/* ← */}  <CaretLeftIcon size={24} /> Back
+            </button>
       <div className="bg-white rounded-xl shadow p-12">
         <div className="flex items-center justify-between mb-3">
           <h1 className="page-title">User Feedback</h1>

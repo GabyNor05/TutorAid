@@ -507,6 +507,7 @@ function Booking() {
     [lockedTutorID, selectedTutor]
   );
 
+
   return (
     <div className="page-background min-h-[100dvh] sm:min-h-screen w-full flex justify-center px-4 py-6 md:py-10">
 
@@ -514,7 +515,7 @@ function Booking() {
       <button
         type="button"
         style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
-        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg"
+        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
         onClick={() => {
           if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
           navigate(-1);

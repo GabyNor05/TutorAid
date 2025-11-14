@@ -4,6 +4,8 @@ import "./manageUsers.css";
 import ManageUserCard from './ManageUserCard';
 import { MagnifyingGlassIcon, FunnelSimple } from '@phosphor-icons/react';
 import { api, endpoints } from '../../../api/client';
+import { CaretLeftIcon } from "@phosphor-icons/react";
+
 
 function ManageUsers() {
   const [users, setUsers] = useState([]);
@@ -69,6 +71,17 @@ function ManageUsers() {
 
   return (
     <div className="page-background">
+      <button
+              type="button"
+              style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+              className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+              onClick={() => {
+                if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+                navigate(-1);
+              }}
+            >
+              {/* ← */}  <CaretLeftIcon size={24} /> Back
+            </button>
       <div className="search-bar rounded-lg border-2 border-cyan-800 p-2 w-1/4 inside-shadow flex items-center cursor-text m-auto mb-10">
         <MagnifyingGlassIcon className='inline text-cyan-800' size={28} weight="bold" />
         <input

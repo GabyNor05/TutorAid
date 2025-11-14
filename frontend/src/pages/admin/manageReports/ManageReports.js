@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api, endpoints } from "../../../api/client"; // ADD
-import { DotsThreeVertical, X} from "@phosphor-icons/react";
+import { DotsThreeVertical, X, CaretLeftIcon} from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 
 const statusColors = {
   Pending: "bg-yellow-100 text-yellow-800",
@@ -9,6 +10,7 @@ const statusColors = {
 };
 
 function ManageReports() {
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [escalateModalOpen, setEscalateModalOpen] = useState(false);
@@ -83,6 +85,17 @@ function ManageReports() {
 
   return (
     <div className="blue-page-background">
+      <button
+              type="button"
+              style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+              className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+              onClick={() => {
+                if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+                navigate(-1);
+              }}
+            >
+              {/* ← */}  <CaretLeftIcon size={24} /> Back
+            </button>
       <div className="bg-white max-w-4xl mx-auto rounded-xl shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold text-cyan-800">Manage Reports</h1>

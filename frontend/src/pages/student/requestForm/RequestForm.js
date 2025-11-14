@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, endpoints } from "../../../api/client";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 
 function RequestForm() {
   const [lessonDate, setLessonDate] = useState("");
@@ -170,6 +171,16 @@ function RequestForm() {
   return (
     <div className="page-background">
       <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-4 sm:py-6 flex flex-col">
+        <button
+                type="button"
+                style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+                className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+                onClick={() => {
+                  navigate(-1);
+                }}
+              >
+                {/* ← */}  <CaretLeftIcon size={24} /> Back
+              </button>
         <div className="bg-white rounded-xl shadow-lg p-5 sm:p-8 mt-4">
           <form
             className="lesson-feedback-form flex flex-col gap-5 text-gray-900"

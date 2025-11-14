@@ -4,6 +4,7 @@ import StudentFileCard from "./studentFileCard";
 import { MagnifyingGlassIcon, FunnelSimple } from "@phosphor-icons/react"; 
 import { useNavigate } from "react-router-dom";
 import { api, endpoints } from "../../../api/client"; 
+import { CaretLeftIcon } from "@phosphor-icons/react";
 
 function StudentFiles() {
     const [students, setStudents] = useState([]);
@@ -80,7 +81,16 @@ function StudentFiles() {
             <div className="pt-2 text-center">
                 <h1 className="blue-page-title">Student Files</h1>
             </div>
-
+            <button
+                    type="button"
+                    style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+                    className="px-3 py-1.5 bg-white text-[#2B5561] text-lg hover:border-white/70 border-2 rounded-lg flex flex-row items-center gap-2"
+                    onClick={() => {
+                      navigate(-1);
+                    }}
+                  >
+                    {/* ← */}  <CaretLeftIcon size={24} /> Back
+                  </button>
             {/* Controls */}
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
                 <div className="search-bar rounded-lg border border-[#ffe998] p-2 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 inside-shadow flex items-center cursor-text m-auto mb-6">

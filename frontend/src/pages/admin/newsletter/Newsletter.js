@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { api, endpoints } from "../../../api/client";
+import { useNavigate } from "react-router-dom";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 
 function Newsletter() {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [subs, setSubs] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -148,6 +151,17 @@ function Newsletter() {
 
   return (
     <div className="blue-page-background p-24">
+      <button
+        type="button"
+        style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+        onClick={() => {
+          if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+          navigate(-1);
+        }}
+      >
+        {/* ← */}  <CaretLeftIcon size={24} /> Back
+      </button>
       <h1 className="blue-page-title mb-8">Newsletter</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Sidebar: templates list */}

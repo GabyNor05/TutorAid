@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./css/userprofile.css";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 import UserCard from "./UserCards";
 import PdfCard from "../../tutor/studentFileView/progressNotes/PdfCard";
 import { api, endpoints } from "../../../api/client";
+import { useNavigate } from "react-router-dom";
 
 function UserProfile() {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [notes, setNotes] = useState([]);
 
@@ -49,6 +52,17 @@ function UserProfile() {
 
     return (
         <div className="page-background">
+            <button
+        type="button"
+        style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+        onClick={() => {
+          if (localStorage.getItem('selectedTutorID')) localStorage.removeItem('selectedTutorID');
+          navigate(-1);
+        }}
+      >
+        {/* ← */}  <CaretLeftIcon size={24} /> Back
+      </button>
             <div className="pt-2 text-center">
                 <h1 className="page-title">User Profile</h1>
             </div>

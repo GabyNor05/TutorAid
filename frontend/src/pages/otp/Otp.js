@@ -4,7 +4,7 @@ import otpImage from "./assets/calendarImage.png";
 import { useNavigate } from "react-router-dom";
 import { api, endpoints } from "../../api/client";
 import { useSEO } from '../../lib/seo';
-import logo from '../reusableAssets/logo.png';
+import { CaretLeftIcon } from "@phosphor-icons/react";
 
 function Otp() {
   const navigate = useNavigate();
@@ -169,6 +169,17 @@ function Otp() {
 
   return (
     <div className="page-background min-h-dvh flex items-center justify-center px-4 py-8">
+      <button
+        type="button"
+        style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
+        className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
+        onClick={() => {
+          if (localStorage.getItem('otp')) localStorage.removeItem('otp');
+          navigate(-1);
+        }}
+      >
+        {/* ← */}  <CaretLeftIcon size={24} /> Back
+      </button>
       <div className="w-full max-w-5xl h-[75dvh] bg-white rounded-2xl shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 items-stretch min-h-0">
         {/* Image */}
         <div className="hidden md:block bg-[#2B5561]/5 h-full min-h-0">
