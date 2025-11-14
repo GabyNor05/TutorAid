@@ -11,7 +11,7 @@ import { api, endpoints } from "../../api/client";
 
 function Dashboard() {
     const [role, setRole] = useState(null);
-    const [acceptedLessons, setAcceptedLessons] = useState([]);
+    const [lessons, setLessons] = useState([]);
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [rateModalOpen, setRateModalOpen] = useState(false);
     const [selectedTutor, setSelectedTutor] = useState(null);
@@ -34,9 +34,14 @@ function Dashboard() {
     useEffect(() => {
         const userId = localStorage.getItem("userID");
         if (userId && role) {
-            api.get(`${endpoints.lessons()}/accepted?userID=${userId}&role=${role}`)
-                .then(res => setAcceptedLessons(Array.isArray(res) ? res : []))
-                .catch(() => setAcceptedLessons([]));
+            const r = String(role).toLowerCase();
+            const base = endpoints.lessons();
+            const url = r === 'student'
+              ? `${base}?userID=${userId}&role=${role}`        // all lessons for student
+              : `${base}/accepted?userID=${userId}&role=${role}`; // keep accepted for tutor
+            api.get(url)
+               .then(res => setLessons(Array.isArray(res) ? res : []))
+               .catch(() => setLessons([]));
         }
     }, [role]);
 
@@ -287,18 +292,18 @@ function Dashboard() {
                             Upcoming Lessons
                         </h1>
 
-                        {acceptedLessons.length === 0 ? (
-                            <p className="text-white/90">No upcoming lessons scheduled.</p>
+                        {lessons.length === 0 ? (
+                            <p className="text-white/90">No lessons scheduled.</p>
                         ) : (
                             <div className="flex flex-col gap-4 sm:gap-6 pb-6">
-                                {acceptedLessons.map(lesson => (
+                                {lessons.map(lesson => (
                                     <LessonCards
                                         key={lesson.lessonID}
                                         lesson={lesson}
                                         role={role}
                                         tutorImage={lesson.tutorImage}
                                         tutorName={lesson.tutorName}
-                                        showStatus={false}
+                                        showStatus={role === "Tutor"} // only tutor sees accept/decline
                                         onContactTutor={() => {
                                             setSelectedTutor(lesson.tutorID);
                                             resolveTutorUserID(lesson.tutorID);
