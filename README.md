@@ -1,4 +1,4 @@
-![banner](./frontend/src/pages/reusableAssets/logo.png)
+![banner](./documentation/tutorAidHeader.png)
 
 - - - -
 
