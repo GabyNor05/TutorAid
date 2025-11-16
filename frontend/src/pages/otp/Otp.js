@@ -123,7 +123,9 @@ function Otp() {
     });
   };
 
+  
   const handleVerify = async () => {
+    const tutorIsSelected = localStorage.getItem('selectedTutorID');
     const otp = digits.join("");
     const newErrors = {};
     if (!otp) newErrors.otp = "OTP is required";
@@ -133,7 +135,13 @@ function Otp() {
 
     try {
       await api.post(endpoints.verifyOtp(), { email, otp });
-      navigate("/dashboard");
+      if (!tutorIsSelected === null && res.userID && res.role === "Student") {
+          navigate("/booking");
+          return;
+        }else{
+          navigate("/dashboard");
+          return;
+        }
     } catch (err) {
       setOtpError(err.message || "Invalid OTP");
     }

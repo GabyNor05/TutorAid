@@ -56,9 +56,7 @@ function Login() {
           analytics.setUser(userID, { role });            // set user_id + role
           analytics.event('login', { method: 'password' }); // GA4 recommended event
           navigate("/otp");
-        } else if (!tutorIsSelected === null && res.userID && res.role === "Student") {
-          navigate("/");
-        }else {
+        } else {
           setErrors({ general: "Login failed" });
         }
       } catch (err) {
@@ -77,7 +75,7 @@ function Login() {
         style={{ position: 'fixed', left: 16, top: 80, zIndex: 2147483647 }}
         className="px-3 py-1.5 bg-[#2B5561] text-white text-lg hover:border-[#2B5561]/70 border-2 rounded-lg flex flex-row items-center gap-2"
         onClick={() => {
-          navigate(-1);
+          navigate('/');
         }}
       >
          <House size={24} /> Home

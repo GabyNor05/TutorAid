@@ -76,6 +76,7 @@ export default function Onboarding2() {
       form.append('funFact', funFact || '');
 
       await api.put(endpoints.userById(user.userID), form);
+      const tutorIsSelected = localStorage.getItem('selectedTutorID');
 
       // 2) Tutor extras
       if (role === 'Tutor') {
@@ -86,7 +87,14 @@ export default function Onboarding2() {
         });
       }
 
-      navigate('/dashboard');
+      if (tutorIsSelected !== null && role === "Student") {
+        navigate("/booking");
+        return;
+      }else{
+        navigate('/dashboard');
+        return;
+      }
+      
     } catch (e) {
       setError(e.message || 'Failed to save');
     } finally {
