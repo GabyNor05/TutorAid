@@ -8,41 +8,59 @@ dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
+// CORS: localhost + env ALLOWED_ORIGINS (comma/space separated; supports * wildcards)
+const DEFAULT_ALLOWED = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://192.168.1.54:3000',
+];
+
 function parseAllowed() {
-  return String(process.env.ALLOWED_ORIGINS || '')
-    .split(/[,\s]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
+  const fromEnv =
+    (process.env.ALLOWED_ORIGINS || process.env.Allowed_ORIGINs || '')
+      .split(/[,\s]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  const all = [...DEFAULT_ALLOWED, ...fromEnv];
+  // de-dup while preserving order
+  return all.filter((v, i) => all.indexOf(v) === i);
 }
+
 function matchOrigin(origin, pattern) {
+  if (!pattern) return false;
   if (pattern === '*') return true;
   const esc = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
   return new RegExp(`^${esc}$`, 'i').test(origin);
 }
+
 function originAllowed(origin, list) {
-  if (!origin) return true; // same-origin or server-to-server
+  if (!origin) return true; // same-origin/non-CORS
   return list.some(p => matchOrigin(origin, p));
 }
 
-// Replace the existing CORS block with this:
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
   const allowed = parseAllowed();
+  const ok = originAllowed(origin, allowed);
 
-  if (originAllowed(origin, allowed)) {
-    // Echo allowed origin (required if credentials are used)
+  if (ok) {
+    // Echo exact origin when CORS is allowed
     if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
     else res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
-  const reqHeaders = req.headers['access-control-request-headers'] || 'Content-Type, Authorization';
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', reqHeaders);
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    req.headers['access-control-request-headers'] || 'Content-Type, Authorization'
+  );
   res.setHeader('Access-Control-Max-Age', '86400');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
 
@@ -87,7 +105,12 @@ const messagesRoutes = require('./routes/messagesRoutes');
 app.use('/api/messages', messagesRoutes);
 
 // Health/debug
-app.get('/api/health', (req, res) => res.json({ ok: true, origin: req.headers.origin || null }));
+app.get('/api/health', (req, res) => {
+  const origin = req.headers.origin || null;
+  const allowedList = parseAllowed();
+  const ok = originAllowed(origin || '', allowedList);
+  res.json({ ok: true, origin, cors: { allowed: ok, allowedList } });
+});
 
 app.get('/api/db-health', async (req, res) => {
   try {
