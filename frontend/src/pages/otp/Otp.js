@@ -125,23 +125,31 @@ function Otp() {
 
   
   const handleVerify = async () => {
-    const tutorIsSelected = localStorage.getItem('selectedTutorID');
+    const selectedTutorID = localStorage.getItem('selectedTutorID');
     const otp = digits.join("");
     const newErrors = {};
     if (!otp) newErrors.otp = "OTP is required";
-    else if (!/^\d{6}$/.test(otp)) newErrors.otp = "OTP must be exactly 6 digits and numbers only";
+    else if (!/^\d{6}$/.test(otp)) newErrors.otp = "OTP must be exactly 6 digits";
     setErrors(newErrors);
     if (Object.keys(newErrors).length) return;
 
     try {
+      // Verify OTP
       await api.post(endpoints.verifyOtp(), { email, otp });
-      if (!tutorIsSelected === null && res.userID && res.role === "Student") {
-          navigate("/booking");
-          return;
-        }else{
-          navigate("/dashboard");
-          return;
-        }
+
+      // Fetch user to determine role
+      let userData = null;
+      try {
+        userData = await api.get(endpoints.userById(userId));
+      } catch {}
+
+      const role = String(userData?.role || "").toLowerCase();
+
+      if (role === "student" && selectedTutorID) {
+        navigate("/booking");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setOtpError(err.message || "Invalid OTP");
     }
