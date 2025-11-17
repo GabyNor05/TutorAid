@@ -130,7 +130,7 @@ Credentials are stored as environment variables.
 
 ## 📽️ Demo Video
 
-(Insert link here once recorded)
+[Watch Demo Video](https://drive.google.com/file/d/1wP8hp1W5I7Q7_hc3jFbPn-tDCyW1u6BD/view?usp=sharing)
 
 
 ---
