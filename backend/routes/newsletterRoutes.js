@@ -1,23 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const ctl = require('../controllers/newsletterController');
+const c = require('../controllers/newsletterController');
 
-// Public
-router.post('/subscribe', ctl.subscribe);
-
-// Admin (consider protecting these with auth middleware)
-// Subscribers
-router.get('/subscribers', ctl.listSubscribers);
-router.delete('/subscribers/:id', ctl.deleteSubscriber);
-router.post('/unsubscribe', ctl.unsubscribeByEmail);
-
-// Templates
-router.get('/templates', ctl.listTemplates);
-router.post('/templates', ctl.createTemplate);
-router.put('/templates/:id', ctl.updateTemplate);
-router.delete('/templates/:id', ctl.deleteTemplate);
-
-// Send
-router.post('/send', ctl.send);
+router.get('/subscribers', c.listSubscribers);
+router.post('/subscribe', c.subscribe);
+router.post('/unsubscribe', c.unsubscribe);
+router.get('/templates', c.listTemplates);
+router.post('/templates', c.createTemplate);
+router.put('/templates/:id', c.updateTemplate);
+router.delete('/templates/:id', c.deleteTemplate);
+router.post('/send', c.sendNewsletter);
 
 module.exports = router;

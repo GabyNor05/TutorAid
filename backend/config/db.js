@@ -16,15 +16,19 @@ console.log('[DB] connecting', {
 });
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,                 
-  port: Number(process.env.DB_PORT || 3306),
+  host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 8,
   queueLimit: 0,
-  ...(process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: false } } : {})
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000
+});
+
+pool.on('error', (e) => {
+  console.error('[mysql pool error]', e.code, e.message);
 });
 
 module.exports = pool;

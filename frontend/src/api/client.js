@@ -18,23 +18,44 @@ function buildUrl(path) {
 async function request(method, path, body, extra = {}) {
   const url = buildUrl(path);
   const isForm = body instanceof FormData;
-  const headers = isForm ? {} : { "Content-Type": "application/json" };
-  const res = await fetch(url, {
-    method,
-    headers: { ...headers, ...(extra.headers || {}) },
-    body: body == null ? undefined : isForm ? body : JSON.stringify(body),
-    mode: "cors",
-    credentials: "omit",
-    signal: extra.signal,
-  }).catch((e) => {
-    throw new Error(`Network error: ${e.message || e}`);
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
+  const headers = isForm ? {} : { 'Content-Type': 'application/json' };
+  const maxAttempts = 3;
+  let attempt = 0;
+  let lastErr;
+
+  while (attempt < maxAttempts) {
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { ...headers, ...(extra.headers || {}) },
+        body: body == null ? undefined : (isForm ? body : JSON.stringify(body)),
+        mode: 'cors',
+        credentials: 'omit',
+        signal: extra.signal,
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
+      }
+      const ct = res.headers.get('content-type') || '';
+      return ct.includes('application/json') ? res.json() : res.text();
+    } catch (e) {
+      lastErr = e;
+      // Network / ECONNRESET / 503 retry
+      const msg = String(e.message || '').toLowerCase();
+      if (msg.includes('network') || msg.includes('ecconnreset') || msg.includes('http 503')) {
+        attempt++;
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, 500 * attempt));
+          continue;
+        }
+      }
+      break;
+    }
   }
-  const ct = res.headers.get("content-type") || "";
-  return ct.includes("application/json") ? res.json() : res.text();
+  console.error('[api request failed]', { method, url, error: lastErr?.message });
+  throw lastErr || new Error('Network error');
 }
 
 // Convenience helpers

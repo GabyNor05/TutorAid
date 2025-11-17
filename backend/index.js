@@ -149,4 +149,13 @@ app.use('/api/newsletter', newsletterRoutes);
 const feedbackRoutes = require('./routes/feedbackRoutes');
 app.use('/api/feedback', feedbackRoutes);
 
+app.use((err, req, res, next) => {
+  console.error('[express error]', err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+process.on('uncaughtException', e => console.error('[uncaughtException]', e));
+process.on('unhandledRejection', e => console.error('[unhandledRejection]', e));
+
 module.exports = app;

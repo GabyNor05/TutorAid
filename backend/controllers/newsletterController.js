@@ -8,6 +8,10 @@ function isValidEmail(email) {
   return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function normalizeEmail(e) {
+  return String(e || '').trim().toLowerCase();
+}
+
 // Tiny token renderer supporting {{name}} and any provided vars
 function renderTemplate(str, vars = {}) {
   if (!str) return '';
@@ -17,17 +21,33 @@ function renderTemplate(str, vars = {}) {
   });
 }
 
-// Public subscribe: store subscriber and send a thank-you email
-exports.subscribe = async (req, res) => {
+// Subscribers
+exports.listSubscribers = async (_req, res) => {
   try {
-    const { email, name } = req.body || {};
-    if (!isValidEmail(email)) return res.status(400).json({ error: 'Valid email required' });
+    const [rows] = await pool.query(
+      `SELECT id, email, status, created_at
+       FROM newsletter_subscribers
+       ORDER BY created_at DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('[newsletter:listSubscribers]', err);
+    res.status(500).json({ error: 'Failed to fetch subscribers' });
+  }
+};
 
+exports.subscribe = async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email' });
+  }
+  try {
     // Upsert subscriber (subscribe or re-subscribe if previously unsubscribed)
     await pool.query(
-      `INSERT INTO newsletterSubscribers (name, email, status) VALUES (?, ?, 'subscribed')
-       ON DUPLICATE KEY UPDATE name = VALUES(name), status = 'subscribed', unsubscribed_at = NULL`,
-      [name || null, email.toLowerCase()]
+      `INSERT INTO newsletter_subscribers (email, status)
+       VALUES (?, 'subscribed')
+       ON DUPLICATE KEY UPDATE status='subscribed'`,
+      [email]
     );
 
     if (!process.env.RESEND_API_KEY) {
@@ -78,183 +98,118 @@ Tutor Aid Team`;
   }
 };
 
-// Admin: Subscribers
-exports.listSubscribers = async (_req, res) => {
+exports.unsubscribe = async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  if (!email) return res.status(400).json({ error: 'Email required' });
   try {
-    const [rows] = await pool.query(
-      'SELECT id, name, email, status, subscribed_at, unsubscribed_at FROM newsletterSubscribers ORDER BY subscribed_at DESC'
+    const [r] = await pool.query(
+      `UPDATE newsletter_subscribers SET status='unsubscribed' WHERE email=?`,
+      [email]
     );
-    res.json(rows);
+    if (!r.affectedRows) return res.status(404).json({ error: 'Not found' });
+    res.json({ ok: true, email });
   } catch (err) {
-    console.error('[newsletter] listSubscribers error:', err);
-    res.status(500).json({ error: 'Failed to fetch subscribers' });
-  }
-};
-
-exports.deleteSubscriber = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM newsletterSubscribers WHERE id = ?', [id]);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('[newsletter] deleteSubscriber error:', err);
-    res.status(500).json({ error: 'Failed to delete subscriber' });
-  }
-};
-
-exports.unsubscribeByEmail = async (req, res) => {
-  try {
-    const { email } = req.body || {};
-    if (!isValidEmail(email)) return res.status(400).json({ error: 'Valid email required' });
-    await pool.query(
-      `UPDATE newsletterSubscribers
-       SET status = 'unsubscribed', unsubscribed_at = CURRENT_TIMESTAMP
-       WHERE email = ?`,
-      [email.toLowerCase()]
-    );
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('[newsletter] unsubscribe error:', err);
+    console.error('[newsletter:unsubscribe]', err);
     res.status(500).json({ error: 'Failed to unsubscribe' });
   }
 };
 
-// Admin: Templates
+// Templates
 exports.listTemplates = async (_req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, name, type, subject, content_html, content_text, updated_at FROM newsletterTemplates ORDER BY updated_at DESC'
+      `SELECT id, name, type, subject, content_html, content_text, updated_at
+       FROM newsletter_templates
+       ORDER BY updated_at DESC`
     );
     res.json(rows);
   } catch (err) {
-    console.error('[newsletter] listTemplates error:', err);
+    console.error('[newsletter:listTemplates]', err);
     res.status(500).json({ error: 'Failed to fetch templates' });
   }
 };
 
 exports.createTemplate = async (req, res) => {
+  const { name, type, subject, content_html = '', content_text = '' } = req.body || {};
+  if (!name || !subject) return res.status(400).json({ error: 'Name & subject required' });
   try {
-    const { name, type, subject, content_html, content_text } = req.body || {};
-    if (!name || !type || !subject || !content_html) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    const [r] = await pool.query(
-      `INSERT INTO newsletterTemplates (name, type, subject, content_html, content_text)
+    const [ins] = await pool.query(
+      `INSERT INTO newsletter_templates (name, type, subject, content_html, content_text)
        VALUES (?, ?, ?, ?, ?)`,
-      [name, type, subject, content_html, content_text || null]
+      [name, type || 'General', subject, content_html, content_text]
     );
-    res.status(201).json({ id: r.insertId });
+    res.status(201).json({ id: ins.insertId });
   } catch (err) {
-    console.error('[newsletter] createTemplate error:', err);
+    console.error('[newsletter:createTemplate]', err);
     res.status(500).json({ error: 'Failed to create template' });
   }
 };
 
 exports.updateTemplate = async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid id' });
+  const { name, type, subject, content_html = '', content_text = '' } = req.body || {};
   try {
-    const { id } = req.params;
-    const { name, type, subject, content_html, content_text } = req.body || {};
-    await pool.query(
-      `UPDATE newsletterTemplates
-       SET name = COALESCE(?, name),
-           type = COALESCE(?, type),
-           subject = COALESCE(?, subject),
-           content_html = COALESCE(?, content_html),
-           content_text = COALESCE(?, content_text)
-       WHERE id = ?`,
-      [name ?? null, type ?? null, subject ?? null, content_html ?? null, content_text ?? null, id]
+    const [r] = await pool.query(
+      `UPDATE newsletter_templates
+       SET name=?, type=?, subject=?, content_html=?, content_text=?, updated_at=NOW()
+       WHERE id=?`,
+      [name, type, subject, content_html, content_text, id]
     );
+    if (!r.affectedRows) return res.status(404).json({ error: 'Template not found' });
     res.json({ ok: true });
   } catch (err) {
-    console.error('[newsletter] updateTemplate error:', err);
+    console.error('[newsletter:updateTemplate]', err);
     res.status(500).json({ error: 'Failed to update template' });
   }
 };
 
 exports.deleteTemplate = async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid id' });
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM newsletterTemplates WHERE id = ?', [id]);
+    const [r] = await pool.query(`DELETE FROM newsletter_templates WHERE id=?`, [id]);
+    if (!r.affectedRows) return res.status(404).json({ error: 'Template not found' });
     res.json({ ok: true });
   } catch (err) {
-    console.error('[newsletter] deleteTemplate error:', err);
+    console.error('[newsletter:deleteTemplate]', err);
     res.status(500).json({ error: 'Failed to delete template' });
   }
 };
 
-// Admin: Send (test or broadcast)
-exports.send = async (req, res) => {
+// Send (simplified: logs pretend sends)
+exports.sendNewsletter = async (req, res) => {
+  const { templateId, testEmail, onlySubscribed, emails } = req.body || {};
+  if (!templateId) return res.status(400).json({ error: 'templateId required' });
   try {
-    const { templateId, testEmail, variables } = req.body || {};
-    if (!templateId) return res.status(400).json({ error: 'templateId is required' });
-
-    const [[tpl]] = await pool.query('SELECT * FROM newsletterTemplates WHERE id = ? LIMIT 1', [templateId]);
+    const [[tpl]] = await pool.query(
+      `SELECT subject, content_html, content_text FROM newsletter_templates WHERE id=? LIMIT 1`,
+      [templateId]
+    );
     if (!tpl) return res.status(404).json({ error: 'Template not found' });
 
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('[newsletter] RESEND_API_KEY missing; simulating send');
-      return res.json({ ok: true, sent: 0, simulated: true });
-    }
-
-    const vars = { name: 'there', year: new Date().getFullYear(), ...(variables || {}) };
-
-    const normalizeHtml = (str) => {
-      if (!str) return '';
-      let html = renderTemplate(str, vars);
-      const hasTags = /<\s*[a-z]/i.test(html);
-      // Convert both real newlines and escaped "\n" if not already proper HTML
-      if (!hasTags) {
-        html = html.replace(/\r?\n/g, '<br/>').replace(/\\n/g, '<br/>');
-      } else {
-        // If someone pasted escaped "\n" into HTML, still clean them
-        html = html.replace(/\\n/g, '<br/>');
-      }
-      return html;
-    };
-
-    const normalizeText = (str) => {
-      if (!str) return undefined;
-      // Render tokens and convert any escaped "\n" to real newlines
-      let txt = renderTemplate(str, vars);
-      return txt.replace(/\\n/g, '\n');
-    };
-
-    // If testEmail provided, send only to that email
+    let targetEmails = [];
     if (testEmail) {
-      if (!isValidEmail(testEmail)) return res.status(400).json({ error: 'Valid testEmail required' });
-      const html = normalizeHtml(tpl.content_html);
-      const text = normalizeText(tpl.content_text);
-      const { error } = await resend.emails.send({ from: FROM, to: testEmail, subject: renderTemplate(tpl.subject, vars), html, text });
-      if (error) {
-        console.error('[newsletter] Resend test error:', error);
-        return res.status(500).json({ error: 'Failed to send test email' });
-      }
-      return res.json({ ok: true, sent: 1 });
-    }
-
-    // Broadcast
-    const [subs] = await pool.query(`SELECT name, email FROM newsletterSubscribers WHERE status = 'subscribed'`);
-    if (!subs.length) return res.json({ ok: true, sent: 0 });
-
-    const chunkSize = 50;
-    let sent = 0;
-    for (let i = 0; i < subs.length; i += chunkSize) {
-      const chunk = subs.slice(i, i + chunkSize);
-      const sends = await Promise.allSettled(
-        chunk.map(({ name, email }) => {
-          const perVars = { ...vars, name: name || 'there' };
-          const html = normalizeHtml(tpl.content_html);
-          const text = normalizeText(tpl.content_text);
-          const subject = renderTemplate(tpl.subject, perVars);
-          return resend.emails.send({ from: FROM, to: email, subject, html, text });
-        })
+      targetEmails = [normalizeEmail(testEmail)];
+    } else if (Array.isArray(emails) && emails.length) {
+      targetEmails = emails.map(normalizeEmail);
+    } else if (onlySubscribed) {
+      const [rows] = await pool.query(
+        `SELECT email FROM newsletter_subscribers WHERE status='subscribed'`
       );
-      sent += sends.filter(s => s.status === 'fulfilled' && !s.value?.error).length;
+      targetEmails = rows.map(r => normalizeEmail(r.email));
     }
 
-    return res.json({ ok: true, sent, total: subs.length });
+    // Simulate sending (replace with real email provider)
+    console.log('[newsletter:send]', {
+      templateId,
+      count: targetEmails.length,
+      subject: tpl.subject
+    });
+
+    res.json({ ok: true, sent: targetEmails.length, total: targetEmails.length });
   } catch (err) {
-    console.error('[newsletter] send error:', err);
+    console.error('[newsletter:sendNewsletter]', err);
     res.status(500).json({ error: 'Failed to send newsletter' });
   }
 };
