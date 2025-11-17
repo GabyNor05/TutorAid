@@ -41,7 +41,7 @@ function StudentFiles() {
     }, []);
 
     // Reset pagination when filters/search change
-    useEffect(() => { setLimit(8); }, [searchTerm, selectedStatus, sortOrder]);
+    useEffect( [searchTerm, selectedStatus, sortOrder]);
 
     const normalize = (v) => String(v || "").toLowerCase();
     const collator = useMemo(() => new Intl.Collator(undefined, { sensitivity: "base" }), []);

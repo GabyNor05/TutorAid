@@ -119,10 +119,7 @@ function LessonCards({
                               Rate Tutor
                           </button>
                       </div>
-                    )}
-
-                    {/* Accept/Decline (mobile shows here; desktop in right column) */}
-                    {showStatus && (
+                    )}:{showStatus && role === "Tutor" && (
                         <div className="flex md:hidden gap-4 mt-1">
                             <button
                                 className="text-green-600 font-semibold hover:underline"
